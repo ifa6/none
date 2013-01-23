@@ -1,5 +1,6 @@
 # Makefile for install.
 # Install ask root.
+#
 .PHONY:go all clear install 
 
 # Directories.
