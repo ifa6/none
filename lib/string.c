@@ -20,7 +20,7 @@ void *memset(void *dest,int ch,int n){
     return dest;
 }
 
-char *strcpy(char *dest,const  char *src){
+char *strcpy(const char *dest,const  const char *src){
     asm("0:lodsb\n\t\t"
         "stosb\n\t\t"
         "test %%al,%%al\n\t\t"
@@ -29,4 +29,30 @@ char *strcpy(char *dest,const  char *src){
         :"D"(dest),"S"(src)
         :);
     return dest;
+}
+
+size_t strlen(const char *str){
+    size_t  len = 0;
+    while(*str++) len++;
+    return len;
+}
+
+int strncmp(const char *s1,const char *s2,size_t len){
+    int same;
+    asm("cld\n\t\t"
+        "rep;cmpsb\n\t"
+        "setnz %%al\n\t"
+        :"=a" (same)
+        :"a"(0),"S"(s1),"D"(s2),"c"(len)
+        );
+    return same;
+}
+
+int strcmpy(const char *s1,const char *s2){
+    int ret;
+    while((*s1 == *s2) && *s1){
+        s1++;
+        s2++;
+    }
+    return *s1 - *s2;
 }

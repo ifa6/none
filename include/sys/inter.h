@@ -2,11 +2,22 @@
 #define INTER_H
 
 #include    <x86/io.h>
+#include    <types.h>
 
 /* 任意进程 */
 #define ANY         -1
-#define REPLY       0
+#define HARDWARE    -2
 
+
+/* System Message Type */
+#define REPLY   -1
+#define OPEN    0
+#define READ    1
+#define WRITE   2
+#define CLOSE   3
+#define IOCTL   4
+
+/* System Call type */
 #define SEND        0
 #define RECVIE      1
 

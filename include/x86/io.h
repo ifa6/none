@@ -43,7 +43,7 @@
     })
 #define inw_p(port)         ({\
     unsigned    short    _v; \
-    asm volatile("in    %%dx,%%al\n"    \
+    asm volatile("in    %%dx,%%ax\n"    \
                  "jmp   1f\n"           \
                  "1:jmp 1f\n"           \
                  "1:":"=a"(_v):"d"(port));\

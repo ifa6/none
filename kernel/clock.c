@@ -11,7 +11,7 @@ Registers *clock_handler(Registers *reg){
     act_proc->registers = reg;
     static Message m = {.type = HARD_INT};
     if(!(jiffies % 10)) interrupt(CLOCK_PID,&m);
-    //if(act_proc != proc_ptr) printk("%s -> %s\n",act_proc->pname,proc_ptr->pname);
+    //if((act_proc != proc_ptr) && (act_proc->pid != IDLE) && (proc_ptr->pid != IDLE)) printk("\eg%s -> %s\n\ew",act_proc->pname,proc_ptr->pname);
     act_proc = proc_ptr;
     tss->esp0 = act_proc->esp0;
     ldcr3(act_proc->core);
@@ -91,7 +91,7 @@ int clock_main(void){
     Time *time;
     time = cmos_time();
 
-    printk("Clock Task runing!\n");
+    printk("Clock runing!\n");
     clock_init();
     while(1){
         recvie(ANY,&m);

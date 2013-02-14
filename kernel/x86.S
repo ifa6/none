@@ -6,6 +6,7 @@
 #   
 #
 #include    <const.h>
+#include    "i8259.h"
 
 .globl	divide_error               # 除法出错
 .globl	single_step_exception      # 单步异常
@@ -195,7 +196,7 @@ none:
 # 
 #define  hwint_master(irq) \
     save;                        \
-    inb     $INT2_CTLMASK,%al;   \
+    inb     $INT_CTLMASK,%al;   \
     orb     $(1<<(irq)),%al;       \
     outb    %al,$INT_CTLMASK;    \
     movb    $0x20,%al;   \
@@ -214,7 +215,7 @@ none:
 
 hwint00:
     save;                        
-    inb     $INT2_CTLMASK,%al;   
+    inb     $INT_CTLMASK,%al;   
     orb     1,%al;       
     outb    %al,$INT_CTLMASK;    
     movb    $0x20,%al;   

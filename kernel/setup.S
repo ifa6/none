@@ -92,6 +92,7 @@ start:
     mov     %ebx,envp
     /* 8259,写过很多次了,懒得在写,不懂的可以google,或者Email我 */
     /* 唯一说一点的就是外部中断0x20~0x30 */
+    /*
     mov     $0x11,%al
     out     %al,$0x20
     io_delay
@@ -117,13 +118,16 @@ start:
     io_delay
     out     %al,$0xa1
     io_delay
+    */
 
 /* 屏蔽外部中断 */
+    /*
     mov     $0xFF,%al
     out     %al,$0x21
     io_delay
     out     %al,$0xa1
     io_delay
+    */
 /* 重新设置GDT,GDT被放置到0x101000处 */
     mov     $GDT_TABLE,%edi
     mov     $gdt_start,%esi

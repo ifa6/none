@@ -1,12 +1,23 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include    <const.h>
 typedef unsigned long Pointer;
 typedef unsigned long size_t;
-typedef long    ssize_t; 
+typedef unsigned long off_t;
 typedef int     pid_t;
 typedef unsigned char Byte;
+typedef long    ssize_t; 
+
+typedef long time_t;
+typedef long clock_t;
+
 typedef int (*IrqHandler)(int);
+
+typedef enum{
+    false = 0,
+    true = 1
+}bool;
 
 typedef struct{
     long back_link;
@@ -60,7 +71,9 @@ struct message{
     int type;
     pid_t   src;
     union{
+        int status;
         struct{Pointer cr2,cr3;};
+        struct{void *buf;size_t offset;size_t count;};
         char msg[64 - 8];
     };
 };
@@ -84,7 +97,7 @@ struct proc{
     Message message;
     Interrput *interruptlink;
     struct proc *next,*prev;
-    struct proc *sendlink;
+    struct proc *sendlink,*sendnext;
 };
 
 union{

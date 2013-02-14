@@ -128,7 +128,6 @@ static inline void del(int cons){
 
 
 static inline void insert(int cons,unsigned char ch){
-
     *(unsigned short *)pos  = ch|(attr<<8);
     if(pos + 2 > bottom){
         scrup(cons);
@@ -138,7 +137,6 @@ static inline void insert(int cons,unsigned char ch){
 }
 
 extern void cons_print(int cons,const char * buf){
-
     unsigned char ch;
 
     while((ch = (*buf++))){
@@ -160,6 +158,10 @@ extern void cons_print(int cons,const char * buf){
                 case    'H':attr = (attr & 0x0f) | 0x60;break;
                 case    'w':attr = (attr & 0xf0) | 0x07;break;
                 case    'W':attr = (attr & 0x0f) | 0x70;break;
+                case    'l':attr |= 0x08;break;
+                case    'L':attr &= 0xf7;break;
+                case    'f':attr |= 0x80;break;
+                case    'F':attr &= 0x7f;break;
             }
             state = 0;
         } 

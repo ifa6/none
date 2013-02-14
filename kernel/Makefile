@@ -7,6 +7,7 @@ i = $r/include
 s = none
 l = $r/lib
 m = $r/mm
+f = $r/fs
 
 #kernel entry
 entry = 0x305000
@@ -24,14 +25,17 @@ LDFLAGS = -m elf_i386 -Ttext $(entry) -nostdlib \
 
 HEAD = stdio.h malloc.h stddef.h stdarg.h
 
+FS = $f/fs.o $f/super.o $f/block.o $f/inode.o
+
 OBJS = setup.o main.o console.o printk.o panic.o x86.o trap.o proc.o\
-	   mm.o\
-	   clock.o
+	   driver.o mm.o\
+	   system.o clock.o	at.o\
+	   $(FS)
 
 LIBS = $l/libc.a 
 # What to make.
 #
-$s:$(OBJS) $(LIBS)
+$s:$(OBJS) $(LIBS) 
 	$(LD) $(OBJS) -o $@ $(LDFLAGS)
 
 %.o:%.S

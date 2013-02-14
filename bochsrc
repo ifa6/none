@@ -13,8 +13,9 @@ vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 floppya: image="a.img", status=inserted
 
 #硬盘数据
-#ata0: enabled=1, ioaddr1=0x1f0,ioaddr2=0x3f0,irq=14
+#ata0: enabled=1, ioaddr1=0x1f0,ioaddr2=0x3f0,irq=3
 #ata0-master: type=disk, path="gmL.hd", mode=flat, cylinders=20, heads=16, spt=63
+ata0-master: type=disk, path="n.hd", mode=flat, cylinders=20, heads=16, spt=63
 
 # choose the boot disk.
 boot: floppy
@@ -24,13 +25,13 @@ boot: floppy
 #使用主机的虚拟网卡
 #ne2k:ioaddr=0x300,irq=3,mac=b0:c4:20:00:00:00,ethmod=tuntap,ethdev=/dev/net/tun,script=/home/belive/vm/tunconfig
 #ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=em1 
-ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=null, ethdev=eth0 
+#ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=null, ethdev=eth0 
 #i440fxsupport: enabled=1, slot1=ne2k
 # where do we send log messages?
 #log: out.log
 
 # disable the mouse
-mouse: enabled=0
+mouse: enabled=1
 
 # enable key mapping, using US layout as default.
 keyboard_mapping: enabled=1, map=/usr/local/share/bochs/keymaps/x11-pc-us.map

@@ -35,3 +35,4 @@ $l:$(OBJS)
 
 clear:
 	-rm *.o -rf
+	rm	$l	-f

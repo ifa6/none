@@ -1,4 +1,5 @@
 #include    "kernel.h"
+#include    "i8259.h"
 #include    <sys/sys.h>
 
 #define     INT_GATE    0x8e00
@@ -155,7 +156,7 @@ extern void disable_irq(int irq){
         panic("invalid irq disable_irq");
 
     if(irq > 7){
-        mask = 1 << (irq - 7);
+        mask = 1 << (irq - 8);
         ctl = INT2_CTLMASK;
     }else{
         mask = 1 << irq;
@@ -163,7 +164,7 @@ extern void disable_irq(int irq){
     }
     cli();
     mask |= inb(ctl);
-    outb(ctl,mask);
+    outb(mask,ctl);
     sti();
 }
 
@@ -172,17 +173,16 @@ extern void enable_irq(int irq){
     unsigned char ctl;
     if(NR_IRQ_VECTORS < irq || 0 > irq)
         panic("invalid irq disable_irq");
-
     if(irq > 7){
-        mask = ~(1 << (irq - 7));
+        mask = ~(1 << (irq - 8));
         ctl = INT2_CTLMASK;
     }else{
         mask = ~(1 << irq);
         ctl = INT_CTLMASK;
     }
     cli();
-    mask &= inb(ctl);
-    outb(ctl,mask);
+    mask &= inb_p(ctl);
+    outb_p(mask,ctl);
     sti();
 }
 
@@ -249,7 +249,18 @@ extern void trap_init(void){
     for(int i = 0;i < NR_IRQ_VECTORS;i++) irq_table[i] = spurious_irq;
     Registers *clock_handler(Registers *);
     irq_table[0] = (IrqHandler)clock_handler;
+    //enable_irq(0);        /* can't use,enable sti */
 
-    outb_p(~(0x1),INT_CTLMASK);
-    //outb_p(0x0,INT2_CTLMASK);
+    /* 8259a */
+    outb_p(0x11,INT_CTL);
+    outb_p(IRQ0_VECTOR,INT_CTLMASK);
+    outb_p((1 << CASCADE_IRQ),INT_CTLMASK);
+    outb_p(1,INT_CTLMASK);
+    outb_p(~(1 << CASCADE_IRQ),INT_CTLMASK);
+
+    outb_p(0x11,INT2_CTL);
+    outb_p(IRQ8_VECTOR,INT2_CTLMASK);
+    outb_p(CASCADE_IRQ,INT2_CTLMASK);
+    outb_p(1,INT2_CTLMASK);
+    outb_p(0xff,INT2_CTLMASK);
 }

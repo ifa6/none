@@ -10,7 +10,7 @@ d = a.img
 m = mnt
 s = kernel/none
 
-SUBDIRS = lib  kernel 
+SUBDIRS = lib  fs kernel 
 
 MAKE = make
 RM = rm

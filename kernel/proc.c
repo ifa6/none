@@ -1,4 +1,5 @@
 #include    "kernel.h"
+#include    "i8259.h"
 
 #define istaskp(p)  ((p)->pri == PRI_TASK)
 #define isservep(p) ((p)->pri == PRI_SERVER)
@@ -14,10 +15,12 @@ Proc *rdy_tail[NR_PRI];
 
 Tss *tss;
 
-static int isrecv(pid_t src,pid_t dest){
-    if(src == ANY) return 1;
-    else return (src == dest); 
+static int isrecv(pid_t wait,pid_t wakeup){
+    if(wait == ANY) return 1;
+    return (wait == wakeup); 
 } 
+
+#define ishardware(dest)    isrecv((dest),HARDWARE)
 
 void pick_proc(void){
     //Proc *rp;
@@ -48,9 +51,9 @@ void unready(Proc *rp){
     if(xp == rp){
         rdy_head[rp->pri] = rp->next;
         /*
-        if(rdy_tail[rp->pri] == rp)
-            rdy_tail[rp->pri] = NULL;
-            */
+           if(rdy_tail[rp->pri] == rp)
+           rdy_tail[rp->pri] = NULL;
+           */
     }else{
         while(xp->next != rp) 
             if(NULL == (xp = xp->next)) return;
@@ -68,7 +71,7 @@ int proc_send(pid_t dest,Message *m_ptr){
     sp = act_proc;
     m_ptr->src = proc_number(sp);
     if((rp = proc_addr(dest)) == NULL) return -1;
-    if((rp->flags & RECVIEING) && (rp->getfrom == proc_number(sp) || rp->getfrom == ANY )){
+    if((rp->flags & RECVIEING) && (isrecv(rp->getfrom,m_ptr->src))){
         memcpy(&(rp->message),m_ptr,sizeof(Message));
         rp->wait = m_ptr->src;
         rp->flags &= ~(RECVIEING);
@@ -76,11 +79,12 @@ int proc_send(pid_t dest,Message *m_ptr){
         unready(sp);
         return 0;
     }
+
     Proc **sl;
-    sl = &rp->sendlink;
-    sp->sendlink = NULL;
+    sl = &(rp->sendlink);
+    sp->sendnext = NULL;
     memcpy(&(sp->message),m_ptr,sizeof(Message));
-    while(*sl != NULL) sl = &((*sl)->sendlink);
+    while(*sl != NULL) sl = &((*sl)->sendnext);
     *sl = sp;
     sp->flags |= SENDING;
     unready(sp);
@@ -90,11 +94,11 @@ int proc_send(pid_t dest,Message *m_ptr){
 int interrupt(pid_t dest,Message *m_ptr){
     Proc *rp;
     Interrput *inte;
-    m_ptr->src = HARDWORE;
+    m_ptr->src = HARDWARE;
     if(NULL == (rp = proc_addr(dest))) panic("\erInterrupt    \eb[\ersystem tasks don't found\eb]");
-    if((rp->flags & RECVIEING)){
+    if((rp->flags & RECVIEING) && (ishardware(rp->getfrom))){
         memcpy(&(rp->message),m_ptr,sizeof(Message));
-        rp->wait = HARDWORE;
+        rp->wait = HARDWARE;
         rp->flags &= ~(RECVIEING);
         ready(rp);
         return 0;
@@ -107,36 +111,37 @@ int interrupt(pid_t dest,Message *m_ptr){
 }
 
 int proc_receive(pid_t src,Message *m_ptr){
-    Proc *rp,*np,**sp;
+    Proc *rp,*sp,**sl;
     Interrput *inte;
     rp = act_proc;
-    sp = &((rp)->sendlink);
-    np = rp->sendlink;
-
-    if((inte = rp->interruptlink)){
+    sp = rp->sendlink;
+    sl = &((rp)->sendlink);
+    if((ishardware(src)) && (inte = rp->interruptlink)){
         rp->interruptlink = inte->next;
         memcpy(m_ptr,&(inte->message),sizeof(Message));
         free(inte);
         return 0;
-    } 
-    while(np != NULL){
-        if(isrecv(src,proc_number(np))){
-            if((np->flags & SENDING)){
-                *sp = np->sendlink;
-                memcpy(m_ptr,&(np->message),sizeof(Message));
-                np->flags &= ~(SENDING);
-                ready(np);
-                return 0;
+    }else { 
+        while(sp != NULL){
+            if(isrecv(src,proc_number(sp))){
+                if((sp->flags & SENDING)){
+                    //*sp = np->sendlink;
+                    memcpy(m_ptr,&(sp->message),sizeof(Message));
+                    sp->flags &= ~(SENDING);
+                    *sl = sp->sendnext;
+                    ready(sp);
+                    return 0;
+                }
             }
+            sl = &(sp->sendnext);
+            sp = sp->sendnext;
         }
-        sp = &((*sp)->sendlink);
-        np = np->sendlink;
     }
     rp->flags |= RECVIEING;
     rp->getfrom = src;
     unready(rp);
     memcpy(m_ptr,&(rp->message),sizeof(Message));
-    if(rp->wait != HARDWORE)  ready(proc_addr(rp->wait));
+    if(rp->wait != HARDWARE)  ready(proc_addr(rp->wait));
     return 0;
 }
 
@@ -150,13 +155,6 @@ void sched(void){
     pick_proc();
 }
 
-int system_main(void){
-    Message m;
-    m.type = GET_TIME;
-    send(CLOCK_PID,&m);
-    unready(act_proc);
-    while(1);
-}
 
 Proc *make_proc(pid_t pid,const char *pname,Pointer data,Pointer code,int pri,int (*pentry)()){
     Proc    *p;
@@ -166,7 +164,7 @@ Proc *make_proc(pid_t pid,const char *pname,Pointer data,Pointer code,int pri,in
     p->core = getcr3();
     p->esp0 = (Pointer)p + sizeof(Task);
     strcpy(p->pname,pname);
-    p->sendlink = NULL;
+    p->sendnext = p->sendlink = NULL;
     p->registers = (Registers*)(p->esp0 - 0x100);
     p->interruptlink = NULL;
     memcpy(p->registers,&(Registers){
@@ -191,7 +189,6 @@ Proc *make_proc(pid_t pid,const char *pname,Pointer data,Pointer code,int pri,in
 }
 
 void proc_init(){
-
     Pointer tr = TR_DESC;
     Proc *idle;
 
@@ -209,7 +206,13 @@ void proc_init(){
     task[IDLE] = idle;
 
     make_proc(CLOCK_PID,"CLock",KERNEL_DATA,KERNEL_CODE,PRI_TASK,clock_main);
+    extern int system_main();
     make_proc(SYSTEM_PID,"Sytem",KERNEL_DATA,KERNEL_CODE,PRI_TASK,system_main);
+    extern int at_main();
+    make_proc(AT_PID,"HardWare",KERNEL_DATA,KERNEL_CODE,PRI_TASK,at_main);
+    extern int fs_main();
+    make_proc(FS_PID,"FS",KERNEL_DATA,KERNEL_CODE,PRI_TASK,fs_main);
+
 
     tss = (Tss*)(TSS_TABLE);
     tss->ss0 = KERNEL_DATA;
