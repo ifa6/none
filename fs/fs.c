@@ -8,6 +8,8 @@ void fs_init(){
 
 int fs_main(void){
     Message m;
+    pid_t   caller;
+    int rcode;
     MinixInode *inode;
     static char buf[BLOCK_SIZE];
     MinixDirentry *dir = (MinixDirentry *)buf;
@@ -16,17 +18,17 @@ int fs_main(void){
     fs_init();
     for(;;){
         recvie(ANY,&m);
+        caller = m.src;
         switch(m.type){
-            case    1:
-                inode = get_inode(AT_PID,1,super);
-                block_rw(READ,AT_PID,buf,inode->i_zone[0],1);
-                for(int i = 0;i < 8;i++){
-                    printk("%s\n",dir->name);
-                    dir++;
-                    dir++;
-                }
-                break;
+            case    OPEN: rcode = OK;break;
+            case    READ: rcode = fs_read();break;
+            case    WRITE: rcode = fs_write();break;
+            case    IOCTL: rcode = fs_ioctl();break;
+            default: rcode = ERROR;
         }
+        m.type = REPLY;
+        m.status = rcode;
+        send(caller,&m);
     }
     return 0;
 }
