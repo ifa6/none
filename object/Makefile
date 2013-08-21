@@ -1,0 +1,2 @@
+include	$r/tools/Makefile
+

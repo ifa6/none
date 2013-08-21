@@ -8,6 +8,7 @@
 #define GDT_TABLE       0x200900        /* GDT描述符表 0x200900 ~ 0x202900 */
 
 #define _va(p)
+#define isNullp(p)  ((p) == NULL)
 
 
 #define HARD_INT        1
@@ -37,6 +38,8 @@
 #define SENDING    0x1
 #define RECVIEING  0x2
 
+#define NO_REPLY    -78
+
 #define PAGE_SIZE   0x1000
 #define KERNEL_STACK_SIZE PAGE_SIZE
 
@@ -44,15 +47,17 @@
 
 #define NR_PRI      3
 #define PRI_TASK    0
-#define PRI_SERVER  1
-#define PRI_USER    2
+/*! #define PRI_SERVER  1 !*/
+#define PRI_USER    1
+#define PRI_GOD     2
 
 
-#define IDLE    0
-#define CLOCK_PID   1
-#define SYSTEM_PID  2
-#define AT_PID      3
-#define FS_PID      4
+#define GOD             0
+#define CLOCK_PID       1
+#define SYSTEM_PID      2
+#define AT_PID          3
+#define FS_PID          4
+#define KEYBOARD_PID    5
 
 #define OK  0
 #define ERROR   -1

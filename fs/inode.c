@@ -1,19 +1,18 @@
 #include    "fs.h"
+#include    <string.h>
 
-/* 当前缓存区里面存放的I结点范围 0结点未使用,所以第一次调用get_inode不会返回错误的I结点 */
-static int  ins = 0;
-static int  ine = 0;
-static char buf[BLOCK_SIZE];
+/*! 测试一个INODE 快的硬盘,先做点有趣的事情才有兴趣继续搞下去 !*/
 
-MinixInode *get_inode(int dev,int nr,MinixSuperBlock *super){
-    int offset,nb,in;
-    nb = (nr - 1) / V2_INODES_PER_BLOCK;
-    in = (nr -1 ) % V2_INODES_PER_BLOCK;
-    if((nr >= ine) || (nr < ins)){ 
-        offset = nb + 1 + 1 + super->s_imap_blocks + super->s_zmap_blocks;
-        if(OK != block_rw(READ,dev,buf,offset,1))panic("Read inode Error!");
-        ins = nb * V2_INODES_PER_BLOCK;
-        ine = ins + V2_INODES_PER_BLOCK;
-    }
-    return (MinixInode *)(buf + in * V2_INODES_PER_BLOCK);
+int get_inode(int nr,MinixInode *inode){
+    if(inode == NULL) return ERROR;
+    static char buf[BLOCK_SIZE];
+    int bn = (nr - 1) / (BLOCK_SIZE / sizeof(d2_inode));
+    int in = (nr - 1) % (BLOCK_SIZE / sizeof(d2_inode));
+    off_t offset = 1 + 1 + super->s_imap_blocks + super->s_zmap_blocks + bn;
+    /*! -1一个inode是因为inode节点是从1开始,而不是0.但是,不应该是把第0个空闲吗? !*/
+    if(OK != block_rw(super->s_dev,READ,buf,offset,1))panic("Read inode Error!");
+    memcpy(inode,&(D2_INODE(buf)[in]),sizeof(d2_inode));
+    inode->i_sp = super;
+    inode->i_dev = super->s_dev;
+    return OK;
 }

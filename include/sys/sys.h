@@ -1,8 +1,13 @@
 typedef int (*fn_ptr)();
 
-extern int proc_receive();
-extern int proc_send();
+extern int dofn();
+extern int doret();
+extern int doget();
 
-fn_ptr sys_call_table[] = {proc_send,proc_receive,};
+fn_ptr sys_call_table[] = {
+    [_NR_run] = dofn,
+    [_NR_get] = doget,
+    [_NR_ret] = doret,
+};
 
 int NR_syscalls = sizeof(sys_call_table)/sizeof(fn_ptr);

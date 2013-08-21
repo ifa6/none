@@ -5,12 +5,16 @@
 typedef unsigned long Pointer;
 typedef unsigned long size_t;
 typedef unsigned long off_t;
-typedef int     pid_t;
+typedef unsigned long count_t;
 typedef unsigned char Byte;
 typedef long    ssize_t; 
 
-typedef long time_t;
+typedef const char * String;
+
+typedef long long  id_t;
+typedef int     pid_t;
 typedef long clock_t;
+typedef long time_t;
 
 typedef int (*IrqHandler)(int);
 
@@ -44,6 +48,8 @@ typedef struct{
     long ldt;
     long io;
 }Tss;
+
+#if 0
 
 typedef struct {
     long gs;
@@ -104,6 +110,8 @@ union{
     Proc proc;
     char stack[KERNEL_STACK_SIZE];
 }Task;
+
+#endif
 
 
 #endif

@@ -60,7 +60,7 @@ IrqHandler irq_table[NR_IRQ_VECTORS];
 
 #define exit(n) panic("oop:-_-|\n");
 static inline void die(char *str,long *reg,long nr){
-    printk("TRAP: %s %d.\nPROC:%d,%s\n",str,nr,act_proc->pid,act_proc->pname);
+    printk("Trap: %s %d.\nObject:%Ld,%s\n",str,nr,self()->id,self()->name);
     panic("^-^");
 }
 
@@ -122,10 +122,6 @@ extern void do_general_protection(long code,long *reg){
 }
 
 extern void do_page_fault(long code,long *reg){
-    Message m = {};
-
-    __asm__("movl %%cr2,%0":"=r"(m.cr2));
-
 }
 
 extern void do_copr_error(long code,long *reg){
@@ -263,4 +259,9 @@ extern void trap_init(void){
     outb_p(CASCADE_IRQ,INT2_CTLMASK);
     outb_p(1,INT2_CTLMASK);
     outb_p(0xff,INT2_CTLMASK);
+
+
+    /*! 时钟中断的特殊之处 !*/
+    void clock_init(void);
+    clock_init();
 }

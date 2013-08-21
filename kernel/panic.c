@@ -1,7 +1,7 @@
 #include    "kernel.h"
 
 extern void panic(const char *s){
-    printk("panic: %s\n",s);
+    printk("\egpanic: \er%s\ew\n",s);
     cli();
     while(1);
     sti();

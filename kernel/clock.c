@@ -3,19 +3,18 @@
 
 volatile unsigned long jiffies = 0;
 static  time_t startup_time;
-void unready(Proc *rp);
-void pick_proc(void);
 
+/*! 时钟中断,可能不太合群,不太协调,毕竟他是整个系统的脉搏,任务繁重 ~*/
 
 Registers *clock_handler(Registers *reg){
-    act_proc->registers = reg;
-    static Message m = {.type = HARD_INT};
-    if(!(jiffies % 10)) interrupt(CLOCK_PID,&m);
-    //if((act_proc != proc_ptr) && (act_proc->pid != IDLE) && (proc_ptr->pid != IDLE)) printk("\eg%s -> %s\n\ew",act_proc->pname,proc_ptr->pname);
-    act_proc = proc_ptr;
-    tss->esp0 = act_proc->esp0;
-    ldcr3(act_proc->core);
-    return act_proc->registers;
+    //Object *old = self();
+    leading->registers = reg;
+    //if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
+    sched();
+    //if(old != self()) printk("\eg%s -> %s\ew\n",old->name,self()->name);
+    tss->esp0 = (unsigned long)((union _task*)leading)->stackp;
+    ldcr3(leading->core);
+    return leading->registers;
 }
 
 #define CMOS_READ(addr) ({\
@@ -78,31 +77,41 @@ static Time *cmos_time(void){
     startup_time = mktime(&time);
     return &time;
 }
+
+static Time *time = NULL;
 void clock_init(void){
     put_irq_handler(0,(IrqHandler)clock_handler);
-    cmos_time();
+    time = cmos_time();
     outb_p(0x36,0x43);
     outb_p(LATCH&0xff,0x40);
     outb_p(LATCH>>8,0x40);
     enable_irq(0);
 }
-int clock_main(void){
-    Message m;
-    Time *time;
-    time = cmos_time();
 
+
+static void put_time(Object *this){
+    printk("\ewClock : %d/%02d/%02d %02d:%02d:%02d\n",time->year + 2000,time->month + 1,time->day,
+            time->hour,time->minute,time->second);
+    ret(this->admit,OK);
+}
+
+/*! 暂时为没有编译进内核的任务提供打印任务 !*/
+static void _print(Object *this){
+    printk(this->buffer);
+    ret(this->admit,OK);
+}
+
+static void _clk(Object *this){
+}
+
+int clock_main(void){
     printk("Clock runing!\n");
-    clock_init();
+    self()->fns[READ] = put_time;
+    self()->fns[WRITE] = _print;
+    self()->fns[HARDWARE] = _clk;
     while(1){
-        recvie(ANY,&m);
-        switch(m.type){
-            case HARD_INT:pick_proc();break;//printk("\erHARD_INT\ew\n");break;
-            case GET_TIME:printk("second:%d ",startup_time);printk("%d/%d/%d %d:%d:%d\n",
-                                  time->year + 2000,time->month + 1,time->day,time->hour,time->minute,time->second);break;
-        }
+        get();
+        dorun(self());
     }
-    unready(act_proc);
-    printk("\eW\eoError:clock is unready!\n\eO\ew");
-    while(1);
     return 0;
 }

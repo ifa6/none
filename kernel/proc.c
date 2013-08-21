@@ -205,7 +205,7 @@ void proc_init(){
     act_proc = idle;
     task[IDLE] = idle;
 
-    make_proc(CLOCK_PID,"CLock",KERNEL_DATA,KERNEL_CODE,PRI_TASK,clock_main);
+    make_proc(CLOCK_PID,"Clock",KERNEL_DATA,KERNEL_CODE,PRI_TASK,clock_main);
     extern int system_main();
     make_proc(SYSTEM_PID,"Sytem",KERNEL_DATA,KERNEL_CODE,PRI_TASK,system_main);
     extern int at_main();

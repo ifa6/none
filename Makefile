@@ -1,36 +1,54 @@
 # Makefile for install.
 # Install ask root.
 #
-.PHONY:go all clear install 
+.PHONY:go all clean install reinstall
 
 # Directories.
 # root directories
 r = $(PWD)
 d = a.img
-m = mnt
+h = n.hd
 s = kernel/none
 
-SUBDIRS = lib  fs kernel 
+boot = mnt/boot
+hw = mnt/hw
+
+FSDIR = fs
+COMMONDIR = common
+KERNELDIR = kernel
+TESTSDIR = tests/
+SUBDIRS = $(COMMONDIR) $(FSDIR) $(KERNELDIR) $(TESTSDIR)
 
 MAKE = make
 RM = rm
 
 all:
-	for dir in  $(SUBDIRS);do\
+	@for dir in  $(SUBDIRS);do\
 		$(MAKE) -C $$dir  r=$r || exit 1;\
 	done
 
-clear:
-	for dir in  $(SUBDIRS);do\
-		$(MAKE) -C $$dir clear || exit 1;\
+clean:
+	@for dir in  $(SUBDIRS);do\
+		$(MAKE) -C $$dir r=$r clean || exit 1;\
 	done
+	@-rm -f lib/*
+	@-rm -f kernel/none
 
 debug:
-	objdump -d $r/kernel/none > t.src
+	@objdump -d $r/kernel/none > t.src
 
-install go:
-	mount -o loop -t ext2 $d $m
-	cp $s $m
-	sleep 1
-	umount $m
-	bochs
+install: 
+	@mount -o loop -t ext2 $d $(boot)
+	@mount $h $(hw)
+	@chmod a+w $(hw) $(boot)
+
+reinstall:
+	@umount $(boot)
+	@umount $(hw)
+go:
+
+	@mount -o loop -t ext2 $d $(boot)
+	@cp $s $(boot)
+	@sleep 1
+	@umount $(boot)
+	@bochs

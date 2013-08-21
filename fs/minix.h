@@ -5,6 +5,8 @@
 typedef unsigned short u16_t;
 
 #define BLOCK_SIZE    1024
+#define FULL_BLOCK(x)   (((x) + (BLOCK_SIZE - 1)) / BLOCK_SIZE)
+
 #define SUPER_BLOCK      1
 
 #define V2_INODE_SIZE   sizeof(d2_inode)
@@ -22,14 +24,27 @@ typedef unsigned short u16_t;
 #define V2_NR_DZONES       7	/* # direct zone numbers in a V2 inode */
 #define V2_NR_TZONES      10	/* total # zone numbers in a V2 inode */
 
-#define MINIX_NAME_LEN   14
-#define MINIX_ROOT_INO  1
+#define MINIX_NAME_LEN      30
+#define MINIX_ROOT_INO      1
 
 /* File system types. */
 #define SUPER_MAGIC   0x137F	/* magic number contained in super-block */
 #define SUPER_REV     0x7F13	/* magic # when 68000 disk read on PC or vv */
 #define SUPER_V2      0x2468	/* magic # for V2 file systems */
 #define SUPER_V2_REV  0x6824	/* V2 magic written on PC, read on 68K or vv */
+
+typedef short           dev_t;
+typedef short           uid_t;
+typedef char            gid_t;
+typedef unsigned short  ino_t;
+typedef unsigned short  mode_t;
+typedef char            nlink_t;
+typedef unsigned long   zone_t;
+typedef unsigned long   block_t;
+typedef unsigned long   bit_t;
+typedef unsigned short  zone1_t;
+typedef unsigned short  bitchunk_t; 
+
 
 typedef struct super_block MinixSuperBlock;
 typedef struct inode MinixInode;
@@ -113,5 +128,11 @@ typedef struct {        /* V2.x disk inode */
     time_t d2_ctime;      /* when was inode data last changed */
     zone_t d2_zone[V2_NR_TZONES]; /* block nums for direct, ind, and dbl ind */
 } d2_inode;
+
+
+#define D2_INODE(x) ((d2_inode*)x)
+#define D1_INODE(x) ((d2_ionde*)x)
+#define SUPER(x)    ((MinixSuperBlock *)x)
+
 
 #endif
