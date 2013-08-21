@@ -20,5 +20,11 @@
 *.log
 *.d
 
+# vim swap file
+*.swap
+# ctags
 tags
+# debug file
 *.src
+# 临时文件价
+mnt/*
