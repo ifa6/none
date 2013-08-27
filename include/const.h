@@ -9,6 +9,7 @@
 
 #define _va(p)
 #define isNullp(p)  ((p) == NULL)
+#define isE(x,p)    ((x) == (p))
 
 
 #define HARD_INT        1
@@ -18,13 +19,14 @@
 #define KERNEL_DATA     0x10
 #define USER_CODE       0x1b    /* 用户空间代码段描述符 */
 #define USER_DATA       0x23    /* 用户空间数据段描述符 */
+#define KERNEL_STACK    0x7ff000    /*! 内核栈虚拟地址 !*/
 
 #define TR_DESC         0x28    /*      */
 
 #define     MMAP_BASE       0x100000    /* 内存空闲位图开始物理地址 */
 #define     MMAP_END        0x200000    /* 空闲内存位图结束物理地址 */
 #define     CONST_MEM       0x800000    /* 内核空间 */
-#define     PAGE_OFFSET     0x0
+#define     PAGE_START      0x0
 #define     KMEM            0x40000000  /* 内核对等映射顶端 */
 #define     DIE_DIR         0x203000        /* die进程页目录,在内核启动之前,由boot设置,这里的boot是内核boot,*/
 #define     DIE_TABLE       0x204000        /*  前4MB的页表 */
@@ -41,6 +43,7 @@
 #define NO_REPLY    -78
 
 #define PAGE_SIZE   0x1000
+#define PAGE_OFFSETOF(x) (((unsigned long)(x)) & 0xfff)
 #define KERNEL_STACK_SIZE PAGE_SIZE
 
 #define NR_IRQ_VECTORS  16
@@ -53,11 +56,12 @@
 
 
 #define GOD             0
-#define CLOCK_PID       1
+#define MM_PID          1
 #define SYSTEM_PID      2
-#define AT_PID          3
-#define FS_PID          4
-#define KEYBOARD_PID    5
+#define CLOCK_PID       3
+#define AT_PID          4
+#define FS_PID          5
+#define CONS_PID        6
 
 #define OK  0
 #define ERROR   -1

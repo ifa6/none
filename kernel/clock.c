@@ -2,18 +2,44 @@
 #include    <time.h>
 
 volatile unsigned long jiffies = 0;
+volatile unsigned long cr3 = 0;
 static  time_t startup_time;
 
 /*! 时钟中断,可能不太合群,不太协调,毕竟他是整个系统的脉搏,任务繁重 ~*/
 
+#if 0
+#define PRINT_SCHED
+#endif
+
 Registers *clock_handler(Registers *reg){
-    //Object *old = self();
+#ifdef  PRINT_SCHED
+    Object *old = self();
+#endif
     leading->registers = reg;
     //if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
     sched();
-    //if(old != self()) printk("\eg%s -> %s\ew\n",old->name,self()->name);
+#ifdef  PRINT_SCHED
+    if(old != self()){
+        printk("\eg%s -> %s\ew\n",old->name,self()->name);
+#if 0
+        void print_cpu_info(Registers *reg);
+        print_cpu_info(((void *)leading->registers));
+        printk("ESP : %p\n",leading->registers);
+#endif
+    }
+#endif
     tss->esp0 = (unsigned long)((union _task*)leading)->stackp;
-    ldcr3(leading->core);
+    //ldcr3(leading->core);
+    cr3 = leading->core;
+#ifdef  PRINT_SCHED
+    if(old != self()){
+#if 0
+        void print_cpu_info(Registers *reg);
+        print_cpu_info(((void *)leading->registers));
+        printk("ESP : %p\n",leading->registers);
+#endif
+    }
+#endif
     return leading->registers;
 }
 

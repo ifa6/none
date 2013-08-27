@@ -12,6 +12,7 @@
 
 extern void trap_init(void);
 extern void mm_init(void);
+void print_cpu_info(Registers *reg);
 
 /* */
 extern void disable_irq(int irq);

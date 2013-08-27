@@ -5,7 +5,7 @@
 
 # Directories
 i = $r/include
-s = hello
+s = shell
 l = $r/lib
 
 all:$s

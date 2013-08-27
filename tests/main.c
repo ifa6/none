@@ -1,7 +1,15 @@
-#include    <sys/inter.h>
+#include    <stdio.h>
 
 int main(void){
-    char *msg = "\eyhello,kennel\ew\n";
-    run(CLOCK_PID,WRITE,0,0,msg);    /*! 让CLOCK给我们打印一条Hello消息 !*/
+    char *msg = "\eyhello,kennel\ew\n\eb$\ew";
+    int ch = '$';
+    printf(msg);
+    do{
+        ch = getchar();
+        if(ch == '\n'){
+            printf("\nsorry,i want sleep!\n\ey:-)\n\ew");
+        }else{
+        }
+    }while(ch != 'q');
     return 0;
 }

@@ -1,4 +1,4 @@
-#include    "kernel.h"
+#include    "keyboard.h"
 
 #define ESC '\e'
 #define BACKSPACE '\b'
@@ -61,12 +61,18 @@ static inline unsigned char pop(void){
 static int keyboard_handler(int nr){
     unsigned char in = inb(0x60);
     push(in);
-    doint(KEYBOARD_PID,HARDWARE,0,0,0);
+    doint(CONS_PID,HARDWARE,0,0,0);
     return OK;
 }
 
 static char buffer[52];
 static int index = 0;
+
+
+static Object *admit = NULL;
+static count_t count = 0;
+static void *_buf = NULL;
+
 static void _input(Object *this){
     static bool shift = false;
     unsigned char ch = pop();
@@ -76,35 +82,46 @@ static void _input(Object *this){
     else{
         if(shift) str = keymap[1];
         else str = keymap[0];
-        if(ch < 55){
+        if((ch < 55) && (ch > 0)){
+            buffer[index++] = str[ch];
             if(str[ch] == ENTER){
-                buffer[index++] = 0;
-                index = 0;
-                run(FS_PID,READ,0,0,buffer);
-                printk(">");
             }else{
-                buffer[index++] = str[ch];
                 printk("%c",buffer[index - 1]);
+            }
+            if(index >= 52) index = 0;
+            if(!isNullp(admit) && index){
+                copy_buffer(admit,_buf,count);
+                admit = NULL;
+                count = 0;
+                _buf = NULL; 
             }
         }
     }
 }
 
-static void keyboard_init(void){
+void copy_buffer(Object *o,void *buf,count_t len){
+    int _v = 0;;
+    if(isE(0,index)){
+        admit = o;
+        count = len;
+        _buf = buf;
+    }else{
+        if(len >= index){
+            memcpy(buf,buffer,index);
+            _v = index;
+        }else{
+            _v = len;
+            memcpy(buf,buffer,len);
+            memcpy(buffer,buffer + len,len - index);
+        }
+        index -= len;
+        ret(o,_v);
+    }
+}
+
+void keyboard_init(void){
     put_irq_handler(1,keyboard_handler);
     kb_in.head = kb_in.tail = 0;
     kb_in.full = false;
     self()->fns[HARDWARE] = _input;
-    printk(">");
-}
-
-
-int keyboard_main(void){
-    printk("Keyboard running\n");
-    keyboard_init();
-    while(1){
-        get();
-        dorun(self());
-    }
-    return 0;
 }

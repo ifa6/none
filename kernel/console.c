@@ -1,6 +1,6 @@
-
-
 #include    "vga.h"
+#include    "keyboard.h"
+#include    "kernel.h"
 
 #define MAX_CONSOLES    1
 
@@ -195,4 +195,25 @@ extern void cons_init(void){
     bottom = top + 80*25*2;
     pos = ((mc6845_read(CURSOR_H)<<9)|(mc6845_read(CURSOR_L)<<1)) + mem_start;
 
+}
+
+static void cons_write(Object *this){
+    cons_print(0,this->buffer);
+    ret(this->admit,OK);
+}
+
+static void cons_read(Object *this){
+    copy_buffer(this->admit,this->buffer,this->count);
+}
+
+int cons_main(void){
+    cons_init();
+    keyboard_init();
+    self()->read = cons_read;
+    self()->write = cons_write;
+    while(1){
+        get();
+        dorun(self());
+    }
+    return 0;
 }

@@ -33,7 +33,6 @@ void free_page(Pointer page){
 }
 
 
-
 void open_pagination(void){
     Pointer *dir = (Pointer *)DIE_DIR;
     Pointer *table = (Pointer *)DIE_TABLE;
@@ -42,7 +41,7 @@ void open_pagination(void){
     memset((void *)dir,0,0x1000);
     dir[0] = (Pointer)table | 7;
     for(int i = 0;i < 1024;i++) table[i] = (i << 12) | 7;
-    for(int i = PAGE_OFFSET >> 22;i < (KMEM >> 22);i++){
+    for(int i = PAGE_START >> 22;i < (KMEM >> 22);i++){
         table = (Pointer *)((Pointer)table + 0x1000);
         dir[i] = (Pointer)table | 7;
         for(int i = 0;i < 1024;i++) table[i] = ((page++) << 12) | 7;
@@ -52,7 +51,8 @@ void open_pagination(void){
 
     /* bios */
     __asm__("mov    %0,%%cr3\n\t\t"
-            "mov    %%cr0,%%eax\n\t\t" "or     $0x80010000,%%eax\n\t"
+            "mov    %%cr0,%%eax\n\t\t"
+            "or     $0x80010000,%%eax\n\t"
             "mov    %%eax,%%cr0\n\t\t"
             ::"a"(dir));
 
@@ -92,3 +92,32 @@ void mm_init(void){
 #undef lhigh
 }
 
+static void clone(Object *this){
+    Task *ot = TASK(this->admit);
+    Task *nt = TASK(cloneObject(OBJECT(ot)));
+    if(isNullp(nt)){
+        ret(this->admit,ERROR);
+    }else{
+        RESET_STACK(nt);
+        memcpy(OBJECT(nt)->name,"Child",7);
+        ret(OBJECT(nt),OK);
+        ret(this->admit,OBJECT(nt)->id);
+#if 1
+        print_cpu_info(((void *)nt->registers));
+        print_cpu_info(((void *)ot->registers));
+#endif
+    }
+}
+
+static void _mm_init(void){
+    self()->clone = clone;
+}
+
+int _mm_main(void){
+    _mm_init();
+    while(1){
+        get();
+        dorun(self());
+    }
+    return 0;
+}

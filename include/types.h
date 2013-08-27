@@ -11,7 +11,7 @@ typedef long    ssize_t;
 
 typedef const char * String;
 
-typedef long long  id_t;
+typedef long    id_t;
 typedef int     pid_t;
 typedef long clock_t;
 typedef long time_t;

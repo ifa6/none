@@ -32,7 +32,7 @@ ssources = x86.s
 
 Ssources = setup.S
 
-LIBS = $l/libc.a $l/libfs.a
+LIBS = $l/libc.a $l/libfs.a $l/libmm.a
 
 
 include	$r/tools/Makefile
@@ -45,8 +45,11 @@ So = $(Ssources:.S=.o)
 
 OBJS = $(So) $(so) $(co)
 
+LDLIB = -lc -lfs -lmm
+
+
 # What to make.
 #
 
 $s:$(OBJS) $(LIBS) 
-	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) -lc -lfs -o $@
+	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) $(LDLIB) -o $@

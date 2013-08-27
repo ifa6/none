@@ -59,9 +59,24 @@ IrqHandler irq_table[NR_IRQ_VECTORS];
 
 
 #define exit(n) panic("oop:-_-|\n");
-static inline void die(char *str,long *reg,long nr){
-    printk("Trap: %s %d.\nObject:%Ld,%s\n",str,nr,self()->id,self()->name);
-    panic("^-^");
+
+void print_cpu_info(Registers *reg){
+    printk("CS  = %010p EIP = %010p    ",reg->cs,reg->eip);
+    printk("SS  = %010p ESP = %010p\n",reg->ss,reg->_esp);
+    printk("DS  = %010p EDI = %010p    ",reg->ds,reg->edi);
+    printk("ES  = %010p ESI = %010p\n",reg->es,reg->esi);
+    printk("EAX = %010p ECX = %010p    ",reg->eax,reg->ecx);
+    printk("EBX = %010p EDX = %010p\n",reg->ebx,reg->edx);
+}
+
+static void print_task_info(String str,long nr){
+    printk("\erTrap: %s %x.\nObject<%p>:%ld,%s\ew\n",str,nr,self(),self()->id,self()->name);
+}
+
+static inline void die(String str,long *reg,long nr){
+    print_task_info(str,nr);
+    print_cpu_info((void*)(reg - 1));
+    panic(":-(");
 }
 
 extern void do_divide_error(long code,long *reg){
@@ -122,6 +137,9 @@ extern void do_general_protection(long code,long *reg){
 }
 
 extern void do_page_fault(long code,long *reg){
+    if(!(code & 0x1)) printk("page don't find\n");
+    else if(code & 0x2) printk("write page failt\n");
+    die("page fault",reg,code);
 }
 
 extern void do_copr_error(long code,long *reg){
@@ -223,24 +241,24 @@ extern void trap_init(void){
     set_int(16,copr_error,KERNEL_CODE,(TRA_GATE|IDT_R0));
 
 
-    set_int(0x20,hwint00,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x21,hwint01,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x22,hwint02,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x23,hwint03,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x24,hwint04,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x25,hwint05,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x26,hwint06,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x27,hwint07,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x28,hwint08,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x29,hwint09,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2a,hwint10,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2b,hwint11,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2c,hwint12,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2d,hwint13,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2e,hwint14,KERNEL_CODE,(TRA_GATE|IDT_R0));
-    set_int(0x2f,hwint15,KERNEL_CODE,(TRA_GATE|IDT_R0));
+    set_int(0x20,hwint00,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x21,hwint01,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x22,hwint02,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x23,hwint03,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x24,hwint04,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x25,hwint05,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x26,hwint06,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x27,hwint07,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x28,hwint08,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x29,hwint09,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2a,hwint10,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2b,hwint11,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2c,hwint12,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2d,hwint13,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2e,hwint14,KERNEL_CODE,(INT_GATE|IDT_R0));
+    set_int(0x2f,hwint15,KERNEL_CODE,(INT_GATE|IDT_R0));
 
-    set_int(0x80,sys_call,KERNEL_CODE,(TRA_GATE|IDT_R3));
+    set_int(0x80,sys_call,KERNEL_CODE,(INT_GATE|IDT_R3));
 
     for(int i = 0;i < NR_IRQ_VECTORS;i++) irq_table[i] = spurious_irq;
     Registers *clock_handler(Registers *);
@@ -259,9 +277,4 @@ extern void trap_init(void){
     outb_p(CASCADE_IRQ,INT2_CTLMASK);
     outb_p(1,INT2_CTLMASK);
     outb_p(0xff,INT2_CTLMASK);
-
-
-    /*! 时钟中断的特殊之处 !*/
-    void clock_init(void);
-    clock_init();
 }

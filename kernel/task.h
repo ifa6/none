@@ -54,4 +54,12 @@ union _task{
 };
 
 #define STACK(x) ((union _task*)x)
+#define TASK(x)     ((Task *)(x))
+#define MEMBER(x,member)    x->member
+/*! 以下宏在没有分页,也没分段的时候维护栈,也许你会发疯 !*/
+#define RESET_OFFSETOF(x,member)   (MEMBER(x,member) = (__typeof__(MEMBER(x,member)))(((unsigned long)(x) + PAGE_OFFSETOF(MEMBER(x,member)))))
+#define RESET_STACK(x) {\
+    RESET_OFFSETOF(x,registers);\
+    RESET_OFFSETOF(x,MEMBER(registers,ebp));\
+    }
 #endif

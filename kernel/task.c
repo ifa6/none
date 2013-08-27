@@ -20,7 +20,6 @@ Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO操作允
 #define setActive(x)    (working(x) = ACTIVE)
 #define isWaitMe(x) ((x->wait) == self())
 
-#define TASK(x)     ((Task *)(x))
 #define TASK_GOD()  TASK(toObject(GOD))   /*! 和上帝对话,我想你大概不会很喜欢他 !*/
 
 
@@ -42,7 +41,7 @@ void sched(void){
 }
 
 /*! 接受党和人民考验的时候到了,是时候派我上场啦?你是说我还要排队,shit !*/
-static void ready(Task *rt){
+/*static */void ready(Task *rt){
     if(isNullp(rt)) panic("\erReady    \eb[rTask is <null>\eb]");
     if(isNullp(rdy_head[rt->pri]))
         rdy_head[rt->pri] = rt;
@@ -208,15 +207,19 @@ void god_init(void){
     leading = make_task(GOD,"God",KERNEL_DATA,KERNEL_CODE,PRI_GOD,NULL);
     leading->next =leading;
 
+    extern int mm_main();
+    make_task(MM_PID,"MM",KERNEL_DATA,KERNEL_CODE,PRI_TASK,mm_main);
+#if 0
     make_task(CLOCK_PID,"Clock",KERNEL_DATA,KERNEL_CODE,PRI_TASK,clock_main);
     extern int at_main();
     make_task(AT_PID,"Hardware",KERNEL_DATA,KERNEL_CODE,PRI_TASK,at_main);
     extern int fs_main();
     make_task(FS_PID,"FS",KERNEL_DATA,KERNEL_CODE,PRI_TASK,fs_main);
+    extern int cons_main();
+    make_task(CONS_PID,"Conslo",KERNEL_DATA,KERNEL_CODE,PRI_TASK,cons_main);
     extern int system_main();
     make_task(SYSTEM_PID,"System",KERNEL_DATA,KERNEL_CODE,PRI_USER,system_main);
-    extern int keyboard_main();
-    make_task(KEYBOARD_PID,"Keybord",KERNEL_DATA,KERNEL_CODE,PRI_USER,keyboard_main);
+#endif
 
     tss = (Tss*)(TSS_TABLE);
     tss->ss0 = KERNEL_DATA;
@@ -226,5 +229,8 @@ void god_init(void){
     tss->io = 0xffff0000;
     tss->eflags = 0x200;
     asm("ltr %0"::"m"(tr));
+    /*! 时钟中断的特殊之处,因为时钟是一切调度的开始,如果让时钟自己来初始化,kernel就无法运作了 !*/
+    void clock_init(void);
+    clock_init();
     /* pick_task(); */
 }

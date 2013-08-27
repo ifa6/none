@@ -14,8 +14,9 @@
 #define WRITE   1
 #define OPEN    2
 #define CLOSE   3
-#define IOCTL   4
-#define HARDWARE    5
+#define CLONE   4
+#define IOCTL   5
+#define HARDWARE    6
 
 /* System Call type */
 
@@ -34,9 +35,9 @@ extern void panic(const char *msg);
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
 #define syscall(_sys_call,obj,fn,r1,r2,r3) ({\
-        int _v; \
-        asm("int $0x80":"=a"(_v):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
-        _v; })
+        int __v__; \
+        asm("int $0x80":"=a"(__v__):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
+        __v__; })
 #define lock()      cli()
 #define unlock()    sti()
 

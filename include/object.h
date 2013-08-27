@@ -57,9 +57,6 @@ struct _object{
     enum { WAITING,SLEEPING,ADMINTING,ACTIVE }work;          /*! 金被日,金日成,金正日,金酱油 !*/
     struct{Object *wlink,*wnext,*wtail;};   /*! 等待调用你的方法的类的队列 !*/
     iLink   *ilink;                         /*! 优先执行链(中断请求) !*/
-    Pointer core;                           /*! 自己的core !*/
-    Section code,data,heap,stack;           /*! 代码段,数据段,堆.该部分是在对象未被销毁前是一直存在 !*/
-    Section _code,_data,_heap,_stack;       /*! 这里的数据才会被加载到内存 !*/
     struct{
         int     fn;
         union{
@@ -67,8 +64,11 @@ struct _object{
                 /*! 对象访问方法,至于怎么访问,由具体对象决定,比如文件对象就是读文件内容,进程就访问进程内存影像 !*/
                 Methon  read;          
                 Methon  write;         /*! 道理同上 !*/
-                /*! 克隆对象拷贝一个对象的镜像,但是这个镜像是一个独立的对象,同一个对象由引用计数控制 !*/
-                Methon  clone;
+                Methon  open;
+                Methon  close;
+                Methon  clone; /*! 克隆对象拷贝一个对象的镜像,但是这个镜像是一个独立的对象,同一个对象由引用计数控制 !*/
+                Methon  hw;
+                Methon  ioctl;
             };
             /*! 自定义方法 !*/
             Methon  fns[NR_METHON];
@@ -84,5 +84,8 @@ struct _object{
 
 extern  Object *object_table[MAX_OBJECT];     /*! 对象表,在该表中的对象才是真正的对象 !*/
 extern void dorun(Object *this);
+extern Object *cloneObject(Object *obj);
+extern ObjectDesc byName(String);
+extern ObjectDesc byId(id_t id);
 
 #endif

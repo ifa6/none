@@ -50,6 +50,7 @@
 .globl  hwint15
 
 .globl  jiffies
+.globl  cr3
 
 .globl  NR_syscalls,sys_call_table
 .globl  irq_table,act_registers,act_core
@@ -228,6 +229,8 @@ hwint00:
     movl    $0,%eax
     call    *irq_table(,%eax,4)     //不用恢复ESP
     movl    %eax,%esp
+    movl    cr3,%eax
+    movl    %eax,%cr3
 0:
     inb     $INT_CTLMASK,%al;    
     andb    $(~1),%al; 

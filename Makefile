@@ -17,7 +17,10 @@ FSDIR = fs
 COMMONDIR = common
 KERNELDIR = kernel
 TESTSDIR = tests/
-SUBDIRS = $(COMMONDIR) $(FSDIR) $(KERNELDIR) $(TESTSDIR)
+MMDIR = mm
+EXECS = shell
+SUBDIRS = $(COMMONDIR) $(FSDIR) $(MMDIR) $(KERNELDIR)\
+		  $(TESTSDIR) 
 
 MAKE = make
 RM = rm
@@ -41,12 +44,16 @@ install:
 	@mount -o loop -t ext2 $d $(boot)
 	@mount $h $(hw)
 	@chmod a+w $(hw) $(boot)
+	@(cd $(TESTSDIR);for exec in $(EXECS);do\
+		cp $$exec ../$(hw);\
+	done;)
+	@sleep 1
 
 reinstall:
 	@umount $(boot)
 	@umount $(hw)
-go:
 
+go: install reinstall
 	@mount -o loop -t ext2 $d $(boot)
 	@cp $s $(boot)
 	@sleep 1
