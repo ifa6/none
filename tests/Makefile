@@ -8,10 +8,13 @@ i = $r/include
 s = shell
 l = $r/lib
 
-all:$s
 
 #kernel entry
-entry = 0x1000
+#entry = 0xC00000
+entry = 0x10000
+shell_entry = 0x1000
+
+all: shell test date
 
 # Programs, flags, etc.
 
@@ -32,6 +35,13 @@ OBJS = $(So) $(so) $(co)
 
 # What to make.
 #
+#
 
-$s:$(OBJS) $(LIBS) 
-	$(LD) $(OBJS) $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+shell: shell.o $(LIBS)
+	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(shell_entry) -o $@
+
+test: test.o $(LIBS)
+	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+
+date: date.o $(LIBS)
+	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@

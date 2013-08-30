@@ -12,7 +12,7 @@ static ObjectDesc getFreeObject(void){
 
 void dorun(Object *this){
     /*! 如果存在这个方法,则调用这个方法,并且由这个方法答复 !*/
-    if(!isNullp(this->fns[this->fn])) (this->fns[this->fn])(this);
+    if((this->fn >= 0) && (this->fn < NR_METHON) && (!isNullp(this->fns[this->fn]))) (this->fns[this->fn])(this);
     /*! 否则,告诉他,出错了, !*/
     else ret(this->admit,ERROR);
 }

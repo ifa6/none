@@ -169,12 +169,11 @@ static void _io(Object *this){
 
 
 static void at_init(void){
-    printk("AT HD startup...\n");
     self()->write = _rw;
     self()->read = _rw;
     self()->fns[HARDWARE] = _io;
     put_irq_handler(AT_IRQ,at_handler);
-    enable_irq(AT_IRQ);
+    //enable_irq(AT_IRQ);
     outb_p(AT_RESET,AT_DEVICE_CTL);
 }
 

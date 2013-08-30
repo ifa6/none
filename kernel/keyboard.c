@@ -84,10 +84,7 @@ static void _input(Object *this){
         else str = keymap[0];
         if((ch < 55) && (ch > 0)){
             buffer[index++] = str[ch];
-            if(str[ch] == ENTER){
-            }else{
-                printk("%c",buffer[index - 1]);
-            }
+            printk("%c",buffer[index - 1]);
             if(index >= 52) index = 0;
             if(!isNullp(admit) && index){
                 copy_buffer(admit,_buf,count);
@@ -120,8 +117,8 @@ void copy_buffer(Object *o,void *buf,count_t len){
 }
 
 void keyboard_init(void){
-    put_irq_handler(1,keyboard_handler);
     kb_in.head = kb_in.tail = 0;
     kb_in.full = false;
     self()->fns[HARDWARE] = _input;
+    put_irq_handler(1,keyboard_handler);
 }

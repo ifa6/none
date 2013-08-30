@@ -23,7 +23,7 @@ extern Task *leading;
 
 /*! extern int interrupt(pid_t dest,Message *m_ptr); !*/
 
-extern void sched(void);
+extern Registers *sched(Registers *reg);
 extern int doint(ObjectDesc obj,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3);
 
 extern IrqHandler irq_table[NR_IRQ_VECTORS];
@@ -31,7 +31,7 @@ extern IrqHandler irq_table[NR_IRQ_VECTORS];
 #define proc_number(rp) ((rp)->pid)
 #define proc_addr(pid)  (task[pid])
 
-extern Tss *tss;
+#define do_switch() __asm__("int $0x81\n\t\t")
 
 /* */
 #define getcr3()    ({  \
@@ -43,6 +43,13 @@ extern Tss *tss;
 #define ldcr3(cr3)  ({\
         asm("movl %0,%%cr3\n\t\t"::"a"(cr3));\
         })
+
+#define getcr2()    ({  \
+        Pointer _cr2;   \
+        asm("movl %%cr2,%0\n\t\t":"=a"(_cr2)); \
+        _cr2;   \
+        })
+
 
 /* Task List */
 int clock_main(void);

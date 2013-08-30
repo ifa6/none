@@ -21,6 +21,7 @@ String taskName[] = {
 
 
 static void shell(void){
+    //while(1);
     run(FS_PID,READ,0,0,"shell");
 }
 

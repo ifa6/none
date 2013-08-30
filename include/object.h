@@ -49,6 +49,7 @@ struct _object{
     union{
         struct{ unsigned long r1,r2,r3;};
         struct{ off_t offset;count_t count;void *buffer;};
+        struct{ void *pointer;};
         struct{ int status;};
     };
     Object  *admit;                     /*! 调用者 !*/

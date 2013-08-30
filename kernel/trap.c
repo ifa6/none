@@ -45,6 +45,7 @@ extern void 	hwint12(void);
 extern void 	hwint13(void);
 extern void 	hwint14(void);
 extern void 	hwint15(void);
+extern void     switch_task(void);      
 extern int      sys_call(int EAX,int EBX,int ECX,int EDX); 
 
 
@@ -76,7 +77,8 @@ static void print_task_info(String str,long nr){
 static inline void die(String str,long *reg,long nr){
     print_task_info(str,nr);
     print_cpu_info((void*)(reg - 1));
-    panic(":-(");
+    run(MM_PID,CLOSE,0,0,0);
+    /* panic(":-("); */
 }
 
 extern void do_divide_error(long code,long *reg){
@@ -137,9 +139,13 @@ extern void do_general_protection(long code,long *reg){
 }
 
 extern void do_page_fault(long code,long *reg){
-    if(!(code & 0x1)) printk("page don't find\n");
-    else if(code & 0x2) printk("write page failt\n");
+    unsigned long cr2 = getcr2();
     die("page fault",reg,code);
+    if(!(code & 0x1)){
+        run(MM_PID,NO_PAGE,cr2,0,0);
+    } else if(code & 0x2){
+        run(MM_PID,WP_PAGE,cr2,0,0);
+    }
 }
 
 extern void do_copr_error(long code,long *reg){
@@ -153,14 +159,6 @@ extern void do_none(long code,long *reg){
 extern void _null(void){
     // die("-_-!",1);
     ;
-}
-
-extern void do_keyboard(void){
-    int _ch;
-    const char key[]=" `1234567890-=\15\tqwertyuiop[]  asdfghjkl;' \r zxcvbnm,./ ";
-    _ch = inb(0x60);
-    if(_ch<sizeof(key));
-        //printk("%c",key[_ch]);
 }
 
 extern void disable_irq(int irq){
@@ -259,11 +257,9 @@ extern void trap_init(void){
     set_int(0x2f,hwint15,KERNEL_CODE,(INT_GATE|IDT_R0));
 
     set_int(0x80,sys_call,KERNEL_CODE,(INT_GATE|IDT_R3));
+    set_int(0x81,switch_task,KERNEL_CODE,(INT_GATE|IDT_R3));
 
     for(int i = 0;i < NR_IRQ_VECTORS;i++) irq_table[i] = spurious_irq;
-    Registers *clock_handler(Registers *);
-    irq_table[0] = (IrqHandler)clock_handler;
-    //enable_irq(0);        /* can't use,enable sti */
 
     /* 8259a */
     outb_p(0x11,INT_CTL);

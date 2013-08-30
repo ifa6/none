@@ -31,6 +31,8 @@
 .globl  _null
 .globl  do_keybord
 .globl  do_call
+.globl  sched
+.globl  switch_task
 
 .globl  hwint00
 .globl  hwint01
@@ -53,7 +55,7 @@
 .globl  cr3
 
 .globl  NR_syscalls,sys_call_table
-.globl  irq_table,act_registers,act_core
+.globl  irq_table,
 
 
 
@@ -214,6 +216,15 @@ none:
     recov;   \
     iret;    
 
+switch_task:
+    save;
+    pushl   %esp
+    call   sched
+    movl    %eax,%esp
+    movl    cr3,%eax
+    movl    %eax,%cr3
+    recov;   
+    iret
 hwint00:
     save;                        
     inb     $INT_CTLMASK,%al;   
@@ -225,9 +236,12 @@ hwint00:
     incl    jiffies
 
 #sti; 
-    pushl   %esp
+    pushl   $0
     movl    $0,%eax
     call    *irq_table(,%eax,4)     //不用恢复ESP
+    addl    $4,%esp;    \
+    push    %esp
+    call    sched
     movl    %eax,%esp
     movl    cr3,%eax
     movl    %eax,%cr3

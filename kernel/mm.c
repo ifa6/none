@@ -91,33 +91,3 @@ void mm_init(void){
 #undef llow
 #undef lhigh
 }
-
-static void clone(Object *this){
-    Task *ot = TASK(this->admit);
-    Task *nt = TASK(cloneObject(OBJECT(ot)));
-    if(isNullp(nt)){
-        ret(this->admit,ERROR);
-    }else{
-        RESET_STACK(nt);
-        memcpy(OBJECT(nt)->name,"Child",7);
-        ret(OBJECT(nt),OK);
-        ret(this->admit,OBJECT(nt)->id);
-#if 1
-        print_cpu_info(((void *)nt->registers));
-        print_cpu_info(((void *)ot->registers));
-#endif
-    }
-}
-
-static void _mm_init(void){
-    self()->clone = clone;
-}
-
-int _mm_main(void){
-    _mm_init();
-    while(1){
-        get();
-        dorun(self());
-    }
-    return 0;
-}

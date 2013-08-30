@@ -148,8 +148,9 @@ new_env:
     mov     %eax,%gs
     mov     $_STACK,%esp  
     call    main   
+    sti
 0:
-    hlt
+#hlt
     jmp     0b
 
 .data

@@ -18,7 +18,7 @@ COMMONDIR = common
 KERNELDIR = kernel
 TESTSDIR = tests/
 MMDIR = mm
-EXECS = shell
+EXECS = shell test date
 SUBDIRS = $(COMMONDIR) $(FSDIR) $(MMDIR) $(KERNELDIR)\
 		  $(TESTSDIR) 
 
@@ -40,7 +40,7 @@ clean:
 debug:
 	@objdump -d $r/kernel/none > t.src
 
-install: 
+tar: 
 	@mount -o loop -t ext2 $d $(boot)
 	@mount $h $(hw)
 	@chmod a+w $(hw) $(boot)
@@ -49,11 +49,11 @@ install:
 	done;)
 	@sleep 1
 
-reinstall:
+stop:
 	@umount $(boot)
 	@umount $(hw)
 
-go: install reinstall
+go: tar stop
 	@mount -o loop -t ext2 $d $(boot)
 	@cp $s $(boot)
 	@sleep 1

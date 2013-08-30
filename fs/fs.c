@@ -8,28 +8,27 @@ MinixInode root_inode;
 
 static void load_elf(String path) {
     static char buff[BLOCK_SIZE];
+    static char buffer[BLOCK_SIZE];
     static Elf32_Ehdr *ehdr = (void *)buff;
     static Elf32_Phdr *phdr;
     MinixInode *inode = eat_path(path);
     if(isNullp(inode)){
-        zerror("File not found!");
+        zerror("%s file not found!",path);
         return;
     }
     zone_rw(inode,READ,0,buff);
     phdr = (void*)(buff + ehdr->e_phoff);
     zone_t zone = phdr->p_offset / BLOCK_SIZE;
-    if(ERROR == zone_rw(inode,READ,zone,(void *)(ehdr->e_entry))) panic("-_-|||\n");
-    if(ERROR == zone_rw(inode,READ,zone + 1,(void *)(ehdr->e_entry) + BLOCK_SIZE)) panic("-_-|||\n");
-    if(ERROR == zone_rw(inode,READ,zone + 2,(void *)(ehdr->e_entry) + 2 * BLOCK_SIZE)) panic("-_-|||\n");
-    if(ERROR == zone_rw(inode,READ,zone + 3,(void *)(ehdr->e_entry) + 3 * BLOCK_SIZE)) panic("-_-|||\n");
-    //if(ERROR == zone_rw(inode,READ,zone + 4,(void *)(ehdr->e_entry) + 4 * BLOCK_SIZE)) panic("-_-|||\n");
-    //if(ERROR == zone_rw(inode,READ,zone + 5,(void *)(ehdr->e_entry) + 5 * BLOCK_SIZE)) panic("-_-|||\n");
-    //if(ERROR == zone_rw(inode,READ,zone + 6,(void *)(ehdr->e_entry) + 6 * BLOCK_SIZE)) panic("-_-|||\n");
     if(0 == run(MM_PID,CLONE,0,0,0)){
+        for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
+            if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
+            memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
+        }
         int (*fn)(void);
         memcpy(self()->name,path,strlen(path) + 1);
         fn = (void*)ehdr->e_entry;
         fn();
+        run(MM_PID,CLOSE,0,0,0);
     }
 }
 
@@ -60,7 +59,6 @@ static void fs_init(void){
 }
 
 int fs_main(void){
-    printk("fs startup...\n");
     fs_init();
     while(1){
         get();

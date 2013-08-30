@@ -2,45 +2,15 @@
 #include    <time.h>
 
 volatile unsigned long jiffies = 0;
-volatile unsigned long cr3 = 0;
 static  time_t startup_time;
 
 /*! 时钟中断,可能不太合群,不太协调,毕竟他是整个系统的脉搏,任务繁重 ~*/
 
-#if 0
-#define PRINT_SCHED
-#endif
 
-Registers *clock_handler(Registers *reg){
-#ifdef  PRINT_SCHED
-    Object *old = self();
-#endif
-    leading->registers = reg;
-    //if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
-    sched();
-#ifdef  PRINT_SCHED
-    if(old != self()){
-        printk("\eg%s -> %s\ew\n",old->name,self()->name);
-#if 0
-        void print_cpu_info(Registers *reg);
-        print_cpu_info(((void *)leading->registers));
-        printk("ESP : %p\n",leading->registers);
-#endif
-    }
-#endif
-    tss->esp0 = (unsigned long)((union _task*)leading)->stackp;
-    //ldcr3(leading->core);
-    cr3 = leading->core;
-#ifdef  PRINT_SCHED
-    if(old != self()){
-#if 0
-        void print_cpu_info(Registers *reg);
-        print_cpu_info(((void *)leading->registers));
-        printk("ESP : %p\n",leading->registers);
-#endif
-    }
-#endif
-    return leading->registers;
+int clock_handler(int irq){
+    if(TASK(leading)->ucount) TASK(leading)->ucount--;
+    if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
+    return OK;
 }
 
 #define CMOS_READ(addr) ({\
@@ -105,18 +75,10 @@ static Time *cmos_time(void){
 }
 
 static Time *time = NULL;
-void clock_init(void){
-    put_irq_handler(0,(IrqHandler)clock_handler);
-    time = cmos_time();
-    outb_p(0x36,0x43);
-    outb_p(LATCH&0xff,0x40);
-    outb_p(LATCH>>8,0x40);
-    enable_irq(0);
-}
 
 
 static void put_time(Object *this){
-    printk("\ewClock : %d/%02d/%02d %02d:%02d:%02d\n",time->year + 2000,time->month + 1,time->day,
+    printk("\ew%d/%02d/%02d %02d:%02d:%02d\n",time->year + 2000,time->month + 1,time->day,
             time->hour,time->minute,time->second);
     ret(this->admit,OK);
 }
@@ -130,11 +92,18 @@ static void _print(Object *this){
 static void _clk(Object *this){
 }
 
-int clock_main(void){
-    printk("Clock runing!\n");
+static void clock_init(void){
     self()->fns[READ] = put_time;
     self()->fns[WRITE] = _print;
     self()->fns[HARDWARE] = _clk;
+    time = cmos_time();
+    outb_p(0x36,0x43);
+    outb_p(LATCH&0xff,0x40);
+    outb_p(LATCH>>8,0x40);
+    put_irq_handler(0,(IrqHandler)clock_handler);
+}
+int clock_main(void){
+    clock_init();
     while(1){
         get();
         dorun(self());

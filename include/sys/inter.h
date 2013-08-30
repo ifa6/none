@@ -17,6 +17,9 @@
 #define CLONE   4
 #define IOCTL   5
 #define HARDWARE    6
+#define NO_PAGE     7
+#define WP_PAGE     9
+#define EXIT       10
 
 /* System Call type */
 

@@ -10,5 +10,4 @@ int main(void){
     mm_init();
     trap_init();
     god_init();
-    hlt();
 }

@@ -14,7 +14,7 @@ CC = gcc
 LD = ld
 
 ASFLAGS = --32
-CFLAGS = -I $i -m32 -std=gnu99 -nostdinc -fno-stack-protector -Wall -Werror
+CFLAGS = -I $i -m32 -std=gnu99 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
 LDFLAGS = -m elf_i386 -L $l -nostdlib
 
 %.a:$(source:.c=.o)

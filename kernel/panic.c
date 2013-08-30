@@ -3,7 +3,7 @@
 extern void panic(const char *s){
     printk("\egpanic: \er%s\ew\n",s);
     cli();
-    hlt();
+    //hlt();
     while(1);
     sti();
 }

@@ -1,10 +1,12 @@
 #include    "task.h"
 #include    "kernel.h"
 
-Task    *rdy_head[NR_PRI];  /*! 调度队列头,参考MINIX设计 !*/
-Task    *rdy_tail[NR_PRI];
-Task    *leading = NULL;    /*! 主角,在你的世界里,你就是主角 ~*/
-Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO操作允许 !*/
+static Task    *rdy_head[NR_PRI];  /*! 调度队列头,参考MINIX设计 !*/
+static Task    *rdy_tail[NR_PRI];
+Task   *leading = NULL;    /*! 主角,在你的世界里,你就是主角 ~*/
+static Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO操作允许 !*/
+
+volatile unsigned long cr3 = 0;
 
 #define isTaskp(p)  ((p)->pri == PRI_TASK)  /*! 是任务,具有高优先级 !*/
 #define isUserp(p)  ((p)->pri == PRI_USER)  /*! 普通任务,时间片调度 !*/
@@ -22,22 +24,40 @@ Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO操作允
 
 #define TASK_GOD()  TASK(toObject(GOD))   /*! 和上帝对话,我想你大概不会很喜欢他 !*/
 
+#if 0
+#define PRINT_SCHED
+#endif
 
-static void pick_task(void){
+static Registers *pick_task(Registers *reg){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
+
+#ifdef  PRINT_SCHED
+    Object *oo = self();
+#endif
+
+    leading->registers = reg;
     if(rdy_head[PRI_TASK] != NULL) leading = rdy_head[PRI_TASK];    
     else if(rdy_head[PRI_USER] != NULL) leading = rdy_head[PRI_USER];
     else leading = rdy_head[PRI_GOD];       /*! 上帝只有在我们都不干了的时候才过来擦屁股,很明显,他做得很好 !*/
+#ifdef  PRINT_SCHED
+    if(oo != self()){
+        printk("\eb%s \er-> \eb%s\ew\n",oo->name,self()->name);
+    }
+#endif
+    tss->esp0 = (unsigned long)((union _task*)leading)->stackp;
+    cr3 = leading->core;
+    return leading->registers;
 }
 
-void sched(void){
-    if(!isNullp(rdy_head[PRI_USER])){
+Registers *sched(Registers *reg){
+    if(!isNullp(rdy_head[PRI_USER]) && (!rdy_head[PRI_USER]->ucount)){
         rdy_tail[PRI_USER]->next = rdy_head[PRI_USER];
         rdy_tail[PRI_USER] = rdy_head[PRI_USER];
         rdy_head[PRI_USER] = rdy_head[PRI_USER]->next;
         rdy_tail[PRI_USER]->next = NULL;
+        rdy_head[PRI_USER]->ucount = rdy_head[PRI_USER]->count;
     }
-    pick_task();
+    return pick_task(reg);
 }
 
 /*! 接受党和人民考验的时候到了,是时候派我上场啦?你是说我还要排队,shit !*/
@@ -64,10 +84,7 @@ static void unready(Task *rt){
             if(rdy_tail[rt->pri] == rt) rdy_tail[rt->pri] = xt;
         }
     }
-    /* if(rt == leading) pick_task(); */
-    sti();      /*! 开中断,你懂的 !*/
-    hlt();      /*! 等待一个时钟进行任务切换,假如来的是其他中断呢? !*/
-    cli();      /*! 关中断,保证之后的操作不会被打断 !*/
+    do_switch();
 }
 
 static void _admit(Object *obj,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
@@ -176,6 +193,8 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
     task = (Task *)get_free_page();
     OBJECT(task)->id = id;
     task->pri = pri;
+    task->count = 20;
+    task->ucount = 20;
     task->core = getcr3();
     task->registers = (void *)(STACK(task)->stackp - sizeof(Registers));
     strcpy(OBJECT(task)->name,name);
@@ -206,20 +225,8 @@ void god_init(void){
     for(int i = 0;i < NR_PRI;i++) rdy_head[i] = rdy_tail[i] = NULL;
     leading = make_task(GOD,"God",KERNEL_DATA,KERNEL_CODE,PRI_GOD,NULL);
     leading->next =leading;
-
     extern int mm_main();
     make_task(MM_PID,"MM",KERNEL_DATA,KERNEL_CODE,PRI_TASK,mm_main);
-#if 0
-    make_task(CLOCK_PID,"Clock",KERNEL_DATA,KERNEL_CODE,PRI_TASK,clock_main);
-    extern int at_main();
-    make_task(AT_PID,"Hardware",KERNEL_DATA,KERNEL_CODE,PRI_TASK,at_main);
-    extern int fs_main();
-    make_task(FS_PID,"FS",KERNEL_DATA,KERNEL_CODE,PRI_TASK,fs_main);
-    extern int cons_main();
-    make_task(CONS_PID,"Conslo",KERNEL_DATA,KERNEL_CODE,PRI_TASK,cons_main);
-    extern int system_main();
-    make_task(SYSTEM_PID,"System",KERNEL_DATA,KERNEL_CODE,PRI_USER,system_main);
-#endif
 
     tss = (Tss*)(TSS_TABLE);
     tss->ss0 = KERNEL_DATA;
@@ -229,8 +236,5 @@ void god_init(void){
     tss->io = 0xffff0000;
     tss->eflags = 0x200;
     asm("ltr %0"::"m"(tr));
-    /*! 时钟中断的特殊之处,因为时钟是一切调度的开始,如果让时钟自己来初始化,kernel就无法运作了 !*/
-    void clock_init(void);
-    clock_init();
-    /* pick_task(); */
+    do_switch();
 }

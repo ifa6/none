@@ -39,7 +39,9 @@ struct _rdy{
     int         pri;            /*! 任务优先级              !*/
     Registers   *registers;     /*! 指向任务私有的堆栈结构  !*/
     Pointer     core;           /*! 任务的内存空间,cr3      !*/
+    Section     code,data;      /*! 代码段,数据段 !*/
     Task        *next,*prev;    /*! 任务链 !*/
+    Task        *father;        /*! !*/
     unsigned    held[20];       /*! !*/
     unsigned    magic;          /*! 常量0x89ABCDEF,一方面用它来校验内核栈是否溢出,另一方面作为Task对象的一个魔术字 !*/
 };
