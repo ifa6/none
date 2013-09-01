@@ -33,7 +33,8 @@ static PageItem *copy_items(PageItem *items,int start,int end){
     nitm = (void *)get_free_page();
     if(isNullp(nitm)) panic("copy_items failt : memory out!");
     for(int i = start;i < end;i++){
-        clrWrite(items + i);
+        //clrWrite(items + i);
+        clrPresent(items + i);
     }
     copy_page(nitm,items);
     return nitm;
@@ -100,7 +101,7 @@ static void free_clild(Object *this){
     Object *child = toObject(this->r1);
     if(isNullp(child)) ret(this->admit,ERROR);
     if(TASK(child)->father == t){
-        object_table[child->id] =NULL;
+        object_table[child->id] = NULL;
         ret(this->admit,OK);
         free_page((Pointer)child);
     }
@@ -222,6 +223,10 @@ static Task* make_task(String name,int (*entry)(void)){
 }
 #endif
 
+static void _wait(Object *this){
+    ;
+}
+
 static void _mm_init(void){
     Task *task;
     self()->clone = clone;
@@ -229,6 +234,7 @@ static void _mm_init(void){
     self()->fns[NO_PAGE] = np_page;
     self()->fns[WP_PAGE] = nw_page;
     self()->fns[EXIT] = free_clild;
+    self()->fns[15] = _wait;
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();

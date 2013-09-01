@@ -1,5 +1,6 @@
 #include    "kernel.h"
 #include    <multiboot.h>
+#include    "buffer.h"
 
 
 #define clear_page(p)   \
@@ -84,6 +85,7 @@ void mm_init(void){
     for(int i = 0;i < (CONST_MEM >> 12); i++) mmap[i] = 100;
     if(MEMORY_END > KMEM ) MEMORY_MAP_END = KMEM;
     else MEMORY_MAP_END = MEMORY_END;
+    buffer_init();
 
     open_pagination();
 #undef alow 

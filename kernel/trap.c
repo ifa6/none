@@ -140,7 +140,6 @@ extern void do_general_protection(long code,long *reg){
 
 extern void do_page_fault(long code,long *reg){
     unsigned long cr2 = getcr2();
-    die("page fault",reg,code);
     if(!(code & 0x1)){
         run(MM_PID,NO_PAGE,cr2,0,0);
     } else if(code & 0x2){

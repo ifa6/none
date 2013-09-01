@@ -1,19 +1,22 @@
 #include    <stdio.h>
 #include    <sys/inter.h>
 
-
+#define balloc()  _push(NULL,0)
 
 int main(void){
-    static char buff[128];
+    char *buff;
+    buff = balloc();
     char *msg = buff;
     char ch;
     printf("\ey$ \ew");
     do{
         ch = getchar();
         if(ch == '\n'){
-            msg = '\0';
-            if(OK == run(FS_PID,READ,0,0,buff)){
-                run(MM_PID,15,0,0,0);
+            *msg = '\0';
+            if(msg != buff){
+                if(OK == run(FS_PID,READ,0,0,buff)){
+                    run(MM_PID,15,0,0,0);
+                }
             }
             msg = buff;
             printf("\ey$ \ew");

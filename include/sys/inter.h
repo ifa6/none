@@ -26,6 +26,7 @@
 #define _NR_run     0
 #define _NR_get     1
 #define _NR_ret     2
+#define _NR_buffer  3
 
 #define SEND        0
 #define RECVIE      1
@@ -47,6 +48,8 @@ extern void panic(const char *msg);
 #define run(obj,fn,r1,r2,r3) syscall(_NR_run,obj,fn,r1,r2,r3)
 #define ret(_obj,_talk) syscall(_NR_ret,_obj,_talk,0,0,0)
 #define get()   syscall(_NR_get,0,0,0,0,0)
+#define _push(s,c)  (void*)(syscall(_NR_buffer,WRITE,s,c,0,0))
+#define _pop(s)     syscall(_NR_buffer,READ,s,0,0,0)
 
 #define send(dest,m_ptr)    syscall(SEND,dest,m_ptr,0)
 #define recvie(src,m_ptr)  syscall(RECVIE,src,m_ptr,0)

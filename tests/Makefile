@@ -10,9 +10,10 @@ l = $r/lib
 
 
 #kernel entry
-#entry = 0xC00000
-entry = 0x10000
-shell_entry = 0x1000
+entry = 0xC00000
+#entry = 0x10000
+shell_entry = 0xc00000
+#shell_entry = 0x1000
 
 all: shell test date
 

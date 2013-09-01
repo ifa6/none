@@ -6,7 +6,7 @@ MinixInode root_inode;
 
 /*! 测试加载ELF文件 !*/
 
-static void load_elf(String path) {
+static void load_elf(String path,Object *this) {
     static char buff[BLOCK_SIZE];
     static char buffer[BLOCK_SIZE];
     static Elf32_Ehdr *ehdr = (void *)buff;
@@ -20,12 +20,13 @@ static void load_elf(String path) {
     phdr = (void*)(buff + ehdr->e_phoff);
     zone_t zone = phdr->p_offset / BLOCK_SIZE;
     if(0 == run(MM_PID,CLONE,0,0,0)){
+        memcpy(self()->name,path,strlen(path) + 1);
         for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
             if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
             memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
         }
+        TASK(self())->father = TASK(this->admit);
         int (*fn)(void);
-        memcpy(self()->name,path,strlen(path) + 1);
         fn = (void*)ehdr->e_entry;
         fn();
         run(MM_PID,CLOSE,0,0,0);
@@ -33,7 +34,7 @@ static void load_elf(String path) {
 }
 
 static void fs_read(Object *this){
-    load_elf(this->buffer);
+    load_elf(this->buffer,this);
     ret(this->admit,OK);
 }
 

@@ -27,6 +27,7 @@ sources = main.c\
 		  task.c\
 		  trap.c\
 		  keyboard.c\
+		  buffer.c\
 
 ssources = x86.s
 
