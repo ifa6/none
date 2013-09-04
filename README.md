@@ -43,5 +43,6 @@ VIM能够顺利跑在None上
 - 修改了调整了tools/Makefile，Makefile/ kernel/Makeifle，主要是添加了对CLENA\_FILES,列表清除的功能
 - 将get 和 dorun封装成一个函数dorun，现在进程不能直接用self()获取他本身，而是由get调用返回，并由dorun传下去。
 - 添加了hook系统调用，用来修改对象的方法。
+
 ###关于此次修改的一些说明
 - File做为对象实现是必须的，完美的，但是作为一个Task进行调度，一开始我很难接受。但是我考虑其他几种实现。都存在各种问题，最后发现，作为一个Task实现也是非常完美的，Object就应该是独立对象，跟Task一起被调度。Task作为内核所有对象的根对象实现。所以现在在考虑是不是将Task直接做成Object。
