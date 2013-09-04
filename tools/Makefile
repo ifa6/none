@@ -41,3 +41,6 @@ sinclude $(sources:.c=.d)
 clean:
 	@-rm *.o -f
 	@-rm *.d -f
+	@for file in $(CLEAN_FILES);do\
+		rm -f $$file;\
+	done

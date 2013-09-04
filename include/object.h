@@ -4,7 +4,8 @@
 
 #define OBJECT_NAME_LEN     0x10
 #define NR_METHON           0x10
-#define MAX_OBJECT          0x300       /*! 当前版本所允许的最大对象数量 !*/
+#define NR_OBJECT           0x300       /*! 当前版本所允许的最大对象数量 !*/
+#define MAX_BODY            0x400       /*! OBJECT 结构体最大允许值 !*/
 
 typedef long  ObjectDesc;         /*! 对象描述符 ,(文件描述符对象版)!*/
 typedef struct _object Object;      /*! 对象,none中的一切,当然,现实中很匮乏 ~*/
@@ -13,21 +14,14 @@ typedef struct _ilink   iLink;      /*! 中断请求链 !*/
 typedef struct{
     unsigned    r:1;        /*! 拥有者可访问标志 !*/
     unsigned    w:1;        /*! 拥有者可修改标志 !*/
-    unsigned    o:6;        /*! 保留 !*/
+    unsigned    :6;         /*! 保留 !*/
     unsigned    gr:1;       /*! 同组对象可访问标志 !*/
     unsigned    gw:1;       /*! 同组对象可更改标志 !*/
-    unsigned    go:6;       /*! 保留 !*/
+    unsigned    :6;         /*! 保留 !*/
     unsigned    otr:1;      /*! 其他对象可访问标志 !*/
     unsigned    otw:1;      /*! 其他对象可修改标志 !*/
-    unsigned    oto:6;      /*! 保留,将来扩展,比如可知执行 之类 !*/
-    unsigned    oo:8;       /*! 保留 !*/
+    unsigned    :14;        /*! 保留,将来扩展,比如可知执行 之类 !*/
 }Purview;
-
-/*! 区在x86-32为计算机上是4MB为单位,也就是刚好整数个页目录项,实际上区表就是页目录的局部结构 !*/
-typedef struct{
-    void    *section;       /*! 指向区表的开始地址. !*/
-    count_t  count;         /*! 区表项数目,和上面的指针确定了该区的范围 !*/
-}Section;
 
 struct _ilink{
     Object   *admit;
@@ -78,13 +72,13 @@ struct _object{
 };
 
 #ifndef OBJECT
-#define OBJECT(obj) ((Object*)obj)
+#define OBJECT(_) ((Object *)(_))
 #endif
 
 #define toObject(_)   (object_table[_])
 
-extern  Object *object_table[MAX_OBJECT];     /*! 对象表,在该表中的对象才是真正的对象 !*/
-extern void dorun(Object *this);
+extern  Object *object_table[NR_OBJECT];     /*! 对象表,在该表中的对象才是真正的对象 !*/
+extern void dorun(void);
 extern Object *cloneObject(Object *obj);
 extern ObjectDesc byName(String);
 extern ObjectDesc byId(id_t id);

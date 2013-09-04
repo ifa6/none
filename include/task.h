@@ -9,7 +9,7 @@
  *!
  */
 #define PAGE_BYTE   0x1000
-typedef struct _rdy Task;
+typedef struct _task Task;
 typedef struct _registers Registers;
 struct _registers{
     long    gs;         /*! 进程调度时的堆栈 !*/
@@ -31,37 +31,26 @@ struct _registers{
     long    ss;
 };
 
-
-struct _rdy{
+struct _task{
     Object      object;         /*! Task是一个任务对象,所有对象都继承Object,并且所有对象的实例都直接间接克隆于god !*/
     count_t     count;          /*! 任务当前每次运行的时间片!*/
     count_t     ucount;         /*! 活动任务当前剩余时间片  !*/
     int         pri;            /*! 任务优先级              !*/
     Registers   *registers;     /*! 指向任务私有的堆栈结构  !*/
     Pointer     core;           /*! 任务的内存空间,cr3      !*/
-    Section     code,data;      /*! 代码段,数据段 !*/
     Task        *next,*prev;    /*! 任务链 !*/
     Task        *father;        /*! !*/
-    unsigned    held[20];       /*! !*/
-    unsigned    magic;          /*! 常量0x89ABCDEF,一方面用它来校验内核栈是否溢出,另一方面作为Task对象的一个魔术字 !*/
 };
 
-union _task{
-    struct _rdy rdy;
-    struct {
-        char        stack[PAGE_BYTE - 16]; /*! 内核栈 ~*/
-        char        stackp[0];             /*! 内核栈顶 !*/
-        char        held[16];              /*! 栈溢出保护 !*/
+struct _stack{
+    union{
+        Task task;
+        char body[MAX_BODY];            /*! 留给子类使用 !*/
     };
+    char stack[PAGE_BYTE - MAX_BODY];   /*! 内核栈 ~*/
+    char stackp[0];                     /*! 内核栈顶 !*/
 };
 
-#define STACK(x) ((union _task*)x)
 #define TASK(x)     ((Task *)(x))
-#define MEMBER(x,member)    x->member
-/*! 以下宏在没有分页,也没分段的时候维护栈,也许你会发疯 !*/
-#define RESET_OFFSETOF(x,member)   (MEMBER(x,member) = (__typeof__(MEMBER(x,member)))(((unsigned long)(x) + PAGE_OFFSETOF(MEMBER(x,member)))))
-#define RESET_STACK(x) {\
-    RESET_OFFSETOF(x,registers);\
-    RESET_OFFSETOF(x,MEMBER(registers,ebp));\
-    }
+#define STACK(x)    ((struct _stack *)x)
 #endif

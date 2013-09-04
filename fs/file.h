@@ -1,0 +1,14 @@
+#ifndef __FILE_H__
+#define __FILE_H__
+
+#include    <task.h>
+#include    "fs.h"
+
+typedef struct _file File;
+
+struct _file{
+    Task        task;
+    MinixInode  inode;
+};
+
+#endif

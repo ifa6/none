@@ -6,52 +6,58 @@ MinixInode root_inode;
 
 /*! 测试加载ELF文件 !*/
 
-static void load_elf(String path,Object *this) {
+static void load_elf(Object *this) {
     static char buff[BLOCK_SIZE];
     static char buffer[BLOCK_SIZE];
     static Elf32_Ehdr *ehdr = (void *)buff;
     static Elf32_Phdr *phdr;
-    MinixInode *inode = eat_path(path);
-    if(isNullp(inode)){
-        zerror("%s file not found!",path);
-        return;
-    }
+    MinixInode *inode = &(((File*)this)->inode);
     zone_rw(inode,READ,0,buff);
     phdr = (void*)(buff + ehdr->e_phoff);
     zone_t zone = phdr->p_offset / BLOCK_SIZE;
-    if(0 == run(MM_PID,CLONE,0,0,0)){
-        memcpy(self()->name,path,strlen(path) + 1);
-        for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
-            if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
-            memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
-        }
-        TASK(self())->father = TASK(this->admit);
-        int (*fn)(void);
-        fn = (void*)ehdr->e_entry;
-        fn();
-        run(MM_PID,CLOSE,0,0,0);
+    for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
+        if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
+        memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
     }
+    int (*fn)(void);
+    fn = (void*)ehdr->e_entry;
+    ret(this->admit,OK);
+    fn();
+    run(MM_PID,CLOSE,0,0,0);
 }
 
 static void fs_read(Object *this){
-    load_elf(this->buffer,this);
-    ret(this->admit,OK);
+    load_elf(this);
 }
 
 
 static void fs_write(Object *this){
-    printk("Hello %s\n",__func__);
+    printk("%s is unhandle\n",__func__);
     ret(this->admit,OK);
 }
 
 static void fs_open(Object *this){
-    ret(this->admit,OK);
+    MinixInode *inode = eat_path(this->buffer);
+    if(!isNullp(inode)){
+        id_t id = fork();
+        if(0 == id){
+            File *file = (void*)self();
+            TASK(file)->father = TASK(this->admit);
+            memcpy(self()->name,this->buffer,strlen(this->buffer) + 1);
+            memcpy(&(file->inode),inode,sizeof(MinixInode));
+            hook(READ,fs_read);
+            hook(WRITE,fs_write);
+            //hook(CLOSE,close);
+            dorun();
+        }else if(id > 0){
+            ret(this->admit,id);
+        }
+    }
+    ret(this->admit,ERROR);
 }
 
 static void fs_init(void){
-    self()->write = fs_write;
-    self()->read = fs_read;
-    self()->open = fs_open;
+    hook(OPEN,fs_open);
     super = read_super(AT_PID);
     if(super == NULL) panic("\erDon't read super block!\ew\n");
     else{
@@ -61,9 +67,6 @@ static void fs_init(void){
 
 int fs_main(void){
     fs_init();
-    while(1){
-        get();
-        dorun(self());
-    }
+    dorun();
     return 0;
 }

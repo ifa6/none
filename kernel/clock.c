@@ -9,7 +9,7 @@ static  time_t startup_time;
 
 int clock_handler(int irq){
     if(TASK(leading)->ucount) TASK(leading)->ucount--;
-    if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
+    //if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
     return OK;
 }
 
@@ -104,9 +104,6 @@ static void clock_init(void){
 }
 int clock_main(void){
     clock_init();
-    while(1){
-        get();
-        dorun(self());
-    }
+    dorun();
     return 0;
 }

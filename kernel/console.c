@@ -211,9 +211,6 @@ int cons_main(void){
     keyboard_init();
     self()->read = cons_read;
     self()->write = cons_write;
-    while(1){
-        get();
-        dorun(self());
-    }
+    dorun();
     return 0;
 }

@@ -26,7 +26,7 @@
 .globl	copr_error                 # 协处理器错误
 .globl  none
 .globl  sys_call
-.globl  fn                          #供内核调方法使用,上层软件也应该自己由一个这样的函数
+.globl  door                          #供内核调方法使用,上层软件也应该自己由一个这样的函数
 
 .globl  _null
 .globl  do_keybord
@@ -341,7 +341,3 @@ ret_from_sys_call:
     popl    %ds
     sti
     iret
-
-fn:
-    int $0x88
-    ret

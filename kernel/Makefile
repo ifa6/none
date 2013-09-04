@@ -46,7 +46,9 @@ So = $(Ssources:.S=.o)
 
 OBJS = $(So) $(so) $(co)
 
-LDLIB = -lc -lfs -lmm
+CLEAN_FILES=none
+
+LDLIB = -lfs -lmm -lc
 
 
 # What to make.

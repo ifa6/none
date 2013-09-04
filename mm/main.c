@@ -96,7 +96,7 @@ static void delete(Object *this){
     /*! free_page((Pointer)t); !*/
 }
 
-static void free_clild(Object *this){
+static void free_child(Object *this){
     Task *t = TASK(this->admit);
     Object *child = toObject(this->r1);
     if(isNullp(child)) ret(this->admit,ERROR);
@@ -107,8 +107,6 @@ static void free_clild(Object *this){
     }
 }
 
-
-#define isSection(x,p) ((x.section >= p) && ((x.section + x.count) >= p))
 
 static int put_page(PageItem *dirs,void *va){
     PageItem *table = NULL;
@@ -128,9 +126,6 @@ static int put_page(PageItem *dirs,void *va){
 static void np_page(Object *this){
     void *ptr = this->pointer;
     Task *t = TASK(this->admit);
-    if(isSection(t->code,ptr)){
-        ret(this->admit,put_page((PageItem *)t->core,ptr));
-    }
     ret(this->admit,put_page((PageItem *)t->core,ptr));
 }
 
@@ -197,13 +192,13 @@ static Task* make_task(String name,int (*entry)(void)){
     Task *task;
     task = TASK(cloneObject(self()));
     task->core = (Pointer)__clone_space__((void *)(TASK(self())->core),task);
-    task->registers = (void*)(KERNEL_STACK + 0x1000 - 16 - sizeof(Registers));
+    task->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     task->pri = PRI_TASK;
     task->count = 20;
     task->ucount = 20;
     strcpy(OBJECT(task)->name,name);
     /*! 之前COPY到KERBEL_STACK,这是不对的,因为还没有切换到那个页去,谨记 !*/
-    memcpy(((void*)STACK(task)->stackp) - sizeof(Registers),&(Registers){
+    memcpy(STACK(task)->stackp - sizeof(Registers),&(Registers){
             .gs = KERNEL_DATA,
             .fs = KERNEL_DATA,
             .ds = KERNEL_DATA,
@@ -229,12 +224,12 @@ static void _wait(Object *this){
 
 static void _mm_init(void){
     Task *task;
-    self()->clone = clone;
-    self()->close = delete;
-    self()->fns[NO_PAGE] = np_page;
-    self()->fns[WP_PAGE] = nw_page;
-    self()->fns[EXIT] = free_clild;
-    self()->fns[15] = _wait;
+    hook(CLONE,clone);
+    hook(CLOSE,delete);
+    hook(NO_PAGE,np_page);
+    hook(WP_PAGE,nw_page);
+    hook(EXIT,free_child);
+    hook(15,_wait);
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();
@@ -243,9 +238,6 @@ static void _mm_init(void){
 
 int mm_main(void){
     _mm_init();
-    while(1){
-        get();
-        dorun(self());
-    }
+    dorun();
     return 0;
 }

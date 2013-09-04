@@ -12,18 +12,18 @@ Pointer MEMORY_MAP_END  =   0;
 
 unsigned char *mmap = (unsigned char *)MMAP_BASE;
 /* get a free page in kernel space */
-Pointer get_free_page(void){
+void *get_free_page(void){
     while(1){
         for(int i = CONST_MEM >> 12;i < KMEM >> 12;i++){
             if(mmap[i] == 0){
                 mmap[i]++;
                 /* clear the page */
                 clear_page((i << 12));
-                return (i << 12);
+                return (void*)(i << 12);
             }
         }
     }
-    return 0;
+    return NULL;
 }
 
 /* free a page in space */

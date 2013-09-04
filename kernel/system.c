@@ -21,15 +21,16 @@ String taskName[] = {
 
 
 static void shell(void){
-    //while(1);
-    run(FS_PID,READ,0,0,"shell");
+    ObjectDesc o = run(FS_PID,OPEN,0,0,"shell");
+    run(o,READ,0,0,0);
+    //run(FS_PID,READ,0,0,"shell");
 }
 
 int system_main(void){
     int i = 0;
     id_t id = 0;
 hel:
-    id = run(MM_PID,CLONE,0,0,0);
+    id = fork();
     if(ERROR == id){
         printk("Fork Failt\n");
     }else if(0 == id){
@@ -41,7 +42,7 @@ hel:
         if(i < sizeof(tasks) / sizeof(void*)) goto hel;
         else shell();
     }
-    get();
+    dorun();
     while(1);
     return OK;
 }

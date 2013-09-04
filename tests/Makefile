@@ -1,6 +1,6 @@
 # Makefile for all
 #
-.PHONY:all
+.PHONY:all clean
 
 
 # Directories
@@ -33,6 +33,8 @@ so = $(ssources:.s=.o)
 So = $(Ssources:.S=.o)
 
 OBJS = $(So) $(so) $(co)
+
+CLEAN_FILES= shell test date
 
 # What to make.
 #

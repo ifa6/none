@@ -10,6 +10,7 @@ extern pid_t fork(void);
 
 #define free(p) free_s(p,0)
 
+extern pid_t fork(void);
 extern void *malloc(unsigned int);
 extern void free_s(void *,int );
 

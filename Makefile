@@ -35,7 +35,7 @@ clean:
 		$(MAKE) -C $$dir r=$r clean || exit 1;\
 	done
 	@-rm -f lib/*
-	@-rm -f kernel/none
+	@-rm -f *.out *.src tags *.swap
 
 debug:
 	@objdump -d $r/kernel/none > t.src

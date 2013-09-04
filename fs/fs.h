@@ -6,6 +6,7 @@
 #include    <stdio.h>
 #include    <object.h>
 #include    "minix.h"
+#include    "file.h"
 
 
 

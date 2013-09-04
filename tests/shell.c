@@ -1,4 +1,5 @@
 #include    <stdio.h>
+#include    <object.h>
 #include    <sys/inter.h>
 
 #define balloc()  _push(NULL,0)
@@ -14,7 +15,9 @@ int main(void){
         if(ch == '\n'){
             *msg = '\0';
             if(msg != buff){
-                if(OK == run(FS_PID,READ,0,0,buff)){
+                ObjectDesc o = run(FS_PID,OPEN,0,0,buff);
+                if(o != ERROR){
+                    run(o,READ,0,0,0);
                     run(MM_PID,15,0,0,0);
                 }
             }

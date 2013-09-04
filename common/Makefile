@@ -6,6 +6,8 @@ sources = malloc.c\
 		 vsprintf.c\
 		 printf.c\
 		 getchar.c\
+		 dorun.c\
+		 fork.c\
 		 string.c
 
 $l/libc.a:$(sources:.c=.o)

@@ -44,7 +44,7 @@ static Registers *pick_task(Registers *reg){
         printk("\eb%s \er-> \eb%s\ew\n",oo->name,self()->name);
     }
 #endif
-    tss->esp0 = (unsigned long)((union _task*)leading)->stackp;
+    tss->esp0 = (unsigned long)(STACK(leading)->stackp);
     cr3 = leading->core;
     return leading->registers;
 }
@@ -114,6 +114,14 @@ static void _wakeup(Object *obj){
     ready(TASK(obj));
 }
 
+int dohook(unsigned long fn,Methon hook){
+    if(fn < NR_METHON){
+        self()->fns[fn] = hook;
+        return OK;
+    }
+    return ERROR;
+}
+
 int dofn(ObjectDesc o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object*obj = toObject(o);
     if(isNullp(obj)) return ERROR;
@@ -160,8 +168,7 @@ int doret(Object *obj,unsigned long talk){
     return OK;
 }
 
-
-int doget(void){
+Object *doget(void){
     if(!isNullp(self()->ilink)){
         iLink   *in = self()->ilink;
 #define eval(v,x)   ((v)->x = (v)->ilink->x)
@@ -175,17 +182,17 @@ int doget(void){
 #undef  getInt
         self()->ilink = in->inext;
         free(in);
-        return OK;
+        return self();
     }else if(!isNullp(self()->wlink)){
         self()->admit = self()->wlink;
         self()->wlink = self()->wlink->wnext;
     }else{      /*! 如果当前没有请求,则进入睡眠,等待请求将其唤醒 !*/
         _sleep(self());     /*! 从这里醒来,说明请求已经装填,可以处理了 !*/
-        return OK;
+        return self();
     }
     _wakeup(self()->admit); /*! 唤醒等待处理的对象来装填请求 !*/
     _sleep(self()); /*! 等待对象的装填完成来唤醒 !*/
-    return OK;
+    return self();
 }
 
 static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int (*entry)()){
@@ -196,7 +203,7 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
     task->count = 20;
     task->ucount = 20;
     task->core = getcr3();
-    task->registers = (void *)(STACK(task)->stackp - sizeof(Registers));
+    task->registers = (void*)(STACK(task)->stackp) - sizeof(Registers);
     strcpy(OBJECT(task)->name,name);
     memcpy(task->registers,&(Registers){
             .gs = data,

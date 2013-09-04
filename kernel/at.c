@@ -179,9 +179,6 @@ static void at_init(void){
 
 int at_main(void){
     at_init();
-    while(1){
-        get();
-        dorun(self());
-    }
+    dorun();
     return 0;
 }
