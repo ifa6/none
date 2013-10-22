@@ -163,10 +163,12 @@ idt:
     .word   256*8-1
     .long   IDT_TABLE
 gdt_start:
-CreateSection(0xAA,0,0XBB);
-CreateSection(0x0,0xFFFFF,CODE_READ|CODE_D|CODE_G)
-CreateSection(0x0,0xFFFFF,DATA_WRITE|DATA_G|R0|DATA_B);
-CreateSection(0x0,0xFFFFF,CODE_READ|CODE_D|CODE_G|R3);
-CreateSection(0x0,0xFFFFF,DATA_WRITE|DATA_G|R3|DATA_B);
+CreateSection(0x0,0xFFFFF,DATA_WRITE|R0|DATA_G);
+CreateSection(0x0,0xFFFFF,CODE_READ |R0|CODE_G|CODE_D);
+CreateSection(0x0,0xFFFFF,DATA_WRITE|R0|DATA_G|DATA_B);
+CreateSection(0x0,0xFFFFF,CODE_READ |R3|CODE_G|CODE_D);
+CreateSection(0x0,0xFFFFF,DATA_WRITE|R3|DATA_G|DATA_B);
+CreateSection(0x0,0xFFFFF,CODE_READ |R0|CODE_G);
+CreateSection(0x0,0xFFFFF,DATA_WRITE|R0|DATA_G);
 CreateSection(TSS_TABLE,0x100,TSS|R3);
 gdt_end:

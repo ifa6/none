@@ -8,6 +8,7 @@ sources = malloc.c\
 		 getchar.c\
 		 dorun.c\
 		 fork.c\
+		 open.c\
 		 string.c
 
 $l/libc.a:$(sources:.c=.o)

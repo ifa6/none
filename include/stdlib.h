@@ -1,6 +1,6 @@
 #ifndef __STDLIB_H__
 #define __STDLIB_H__
-//#include    <types.h>
+#include    <types.h>
 
 /*
 //extern void exit(int);
@@ -11,6 +11,7 @@ extern pid_t fork(void);
 #define free(p) free_s(p,0)
 
 extern pid_t fork(void);
+extern int   open(String,int);
 extern void *malloc(unsigned int);
 extern void free_s(void *,int );
 

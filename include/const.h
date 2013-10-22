@@ -19,9 +19,11 @@
 #define KERNEL_DATA     0x10
 #define USER_CODE       0x1b    /* 用户空间代码段描述符 */
 #define USER_DATA       0x23    /* 用户空间数据段描述符 */
+#define KERNEL16_CODE   0x28    /* 16位代码段 !*/
+#define KERNEL16_DATA   0x30    /*! 16位数据段,用来使用VESA ~*/
+#define TR_DESC         0x38    /*      */
 #define KERNEL_STACK    0x7ff000    /*! 内核栈虚拟地址 !*/
 
-#define TR_DESC         0x28    /*      */
 
 #define     MMAP_BASE       0x100000    /* 内存空闲位图开始物理地址 */
 #define     MMAP_END        0x200000    /* 空闲内存位图结束物理地址 */

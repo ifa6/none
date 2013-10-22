@@ -5,9 +5,10 @@ MinixSuperBlock *super;
 MinixInode root_inode;
 
 /*! 测试加载ELF文件 !*/
+static char buff[BLOCK_SIZE];
 
+#if 1
 static void load_elf(Object *this) {
-    static char buff[BLOCK_SIZE];
     static char buffer[BLOCK_SIZE];
     static Elf32_Ehdr *ehdr = (void *)buff;
     static Elf32_Phdr *phdr;
@@ -25,15 +26,36 @@ static void load_elf(Object *this) {
     fn();
     run(MM_PID,CLOSE,0,0,0);
 }
+#endif
 
 static void fs_read(Object *this){
-    load_elf(this);
+    File    *file = _FILE(this);
+    void *buffer = this->buffer;
+    count_t count = this->count;
+    zone_t  zone = (file->offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    off_t   offset = file->offset;
+    if(offset + count > file->inode.i_size){
+        count = file->inode.i_size - offset;
+    }
+    if(ERROR == zone_rw(&(file->inode),READ,zone,buff)){
+        ret(this->admit,ERROR);
+    }else{
+        file->offset += count;
+        memcpy(buffer,buff,count);
+        ret(this->admit,count);
+    }
 }
 
 
+/*! !*/
 static void fs_write(Object *this){
     printk("%s is unhandle\n",__func__);
     ret(this->admit,OK);
+}
+
+static void fs_close(Object *this){
+    printk("\eRFIXME\ew : FS colse\n");
+    run(MM_PID,CLOSE,0,0,0);
 }
 
 static void fs_open(Object *this){
@@ -45,9 +67,11 @@ static void fs_open(Object *this){
             TASK(file)->father = TASK(this->admit);
             memcpy(self()->name,this->buffer,strlen(this->buffer) + 1);
             memcpy(&(file->inode),inode,sizeof(MinixInode));
+            file->offset = 0;
             hook(READ,fs_read);
             hook(WRITE,fs_write);
-            //hook(CLOSE,close);
+            hook(RUN,load_elf);
+            hook(CLOSE,fs_close);
             dorun();
         }else if(id > 0){
             ret(this->admit,id);

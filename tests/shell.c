@@ -1,12 +1,11 @@
 #include    <stdio.h>
+#include    <stdlib.h>
 #include    <object.h>
 #include    <sys/inter.h>
 
-#define balloc()  _push(NULL,0)
 
+static char buff[512];
 int main(void){
-    char *buff;
-    buff = balloc();
     char *msg = buff;
     char ch;
     printf("\ey$ \ew");
@@ -15,9 +14,9 @@ int main(void){
         if(ch == '\n'){
             *msg = '\0';
             if(msg != buff){
-                ObjectDesc o = run(FS_PID,OPEN,0,0,buff);
+                ObjectDesc o = open(buff,0);
                 if(o != ERROR){
-                    run(o,READ,0,0,0);
+                    run(o,RUN,0,0,0);
                     run(MM_PID,15,0,0,0);
                 }
             }

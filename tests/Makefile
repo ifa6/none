@@ -10,12 +10,12 @@ l = $r/lib
 
 
 #kernel entry
-entry = 0xC00000
+entry = 0xc00000
 #entry = 0x10000
 shell_entry = 0xc00000
 #shell_entry = 0x1000
 
-all: shell test date
+all: shell test date ascii
 
 # Programs, flags, etc.
 
@@ -47,4 +47,7 @@ test: test.o $(LIBS)
 	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
 
 date: date.o $(LIBS)
+	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+
+ascii: ascii.o $(LIBS)
 	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@

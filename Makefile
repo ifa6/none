@@ -18,7 +18,7 @@ COMMONDIR = common
 KERNELDIR = kernel
 TESTSDIR = tests/
 MMDIR = mm
-EXECS = shell test date
+EXECS = shell test date ascii
 SUBDIRS = $(COMMONDIR) $(FSDIR) $(MMDIR) $(KERNELDIR)\
 		  $(TESTSDIR) 
 

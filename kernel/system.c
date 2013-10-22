@@ -22,8 +22,7 @@ String taskName[] = {
 
 static void shell(void){
     ObjectDesc o = run(FS_PID,OPEN,0,0,"shell");
-    run(o,READ,0,0,0);
-    //run(FS_PID,READ,0,0,"shell");
+    run(o,RUN,0,0,0);
 }
 
 int system_main(void){
