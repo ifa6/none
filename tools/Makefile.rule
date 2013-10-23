@@ -1,0 +1,38 @@
+#
+#
+#	项目编译规则文件，其他目录引用该文件的规则来编译。这种用法来自BlueLab。
+#	一个把消息机制用得非常烂的蓝牙开发平台。
+.PHONY: clean
+i = $r/include
+l = $r/lib
+
+vpath %.h $r/include
+vpath %.a $r/lib
+
+AS = as
+AR = ar
+CC = gcc
+CXX = g++
+LD = ld
+
+ASFLAGS = --32
+CFLAGS += $(addprefix -I,$i) -m32 -std=gnu99 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
+LDFLAGS += $(addprefix -L,$l) -m elf_i386 -nostdlib
+
+# 根目录项检测,如果不定又该项,很可能误伤系统
+ifndef r
+	$(error 没有定义项目的根目录,不能进行编译!)
+endif
+
+%.o:%.c
+	@$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+
+# 调用了C预处理的汇编文件 
+%.o:%.S	
+	@$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+
+%.o:%.s
+	@$(AS) $< -o $@ $(ASFLAGS) -c
+
+%.a:$(source:.c=.o)
+	@$(AR) -r $@ $^

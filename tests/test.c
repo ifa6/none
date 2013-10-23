@@ -4,11 +4,6 @@
 #include    <sys/inter.h>
 #include    "bmp.h"
 
-static const char _bmp[] = {
-#include    "none.bmp.h"
-};
-
-
 #define VGABASE ((void *)0x0)
 #define VGALIMIT    0x10000
 
@@ -31,7 +26,10 @@ static PMInfoBlock * getPMInfo(void);
 static void installGDT(unsigned short nr,unsigned long base,unsigned long limit,char g,char d,char p,char dpl,char s,char type);
 static unsigned long _int10(unsigned long ax,unsigned long bx,unsigned long cx,unsigned long dx,unsigned long si,unsigned long di);
 static void drawPixel(int mode,int x,int y,unsigned short color);
-static void setPaletts(BMPRGB *color);
+static void drawLine(int x1,int y1,int x2,int y2,unsigned short color);
+static void drawX(int x1,int x2,int y1,int y2,int color);
+static void drawCircle(int xc, int yc, int r, int fill, long c) ;
+//static void setPaletts(BMPRGB *color);
 
 #define M640x400x8      0x0100
 #define M640x480x8      0x0101
@@ -96,20 +94,65 @@ int main(void){
 #endif
     memcpy((void*)0x1000,(void*)_int10,0x100);
     selectMode(M640x480x8);
-#if 1
-    BMPPicture *bmp = (void*)_bmp;
-    const char *bmpData = _bmp + bmp->header.bfOffset;
-    int height = bmp->info.biHeight;
-    int width = (bmp->info.biWidth);
-    setPaletts(bmp->rgb);
-    for(int y = height - 1;y;y--){
-        for(int x = 0;x < width;x++){
-            drawPixel(0,x + 150,height - y + 75,bmpData[y * width + x]);
-        }
-    }
-#endif
+    drawX(0,640,0,480,33);
+    drawX(40,600,40,440,60);
+    drawX(40,600,40,60,150);
+    drawX(60,580,60,420,200);
+    drawCircle(320,240,140,1,170);
+    drawX(0,640,460,480,43);
+    drawCircle(20,470,10,1,40);
+    drawX(600,640,460,480,60);
     while(1);
     return 0;
+}
+
+static void drawX(int x1,int x2,int y1,int y2,int color){
+    for(int i = y1;i < y2;i++){
+        drawLine(x1,i,x2,i,color);
+    }
+}
+
+static inline void drawCircle8(int xc, int yc, int x, int y,long c) {
+    // 参数 c 为颜色值
+    drawPixel(0, xc + x, yc + y, c);
+    drawPixel(0, xc - x, yc + y, c);
+    drawPixel(0, xc + x, yc - y, c);
+    drawPixel(0, xc - x, yc - y, c);
+    drawPixel(0, xc + y, yc + x, c);
+    drawPixel(0, xc - y, yc + x, c);
+    drawPixel(0, xc + y, yc - x, c);
+    drawPixel(0, xc - y, yc - x, c);
+}
+ 
+//Bresenham's circle algorithm
+static void drawCircle(int xc, int yc, int r, int fill, long c) {
+    int x = 0, y = r, yi, d;
+    d = 3 - 2 * r;
+
+    if (fill) {
+        while (x <= y) {
+            for (yi = x; yi <= y; yi ++)
+                drawCircle8(xc, yc, x, yi, c);
+            if (d < 0) {
+                d = d + 4 * x + 6;
+            } else {
+                d = d + 4 * (x - y) + 10;
+                y --;
+            }
+            x++;
+        }
+    } else {
+        while (x <= y) {
+            drawCircle8(xc, yc, x, y, c);
+            if (d < 0) {
+                d = d + 4 * x + 6;
+            } else {
+                d = d + 4 * (x - y) + 10;
+                y --;
+            }
+            x ++;
+        }
+    }
 }
 
 static void drawPixel(int mode,int x,int y,unsigned short color){
@@ -121,6 +164,47 @@ static void drawPixel(int mode,int x,int y,unsigned short color){
         selectPlane(page << 2);
     }
     ((unsigned char *)0xa0000)[pos & 0xffff] = color;
+}
+
+#define SWAP(a,b) { a ^= b; b ^= a; a ^= b; }
+#define ABS(x)  ((x) >= 0 ? (x) : -(x))
+static void drawLine(int x1,int y1,int x2,int y2,unsigned short color){
+    int dx = ABS(x2 - x1);
+    int dy = ABS(y2 - y1);
+    int yx = 0;
+
+    if( dx < dy){
+        SWAP(x1,y1);
+        SWAP(x2,y2);
+        SWAP(dx,dy);
+        yx = 1;
+    }
+    int ix = (x2 - x1) > 0 ? 1 : -1;
+    int iy = (y2 - y1) > 0 ? 1 : -1;
+    int n2dy = dy << 1;
+    int n2dydx = (dy - dx) << 1;
+    int d = (dy << 1) - dx;
+    if(yx){
+        for(int cx = x1,cy = y1;cx != x2;cx += ix){
+            if(d < 0){
+                d += n2dy;
+            }else{
+                cy += iy;
+                d += n2dydx;
+            }
+            drawPixel(0,cy,cx,color);
+        }
+    }else{
+        for(int cx = x1,cy = y1;cx != x2;cx += ix){
+            if(d < 0){
+                d += n2dy;
+            }else{
+                cy += iy;
+                d += n2dydx;
+            }
+            drawPixel(0,cx,cy,color);
+        }
+    }
 }
 
 
@@ -189,6 +273,7 @@ static unsigned long _int10(unsigned long ax,unsigned long bx,unsigned long cx,u
     return ax;
 }
 
+#if 0
 static void setPaletts(BMPRGB *color){
     outb(0xffff,0x3c6);
     for(int i = 0;i < 256;i++){
@@ -198,3 +283,4 @@ static void setPaletts(BMPRGB *color){
         outb(color[i].blue >> 2,0x3c9);
     }
 }
+#endif

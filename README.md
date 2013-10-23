@@ -53,3 +53,9 @@ VIM能够顺利跑在None上
 - 显示了一幅BMP图片
 - 这只是一个实验，代码不会是这个样子
 - 晚安
+
+##2013年10月23日星期三 22:47:47
+- 网上看了一个画圆算法，画线算法；画了一个界面
+- 用早上上传的automake重新组织了下代码的编译方式，好像编译慢了
+- 效果如下:
+![画圆，画线效果图](http://a3.qpic.cn/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/FGXR4iDluGpzpFCoARBweZeKONloyn1EMAX4*bhPiWs!/c/dA8ru8TuEgAA&bo=ggIwAoICMAIDACU!&rf=0-18)

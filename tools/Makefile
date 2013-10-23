@@ -1,46 +1,21 @@
 #
-#
-#	项目编译规则文件，其他目录引用该文件的规则来编译。这种用法来自BlueLab。
-#	一个把消息机制用得非常烂的蓝牙开发平台。
-.PHONY: clean
-i = $r/include
-l = $r/lib
+#	样板Makefile文件,集体项目根据实际情况进行简单修改即可
+#	Author : lzy
+.PHONY:all clean
+#当前目录
+LOCAL_PATH=$(notdir $(shell pwd))
+CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
+SFILES=$(shell find ./ -maxdepth 1 -name "*.S")
+sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
 
-vpath %.h $r/include/
+# .o文件集
+OBJS=$(CFILES:%.c=%.o) $(SFILES:%.S=%.o) $(sFILES:%.s=%.o)
+obj=$r/lib/lib$(LOCAL_PATH).a
+all:$(obj)
 
-AS = as
-AR = ar
-CC = gcc
-LD = ld
-
-ASFLAGS = --32
-CFLAGS = -I $i -m32 -std=gnu99 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
-LDFLAGS = -m elf_i386 -L $l -nostdlib
-
-%.a:$(source:.c=.o)
-	@$(AR) -r $@ $^
-
-# 调用了C预处理的汇编文件 
-%.o:%.S	
-	@$(CC) $< -o $@ $(CFLAGS) -c
-
-#  很好用但是不标准的C编译，Cygwin下的GCC编译通不过。Fuck！
-%.o:%.c
-	@$(CC) $< -o $@ $(CFLAGS) -c
-
-%.o:%.s
-	@$(AS) $< -o $@ $(ASFLAGS) -c
-
-%.d:%.c
-	@$(CC) $< $(CFLAGS) -M -o $@.$$$$;\
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
-
-sinclude $(sources:.c=.d)
-
+$(obj):$(OBJS)
+	ar -r $@ $^ 
 clean:
-	@-rm *.o -f
-	@-rm *.d -f
-	@for file in $(CLEAN_FILES);do\
-		rm -f $$file;\
-	done
+	@-rm -f *.[od]
+include $r/tools/Makefile.rule
+-include $(OBJS:%.o=%.d)

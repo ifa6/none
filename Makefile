@@ -1,7 +1,7 @@
 # Makefile for install.
 # Install ask root.
 #
-.PHONY:go all clean install reinstall
+.PHONY:go all clean 
 
 # Directories.
 # root directories
@@ -14,33 +14,34 @@ boot = mnt/boot
 hw = mnt/hw
 
 FSDIR = fs
-COMMONDIR = common
+COMMONDIR = c
 KERNELDIR = kernel
 TESTSDIR = tests/
 MMDIR = mm
 EXECS = shell test date ascii
-SUBDIRS = $(COMMONDIR) $(FSDIR) $(MMDIR) $(KERNELDIR)\
-		  $(TESTSDIR) 
+SUBDIRS = \
+		  $(COMMONDIR)\
+		  $(FSDIR)\
+		  $(MMDIR)\
+		  $(KERNELDIR)\
+		  $(TESTSDIR) \
 
 MAKE = make
 RM = rm
 
-all:
-	@for dir in  $(SUBDIRS);do\
-		$(MAKE) -C $$dir  r=$r || exit 1;\
+all clean:
+	if [ "$@" == "clean" ];then\
+		rm -f lib/*;\
+		rm -f *.out *.src tags *.swap;\
+	fi
+	for dir in  $(SUBDIRS);do\
+		$(MAKE) -C $$dir r=$r $@ || exit 1;\
 	done
-
-clean:
-	@for dir in  $(SUBDIRS);do\
-		$(MAKE) -C $$dir r=$r clean || exit 1;\
-	done
-	@-rm -f lib/*
-	@-rm -f *.out *.src tags *.swap
 
 debug:
 	@objdump -d $r/kernel/none > t.src
 
-tar: 
+tar: $s
 	@mount -o loop -t ext2 $d $(boot)
 	@mount $h $(hw)
 	@chmod a+w $(hw) $(boot)

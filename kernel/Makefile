@@ -1,58 +1,30 @@
-# Makefile for all
 #
-.PHONY:all
+#	样板Makefile文件,集体项目根据实际情况进行简单修改即可
+#	Author : lzy
+.PHONY:all clean
+#当前目录
+LOCAL_PATH=$(notdir $(shell pwd))
+CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
+#setup必须在前面编译,这个是grub规定的
+SFILES=$(shell find ./ -maxdepth 1 -name "*.S" | sort)
+sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
 
+# LIBS 
+LS = c fs mm
 
-# Directories
-i = $r/include
-s = none
-l = $r/lib
-
-all:$s
-
-#kernel entry
 entry = 0x305000
-
-# Programs, flags, etc.
-
-sources = main.c\
-		  clock.c\
-		  at.c\
-		  console.c\
-		  mm.c\
-		  object.c\
-		  panic.c\
-		  printk.c\
-		  system.c\
-		  task.c\
-		  trap.c\
-		  keyboard.c\
-		  buffer.c\
-
-ssources = x86.s
-
-Ssources = setup.S
-
-LIBS = $l/libc.a $l/libfs.a $l/libmm.a
-
-
-include	$r/tools/Makefile
-
-co = $(sources:.c=.o)
-
-so = $(ssources:.s=.o)
-
-So = $(Ssources:.S=.o)
-
-OBJS = $(So) $(so) $(co)
-
-CLEAN_FILES=none
-
-LDLIB = -lfs -lmm -lc
-
-
-# What to make.
+# .o文件集
 #
+OBJS=$(SFILES:%.S=%.o) $(CFILES:%.c=%.o) $(sFILES:%.s=%.o)
+LIBS += $(addprefix lib,$(addsuffix .a,$(LS)))
+LDFLAGS += $(addprefix -l,$(LS))
+obj = none
+all:$(obj)
 
-$s:$(OBJS) $(LIBS) 
-	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) $(LDLIB) -o $@
+$(obj):$(OBJS) $(LIBS)
+	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) -o $@
+
+clean:
+	@-rm -f *.[od] none
+include $r/tools/Makefile.rule
+-include $(OBJS:%.o=%.d)

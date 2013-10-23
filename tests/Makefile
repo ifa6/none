@@ -1,53 +1,38 @@
-# Makefile for all
 #
+#	样板Makefile文件,集体项目根据实际情况进行简单修改即可
+#	Author : lzy
 .PHONY:all clean
+#当前目录
+LOCAL_PATH=$(notdir $(shell pwd))
+CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
+SFILES=$(shell find ./ -maxdepth 1 -name "*.S")
+sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
 
+# LIBS 
+LS = c
 
-# Directories
-i = $r/include
-s = shell
-l = $r/lib
-
-
-#kernel entry
 entry = 0xc00000
-#entry = 0x10000
-shell_entry = 0xc00000
-#shell_entry = 0x1000
-
-all: shell test date ascii
-
-# Programs, flags, etc.
-
-sources = main.c\
-
-LIBS = $l/libc.a
-
-
-include	$r/tools/Makefile
-
-co = $(sources:.c=.o)
-
-so = $(ssources:.s=.o)
-
-So = $(Ssources:.S=.o)
-
-OBJS = $(So) $(so) $(co)
-
-CLEAN_FILES= shell test date
-
-# What to make.
+# .o文件集
 #
-#
+OBJS=$(CFILES:%.c=%.o) $(SFILES:%.S=%.o) $(sFILES:%.s=%.o)
+LIBS += $(addprefix lib,$(addsuffix .a,$(LS)))
+LDFLAGS += $(addprefix -l,$(LS)) -e main -Ttext $(entry)
+objs= shell test ascii date
+all:$(obj) $(LIBS)
+
+clean:
+	@-rm -f *.[od] none
+include $r/tools/Makefile.rule
+-include $(OBJS:%.o=%.d)
 
 shell: shell.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(shell_entry) -o $@
+	$(LD) $< $(LDFLAGS) -o $@
 
 test: test.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+	$(LD) $< $(LDFLAGS) -o $@
 
 date: date.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+	$(LD) $< $(LDFLAGS) -o $@
 
 ascii: ascii.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -e main -lc -Ttext $(entry) -o $@
+	$(LD) $< $(LDFLAGS) -o $@
