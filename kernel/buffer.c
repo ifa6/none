@@ -46,7 +46,7 @@ void *dobuffer(int fn,void *s,size_t len){
     len &= 0xfff;
     if(fn == WRITE){
         buff = get_buffer();
-        if(!isNullp(buff) && !isNullp(s)){
+        if(!isNullp(buff) && !isNullp(s) && len){
             memcpy(buff,s,len);
         }
     }else if(fn == READ){

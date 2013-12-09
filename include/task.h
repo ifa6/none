@@ -43,11 +43,8 @@ struct _task{
 };
 
 struct _stack{
-    union{
-        Task task;
-        char body[MAX_BODY];            /*! 留给子类使用 !*/
-    };
-    char stack[PAGE_BYTE - MAX_BODY];   /*! 内核栈 ~*/
+    Task task;
+    char stack[PAGE_BYTE - sizeof(Task)];   /*! 内核栈 ~*/
     char stackp[0];                     /*! 内核栈顶 !*/
 };
 

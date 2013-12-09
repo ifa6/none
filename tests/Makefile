@@ -17,22 +17,40 @@ entry = 0xc00000
 OBJS=$(CFILES:%.c=%.o) $(SFILES:%.S=%.o) $(sFILES:%.s=%.o)
 LIBS += $(addprefix lib,$(addsuffix .a,$(LS)))
 LDFLAGS += $(addprefix -l,$(LS)) -e main -Ttext $(entry)
-objs= shell test ascii date
-all:$(obj) $(LIBS)
+objs = $(basename $(OBJS))
+#OBJS = $(addsuffix .o,$(objs))
+all:$(objs) $(LIBS)
 
 clean:
-	@-rm -f *.[od] none
+	@-rm -f *.[od] $(objs)
 include $r/tools/Makefile.rule
 -include $(OBJS:%.o=%.d)
 
-shell: shell.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -o $@
+$(objs): $(OBJS) $(LIBS)
+	for exe in $(objs);do\
+		$(LD) $$exe.o $(LDFLAGS) -o $$exe||exit 1;\
+	done
 
-test: test.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -o $@
-
-date: date.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -o $@
-
-ascii: ascii.o $(LIBS)
-	$(LD) $< $(LDFLAGS) -o $@
+#shell: shell.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#test: test.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#date: date.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#ascii: ascii.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#rascal: rascal.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#	
+#ls: ls.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#cat: cat.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@
+#
+#vim: vim.o $(LIBS)
+#	$(LD) $< $(LDFLAGS) -o $@

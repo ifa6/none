@@ -1,6 +1,15 @@
 #include    "fs.h"
 #include    "../kernel/kernel.h"
 #include    <elf.h>
+
+//#define LOG
+
+#ifdef  LOG
+#define fs_log(fmt,...) printk("[FS  ] : "fmt,##__VA_ARGS__)
+#else
+#define fs_log(fmt,...)
+#endif
+
 MinixSuperBlock *super;
 MinixInode root_inode;
 
@@ -37,6 +46,7 @@ static void fs_read(Object *this){
     if(offset + count > file->inode.i_size){
         count = file->inode.i_size - offset;
     }
+    fs_log("read %d bytes offset %d for %s\n",count,zone,this->name);
     if(ERROR == zone_rw(&(file->inode),READ,zone,buff)){
         ret(this->admit,ERROR);
     }else{
@@ -49,8 +59,16 @@ static void fs_read(Object *this){
 
 /*! !*/
 static void fs_write(Object *this){
-    printk("%s is unhandle\n",__func__);
-    ret(this->admit,OK);
+    File *file = _FILE(this);
+    void *buffer = this->buffer;
+    count_t count = this->count;
+    zone_t  zone = (file->offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    memcpy(buff,buffer,count);
+    if(ERROR == zone_rw(&(file->inode),WRITE,zone,buff)){
+        ret(this->admit,ERROR);
+    }
+    file->offset += count;
+    ret(this->admit,count);
 }
 
 static void fs_close(Object *this){
@@ -60,6 +78,7 @@ static void fs_close(Object *this){
 
 static void fs_open(Object *this){
     MinixInode *inode = eat_path(this->buffer);
+    fs_log("|OPEN| inode %p\n",inode);
     if(!isNullp(inode)){
         id_t id = fork();
         if(0 == id){

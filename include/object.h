@@ -5,7 +5,6 @@
 #define OBJECT_NAME_LEN     0x10
 #define NR_METHON           0x10
 #define NR_OBJECT           0x300       /*! 当前版本所允许的最大对象数量 !*/
-#define MAX_BODY            0x400       /*! OBJECT 结构体最大允许值 !*/
 
 typedef long  ObjectDesc;         /*! 对象描述符 ,(文件描述符对象版)!*/
 typedef struct _object Object;      /*! 对象,none中的一切,当然,现实中很匮乏 ~*/

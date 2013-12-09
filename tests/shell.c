@@ -18,6 +18,8 @@ int main(void){
                 if(o != ERROR){
                     run(o,RUN,0,0,0);
                     run(MM_PID,15,0,0,0);
+                }else{
+                    printf("%s : File not found.\n",msg);
                 }
             }
             msg = buff;

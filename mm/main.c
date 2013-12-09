@@ -2,6 +2,9 @@
 
 /*! BUG !*/
 #define CMEM  0xC00000   //CONST_MEM
+
+#define mm_error(fmt,...)   printk("\eg[MM   ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
+
 extern unsigned char *mmap; 
 
 typedef union _pageItem{
@@ -20,13 +23,20 @@ typedef union _pageItem{
 }PageItem;
 
 #define clrWrite(x) ((x)->write = 0)
-#define isWrite(x) ((x)->write = 1)
+#define isWrite(x) (1 == (x)->write)
 #define toPointer(x)    ((x) & (~0xfff))
-#define isPresent(x)    ((x)->present == 1)
+#define isPresent(x)    (1 == (x)->present)
 #define clrPresent(x) ((x)->present = 0)
 /* copy page memory from f to t (4kb) */
 #define copy_page(t,f) \
     __asm__("cld;rep movsl;"::"S"(f),"D"(t),"c"(1024));
+
+#if 0
+#define get_free_page() ({\
+        void* _v = get_free_page();\
+        if(_v == (void*)0x00ffc000) printk("%d\n",__LINE__);\
+        _v;})
+#endif
 
 static PageItem *copy_items(PageItem *items,int start,int end){
     PageItem *nitm = NULL;
@@ -72,12 +82,17 @@ static void clone(Object *this){
 }
 
 #if 1
-static void delete_table(PageItem *table){
+static int delete_table(PageItem *table){
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
-            free_page(toPointer(table[i].pointer));
+            //printk("[MM   ] : |LOG    | i = %04x table = %08x\n",i,table[i].pointer);
+            if(ERROR == free_page(table[i].pointer)){
+                mm_error("table[%d] = %08x",i,table[i].pointer);
+                return ERROR;
+            }
         }
     }
+    return OK;
 }
 #endif
 
@@ -86,11 +101,18 @@ static void delete(Object *this){
     PageItem *nsp = (PageItem *)t->core;
     for(int i = CMEM >>22;i < 1024;i++){
         if(isPresent(nsp + i)){
-            delete_table((PageItem *)(nsp[i].pointer));
-            free_page(toPointer(nsp[i].pointer));
+            //printk("[MM   ] : |LOG    | i = %04x\n",i);
+            //printk("[MM   ] : |LOG    | pointer = %08x\n",nsp[i].pointer);
+            if((ERROR == delete_table((PageItem *)(toPointer(nsp[i].pointer)))) || 
+                    (ERROR == free_page(nsp[i].pointer))){
+                mm_error("  dir[%d] = %08x",i,nsp[i].pointer);
+                panic("free page fail");
+            }
         }
     }
-    free_page((Pointer)(nsp));
+    if(ERROR == free_page((Pointer)(nsp))){
+        panic("free page fail");
+    }
     /*! object_table[this->admit->id] = NULL; !*/
     ret(OBJECT(t->father),this->admit->id);
     /*! free_page((Pointer)t); !*/
@@ -112,11 +134,11 @@ static int put_page(PageItem *dirs,void *va){
     PageItem *table = NULL;
     void *page = NULL;
     if(!isPresent(dirs + DIR_INDEX((Pointer)va))){
-        table = (void*)get_free_page();
+        table = get_free_page();
         if(isNullp(table)) return ERROR;
         put_item(dirs,table,DIR_INDEX((Pointer)va),7);
     }
-    page = (void*)get_free_page();
+    page = get_free_page();
     if(isNullp(page)) return ERROR;
     table = (void *)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
     put_item(table,page,TABLE_INDEX((Pointer)va),7);

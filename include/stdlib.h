@@ -12,6 +12,8 @@ extern pid_t fork(void);
 
 extern pid_t fork(void);
 extern int   open(String,int);
+extern int   read(int,void*,int);
+extern int   write(int,void*,int);
 extern void *malloc(unsigned int);
 extern void free_s(void *,int );
 

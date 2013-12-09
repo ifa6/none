@@ -39,4 +39,3 @@ boot: floppy
 
 # disable the mouse
 mouse: enabled=0
-

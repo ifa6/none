@@ -18,7 +18,7 @@ COMMONDIR = c
 KERNELDIR = kernel
 TESTSDIR = tests/
 MMDIR = mm
-EXECS = shell test date ascii
+EXECS = $(basename $(shell ls tests/*.c)) #shell test date ascii rascal ls cat vim
 SUBDIRS = \
 		  $(COMMONDIR)\
 		  $(FSDIR)\
@@ -30,11 +30,11 @@ MAKE = make
 RM = rm
 
 all clean:
-	if [ "$@" == "clean" ];then\
+	@if [ "$@" == "clean" ];then\
 		rm -f lib/*;\
 		rm -f *.out *.src tags *.swap;\
 	fi
-	for dir in  $(SUBDIRS);do\
+	@for dir in  $(SUBDIRS);do\
 		$(MAKE) -C $$dir r=$r $@ || exit 1;\
 	done
 
@@ -45,9 +45,7 @@ tar: $s
 	@mount -o loop -t ext2 $d $(boot)
 	@mount $h $(hw)
 	@chmod a+w $(hw) $(boot)
-	@(cd $(TESTSDIR);for exec in $(EXECS);do\
-		cp $$exec ../$(hw);\
-	done;)
+	@cp $(EXECS) $(hw)
 	@sleep 1
 
 stop:

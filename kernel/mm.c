@@ -6,6 +6,8 @@
 #define clear_page(p)   \
     asm("rep stosl\n\t\t"::"a"(0),"c"(0x1000 >> 2),"D"(p));
 
+#define mm_error(fmt,...)   printk("\eg[KMEM ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
+#define mm_log(fmt,...)   printk("[KMEM ] : |LOG     | "fmt"\n",##__VA_ARGS__)
 
 Pointer MEMORY_END  =   0;
 Pointer MEMORY_MAP_END  =   0;
@@ -27,10 +29,17 @@ void *get_free_page(void){
 }
 
 /* free a page in space */
-void free_page(Pointer page){
-    if(page < CONST_MEM) panic("Free Kernel Memory!");
-    if(mmap[page >>12] == 0) panic("Free free Memory!");
-    mmap[page >>12] --;
+int free_page(Pointer page){
+    if(page < CONST_MEM) {
+        mm_error("address %08x is kernel memory",page);
+        return ERROR;
+    }
+    if(mmap[page >> 12] == 0){
+        mm_error("address %08x is free memory",page);
+        return ERROR;
+    }
+    mmap[page >> 12]--;
+    return OK;
 }
 
 

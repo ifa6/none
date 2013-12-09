@@ -74,7 +74,9 @@ static inline char *_toNumber(char *str,long long value,_bool sign,
     if(DECIMAL != base){
         sign = _false;
         style &= ~STYLE_SIGN;
-    } else style &= ~STYLE_SPECIAL;
+    } else {
+        style &= ~STYLE_SPECIAL;
+    }
 
     if(style & STYLE_SPECIAL){
         if(HEX == base) size -= 2;
@@ -162,7 +164,7 @@ repeat:
                      continue;
                 case 'o':base = OCTAL;break;
                 case 'X':style |= STYLE_LARGE;
-                case 'x':base = HEX;style |= STYLE_SPECIAL;break;
+                case 'x':base = HEX;/* style |= STYLE_SPECIAL;*/break;
                 case 'd':
                 case 'i': sign = _true;
                 case 'u': break;

@@ -9,18 +9,20 @@
 
 
 /* System Message Type */
-#define REPLY   -1
-#define READ    0
-#define WRITE   1
-#define OPEN    2
-#define CLOSE   3
-#define CLONE   4
-#define IOCTL   5
-#define HARDWARE    6
-#define NO_PAGE     7
-#define WP_PAGE     8
-#define EXIT        9
-#define RUN         11
+enum{
+    REPLY =     -1,
+    READ  =     0,
+    WRITE       ,
+    OPEN        ,
+    CLOSE       ,
+    CLONE       ,
+    IOCTL       ,
+    HARDWARE    ,
+    NO_PAGE     ,
+    WP_PAGE     ,
+    EXIT        ,
+    RUN         ,
+}DefaultMothon;
 
 /* System Call type */
 
@@ -30,11 +32,8 @@
 #define _NR_hook    3
 #define _NR_buffer  4
 
-#define SEND        0
-#define RECVIE      1
-
 extern void* get_free_page(void);
-extern void free_page(Pointer);
+extern int free_page(Pointer);
 extern int printk(const char *fmt,...);
 extern void panic(const char *msg);
 
@@ -53,8 +52,5 @@ extern void panic(const char *msg);
 #define hook(fn,methon) syscall(_NR_hook,fn,methon,0,0,0)
 #define _push(s,c)  (void*)(syscall(_NR_buffer,WRITE,s,c,0,0))
 #define _pop(s)     syscall(_NR_buffer,READ,s,0,0,0)
-
-#define send(dest,m_ptr)    syscall(SEND,dest,m_ptr,0)
-#define recvie(src,m_ptr)  syscall(RECVIE,src,m_ptr,0)
 
 #endif
