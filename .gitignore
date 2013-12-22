@@ -26,5 +26,5 @@
 tags
 # debug file
 *.src
-# 临时文件价
+# 临时文件夹
 mnt/*
