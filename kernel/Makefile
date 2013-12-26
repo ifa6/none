@@ -4,10 +4,10 @@
 .PHONY:all clean
 #当前目录
 LOCAL_PATH=$(notdir $(shell pwd))
-CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
+CFILES=$(wildcard *.c)
 #setup必须在前面编译,这个是grub规定的
-SFILES=$(shell find ./ -maxdepth 1 -name "*.S" | sort)
-sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
+SFILES=$(sort $(wildcard *.S))
+sFILES=$(wildcard *.s)
 
 # LIBS 
 LS = c fs mm
@@ -22,7 +22,7 @@ obj = none
 all:$(obj)
 
 $(obj):$(OBJS) $(LIBS)
-	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) -o $@
+	@$(LD) $(OBJS) $(LDFLAGS) -Ttext $(entry) -o $@
 
 clean:
 	@-rm -f *.[od] none

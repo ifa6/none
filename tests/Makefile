@@ -4,9 +4,9 @@
 .PHONY:all clean
 #当前目录
 LOCAL_PATH=$(notdir $(shell pwd))
-CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
-SFILES=$(shell find ./ -maxdepth 1 -name "*.S")
-sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
+CFILES=$(wildcard "*.c")
+SFILES=$(wildcard "*.S")
+sFILES=$(wildcard "*.s")
 
 # LIBS 
 LS = c

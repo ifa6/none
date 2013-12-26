@@ -33,9 +33,11 @@ all clean:
 	@if [ "$@" == "clean" ];then\
 		rm -f lib/*;\
 		rm -f *.out *.src tags *.swap;\
+	elif [ ! -d lib/ ];then \
+		mkdir lib/; \
 	fi
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE) -C $$dir r=$r $@ || exit 1;\
+		$(MAKE) -s -C $$dir r=$r $@ || exit 1;\
 	done
 
 debug:

@@ -4,9 +4,9 @@
 .PHONY:all clean
 #当前目录
 LOCAL_PATH=$(notdir $(shell pwd))
-CFILES=$(shell find ./ -maxdepth 1 -name "*.c")
-SFILES=$(shell find ./ -maxdepth 1 -name "*.S")
-sFILES=$(shell find ./ -maxdepth 1 -name "*.s")
+CFILES=$(wildcard *.c)
+SFILES=$(wildcard *.S)
+sFILES=$(wildcard *.s)
 
 # .o文件集
 OBJS=$(CFILES:%.c=%.o) $(SFILES:%.S=%.o) $(sFILES:%.s=%.o)
@@ -14,7 +14,7 @@ obj=$r/lib/lib$(LOCAL_PATH).a
 all:$(obj)
 
 $(obj):$(OBJS)
-	ar -r $@ $^ 
+	@ar -r $@ $^ 
 clean:
 	@-rm -f *.[od]
 include $r/tools/Makefile.rule
