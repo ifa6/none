@@ -2,37 +2,103 @@
 #
 #	项目编译规则文件，其他目录引用该文件的规则来编译。这种用法来自BlueLab。
 #	一个把消息机制用得非常烂的蓝牙开发平台。
-.PHONY: clean
-i = $r/include
-l = $r/lib
-
-vpath %.h $r/include
-vpath %.a $r/lib
-
-AS = as
-AR = ar
-CC = gcc
-CXX = g++
-LD = ld
-
-ASFLAGS = --32
-CFLAGS += $(addprefix -I,$i) -m32 -std=gnu99 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
-LDFLAGS += $(addprefix -L,$l) -m elf_i386 -nostdlib
-
+#
 # 根目录项检测,如果不定又该项,很可能误伤系统
-ifndef r
+ifndef ROOT_DIR
 	$(error 没有定义项目的根目录,不能进行编译!)
 endif
 
-%.o:%.c
-	@$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+.PHONY: clean all
+##########################################################################
+#
+#	目录定义
+##########################################################################	
+INCLUDE_DIR := $(ROOT_DIR)/include
+LIB_DIR 	:= $(ROOT_DIR)/lib
+OBJS_DIR	:= $(ROOT_DIR)/objs
+
+vpath %.h $(INCLUDE_DIR)
+vpath %.a $(LIB_DIR)
+vpath %.o $(OBJS_DIR)
+
+ifndef	MODULE_NAME
+MODULE_NAME	:= $(notdir $(shell pwd))
+endif
+
+$(shell mkdir -p  $(LIB_DIR)/)
+
+SRC_FILES	:= $(wildcard *.[cSs])
+
+
+##########################################################################
+# 	工具定义	
+##########################################################################
+AS	:= as
+AR	:= ar
+CC	:= gcc
+CXX	:= g++
+LD	:= ld
+
+#########################################################################
+#	选项
+#########################################################################
+
+
+ASFLAGS  += --32
+CFLAGS   += $(addprefix -I,$(INCLUDE_DIR)) -m32 -std=gnu99 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
+
+########################################################################
+#	中间文件生成
+########################################################################
+OBJS	:= $(sort $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.c,%.o,$(SRC_FILES)))))
+#$(warning  $(OBJS))
+########################################################################
+
+ifeq ($(BUILD),BINARY)
+MODULE 	:= $(MODULE_NAME)
+LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
+LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
+$(MODULE) : $(OBJS) $(LIBS)
+	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
+endif
+
+ifeq ($(BUILD),BINARYS)
+LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
+LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
+$(BUILD): $(OBJS) $(LIBS)
+	for exec in $(basename $(OBJS));do\
+		$(LD) $$exec.o $(LDFLAGS) -e main -Ttext $(ENTRY) -o $$exec;\
+	done
+endif
+
+ifeq ($(BUILD),LIB)
+MODULE := $(LIB_DIR)/lib$(MODULE_NAME).a
+$(MODULE): $(OBJS)
+	$(AR) -r $@ $?
+else
+all:
+	@echo "What do you want fuck?"
+endif
+
+clean:
+	-rm -f -- *.[doa]
+ifdef CLEANS
+	echo "$(CLEANS) will remove"
+	-rm -f $(CLEANS)
+endif
+
+########################################################################
+#	编译规则
+########################################################################
+%.o: %.c
+	$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 # 调用了C预处理的汇编文件 
-%.o:%.S	
-	@$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+%.o: %.S	
+	$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
-%.o:%.s
-	@$(AS) $< -o $@ $(ASFLAGS) -c
+%.o: %.s
+	$(AS) $< -o $@ $(ASFLAGS) -c
 
-%.a:$(source:.c=.o)
-	@$(AR) -r $@ $^
+
+-include	$(OBJS:%.o=%.d)

@@ -59,3 +59,6 @@ VIM能够顺利跑在None上
 - 用早上上传的automake重新组织了下代码的编译方式，好像编译慢了
 - 效果如下:
 ![画圆，画线效果图](http://a3.qpic.cn/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/FGXR4iDluGpzpFCoARBweZeKONloyn1EMAX4*bhPiWs!/c/dA8ru8TuEgAA&bo=ggIwAoICMAIDACU!&rf=0-18)
+
+## Wed Jan  1 17:16:58 CST 2014
+- 整理了tools/Makefile.rule

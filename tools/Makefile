@@ -3,19 +3,8 @@
 #	Author : lzy
 .PHONY:all clean
 #当前目录
-LOCAL_PATH=$(notdir $(shell pwd))
-CFILES=$(wildcard *.c)
-SFILES=$(wildcard *.S)
-sFILES=$(wildcard *.s)
+MODULE_NAME := $(notdir $(shell pwd))
+BUILD		:= LIB
 
-# .o文件集
-OBJS=$(CFILES:%.c=%.o) $(SFILES:%.S=%.o) $(sFILES:%.s=%.o)
-obj=$r/lib/lib$(LOCAL_PATH).a
-all:$(obj)
 
-$(obj):$(OBJS)
-	@ar -r $@ $^ 
-clean:
-	@-rm -f *.[od]
-include $r/tools/Makefile.rule
--include $(OBJS:%.o=%.d)
+include $(ROOT_DIR)/tools/Makefile.rule
