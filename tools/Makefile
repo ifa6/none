@@ -7,7 +7,7 @@ MODULE_NAME := $(notdir $(shell pwd))
 BUILD		:= LIB
 
 ifeq ("$(ROOT_DIR)","")
-	$(error "Miss ROOT_DIR")
+	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 else
 include $(ROOT_DIR)/tools/Makefile.rule
 endif

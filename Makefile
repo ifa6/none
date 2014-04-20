@@ -18,7 +18,7 @@ COMMONDIR 	:= c
 KERNELDIR 	:= kernel
 TESTSDIR 	:= tests
 MMDIR 		:= mm
-EXECS 		:= $(basename $(wildcard $(TESTSDIR)/*.c)) 
+EXECS 		:= $(addprefix objs/,$(basename $(wildcard $(TESTSDIR)/*.c)))
 SUBDIRS 	:= \
 	$(COMMONDIR)\
 	$(FSDIR)\
@@ -33,7 +33,7 @@ $(shell mkdir -p $(boot) $(hw))
 
 all :
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE)  -s -C $$dir ROOT_DIR=$(ROOT_DIR) V=$V $* || exit 1;\
+		$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
 	done
 
 debug:
@@ -58,9 +58,9 @@ go: install uninstall
 	@bochs
 
 clean:
-	@-rm -rf -- lib/ 
+	@-rm -rf -- lib/
 	@-rm -rf -- objs/
 	@-rm -f -- *.out *.src tags *.swap
 	@for dir in $(SUBDIRS);do\
-		$(MAKE) -s -C $$dir ROOT_DIR=$(ROOT_DIR) $@ || exit 1;\
+		$(MAKE) -s -C $$dir $@ || exit 1;\
 	done

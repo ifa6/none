@@ -4,8 +4,8 @@
 #	一个把消息机制用得非常烂的蓝牙开发平台。
 #
 # 根目录项检测,如果不定又该项,很可能误伤系统
-ifndef ROOT_DIR
-	$(error 没有定义项目的根目录,不能进行编译!)
+ifeq ("$(ROOT_DIR)","")
+	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 endif
 
 ifeq ("$(V)",1)
@@ -19,21 +19,24 @@ endif
 #
 #	目录定义
 ##########################################################################	
+LOCAL_PATH  := $(shell pwd)
 INCLUDE_DIR := $(ROOT_DIR)/include
 LIB_DIR 	:= $(ROOT_DIR)/lib
-OBJS_DIR	:= $(ROOT_DIR)/objs
+OBJS_DIR	:= $(subst $(ROOT_DIR),$(ROOT_DIR)/objs,$(LOCAL_PATH))
 
 vpath %.h $(INCLUDE_DIR)
 vpath %.a $(LIB_DIR)
 vpath %.o $(OBJS_DIR)
 
 ifndef	MODULE_NAME
-MODULE_NAME	:= $(notdir $(shell pwd))
+MODULE_NAME	:= $(notdir $(LOCAL_PATH))
+endif
+ifndef SRC_FILES
+SRC_FILES	:= $(wildcard *.[cSs])
 endif
 
-$(shell mkdir -p  $(LIB_DIR)/)
-
-SRC_FILES	:= $(wildcard *.[cSs])
+$(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/)
+sub-dir = $Q for dir in `find ./ -type d -maxpdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
 
 
 ##########################################################################
@@ -56,7 +59,10 @@ CFLAGS   += $(addprefix -I,$(INCLUDE_DIR)) -m32 -std=gnu99 -nostdinc -fno-stack-
 ########################################################################
 #	中间文件生成
 ########################################################################
-OBJS	:= $(sort $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.c,%.o,$(SRC_FILES)))))
+#OBJS	:= $(addprefix objs/$(LOCAL_PATH)/,$(sort $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.c,%.o,$(SRC_FILES))))))
+OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.S,%.o,$(filter %.S,$(SRC_FILES))))
+OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.s,%.o,$(filter %.s,$(SRC_FILES))))
+OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.c,%.o,$(filter %.c,$(SRC_FILES))))
 #$(warning  $(OBJS))
 ########################################################################
 
@@ -65,14 +71,17 @@ MODULE 	:= $(MODULE_NAME)
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(MODULE) : $(OBJS) $(LIBS)
+	$Q echo "    Install    $@"
 	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
 endif
 
 ifeq ($(BUILD),BINARYS)
+MODULE := $(MODULE_NAME)
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(BUILD): $(OBJS) $(LIBS)
 	$Q for exec in $(basename $(OBJS));do\
+		echo "    Install    $$exec";\
 		$(LD) $$exec.o $(LDFLAGS) -e main -Ttext $(ENTRY) -o $$exec;\
 	done
 endif
@@ -80,30 +89,33 @@ endif
 ifeq ($(BUILD),LIB)
 MODULE := $(LIB_DIR)/lib$(MODULE_NAME).a
 $(MODULE): $(OBJS)
-	$(AR) -r $@ $?
+	$Q echo "    Install    $(MODULE)"
+	$Q $(AR) -r $@ $? > /dev/null 2>&1
 else
 all:
 	$Q echo "What do you want fuck?"
 endif
 
 clean:
-	$Q -rm -f -- *.[doa]
+	$Q -rm -f -- *.doa
 ifdef CLEANS
 	$Q echo "$(CLEANS) will remove"
 	$Q -rm -f $(CLEANS)
 endif
-
 ########################################################################
 #	编译规则
 ########################################################################
-%.o: %.c
+$(OBJS_DIR)/%.o: %.c
+	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 # 调用了C预处理的汇编文件 
-%.o: %.S	
+$(OBJS_DIR)/%.o: %.S	
+	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
-%.o: %.s
+$(OBJS_DIR)/%.o: %.s
+	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(AS) $< -o $@ $(ASFLAGS) -c
 
 
