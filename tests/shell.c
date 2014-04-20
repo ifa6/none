@@ -19,7 +19,7 @@ int main(void){
                     run(o,RUN,0,0,0);
                     run(MM_PID,15,0,0,0);
                 }else{
-                    printf("%s : File not found.\n",msg);
+                    printf("%s : File not found.\n",buff);
                 }
             }
             msg = buff;

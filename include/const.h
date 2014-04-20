@@ -57,13 +57,6 @@
 #define PRI_GOD     2
 
 
-#define GOD             0
-#define MM_PID          1
-#define SYSTEM_PID      2
-#define CLOCK_PID       3
-#define AT_PID          4
-#define FS_PID          5
-#define CONS_PID        6
 
 #define OK  0
 #define ERROR   -1

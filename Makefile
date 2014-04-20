@@ -33,7 +33,7 @@ $(shell mkdir -p $(boot) $(hw))
 
 all :
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE) -s -C $$dir ROOT_DIR=$(ROOT_DIR) $* || exit 1;\
+		$(MAKE)  -s -C $$dir ROOT_DIR=$(ROOT_DIR) V=$V $* || exit 1;\
 	done
 
 debug:
@@ -46,11 +46,11 @@ install: $s
 	@-cp $(EXECS) $(hw)
 	@sleep 1
 
-umount:
+uninstall:
 	@-umount $(boot)
 	@-umount $(hw)
 
-go: install umount
+go: install uninstall
 	@mount -o loop -t ext2 $d $(boot)
 	@-cp $s $(boot)
 	@sleep 1

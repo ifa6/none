@@ -8,6 +8,12 @@ ifndef ROOT_DIR
 	$(error 没有定义项目的根目录,不能进行编译!)
 endif
 
+ifeq ("$(V)",1)
+	Q :=
+else
+	Q := @
+endif
+
 .PHONY: clean all
 ##########################################################################
 #
@@ -59,14 +65,14 @@ MODULE 	:= $(MODULE_NAME)
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(MODULE) : $(OBJS) $(LIBS)
-	$(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
+	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
 endif
 
 ifeq ($(BUILD),BINARYS)
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(BUILD): $(OBJS) $(LIBS)
-	for exec in $(basename $(OBJS));do\
+	$Q for exec in $(basename $(OBJS));do\
 		$(LD) $$exec.o $(LDFLAGS) -e main -Ttext $(ENTRY) -o $$exec;\
 	done
 endif
@@ -77,28 +83,28 @@ $(MODULE): $(OBJS)
 	$(AR) -r $@ $?
 else
 all:
-	@echo "What do you want fuck?"
+	$Q echo "What do you want fuck?"
 endif
 
 clean:
-	-rm -f -- *.[doa]
+	$Q -rm -f -- *.[doa]
 ifdef CLEANS
-	echo "$(CLEANS) will remove"
-	-rm -f $(CLEANS)
+	$Q echo "$(CLEANS) will remove"
+	$Q -rm -f $(CLEANS)
 endif
 
 ########################################################################
 #	编译规则
 ########################################################################
 %.o: %.c
-	$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 # 调用了C预处理的汇编文件 
 %.o: %.S	
-	$(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 %.o: %.s
-	$(AS) $< -o $@ $(ASFLAGS) -c
+	$Q $(AS) $< -o $@ $(ASFLAGS) -c
 
 
 -include	$(OBJS:%.o=%.d)

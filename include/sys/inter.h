@@ -9,7 +9,7 @@
 
 
 /* System Message Type */
-enum{
+typedef enum{
     REPLY =     -1,
     READ  =     0,
     WRITE       ,
@@ -24,6 +24,17 @@ enum{
     RUN         ,
 }DefaultMothon;
 
+/*! Const task PID !*/
+typedef enum {
+    GOD = 0,
+    MM_PID,
+    SYSTEM_PID,
+    CLOCK_PID,
+    AT_PID,
+    FS_PID,
+    CONS_PID,
+    RS_PID
+}PID;
 /* System Call type */
 
 #define _NR_run     0

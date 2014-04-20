@@ -6,5 +6,8 @@
 MODULE_NAME := $(notdir $(shell pwd))
 BUILD		:= LIB
 
-
+ifeq ("$(ROOT_DIR)","")
+	$(error "Miss ROOT_DIR")
+else
 include $(ROOT_DIR)/tools/Makefile.rule
+endif
