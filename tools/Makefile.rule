@@ -67,7 +67,7 @@ OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.c,%.o,$(filter %.c,$(SRC_FILES))))
 ########################################################################
 
 ifeq ($(BUILD),BINARY)
-MODULE 	:= $(MODULE_NAME)
+MODULE 	:= $(addprefix $(OBJS_DIR)/,$(MODULE_NAME))
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(MODULE) : $(OBJS) $(LIBS)

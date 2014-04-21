@@ -8,7 +8,7 @@
 ROOT_DIR := $(PWD)
 d 		:= a.img
 h 		:= n.hd
-s 		:= kernel/none
+s 		:= objs/kernel/none
 
 boot    := mnt/boot
 hw		:= mnt/hw

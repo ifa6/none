@@ -1,11 +1,9 @@
 #include    <stdio.h>
+#include <stdlib.h>
 #include    <sys/inter.h>
 
 extern int getchar(void){
     char ch;
-    void *p = (void*)_push(NULL,1);
-    run(CONS_PID,READ,0,1,p);
-    ch = *(char *)p;
-    _pop(p);
+    read(STDIN_FILENO,&ch,1);
     return ch;
 }

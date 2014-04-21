@@ -19,15 +19,31 @@ static char buff[BLOCK_SIZE];
 #if 1
 static void load_elf(Object *this) {
     static char buffer[BLOCK_SIZE];
+    static char shdr_buff[BLOCK_SIZE];
     static Elf32_Ehdr *ehdr = (void *)buff;
     static Elf32_Phdr *phdr;
+    static Elf32_Shdr *shdr;
     MinixInode *inode = &(((File*)this)->inode);
     zone_rw(inode,READ,0,buff);
     phdr = (void*)(buff + ehdr->e_phoff);
+    //shdr = (void*)(buff + ehdr->e_shoff);
     zone_t zone = phdr->p_offset / BLOCK_SIZE;
     for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
         if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
         memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
+    }
+    zone = (ehdr->e_shoff / BLOCK_SIZE);
+    if(ERROR == zone_rw(inode,READ,zone,shdr_buff)) panic("-_-|||\n");
+    shdr = (void*)(shdr_buff + (ehdr->e_shoff % BLOCK_SIZE));
+    for(int i = 0;i < ehdr->e_shnum;i++){
+        shdr++;
+        zone = shdr->sh_offset / BLOCK_SIZE;
+        if(shdr->sh_type == SHT_PROGBITS){
+            for(int j = 0;j < (shdr->sh_size + BLOCK_SIZE - 1) / BLOCK_SIZE;j++){
+                if(ERROR == zone_rw(inode,READ,zone + j,buffer)) panic("-_-|||\n");
+                memcpy((void*)(shdr->sh_addr + j * BLOCK_SIZE),buffer,BLOCK_SIZE);
+            }
+        }
     }
     int (*fn)(void);
     fn = (void*)ehdr->e_entry;

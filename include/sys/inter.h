@@ -47,6 +47,10 @@ extern void* get_free_page(void);
 extern int free_page(Pointer);
 extern int printk(const char *fmt,...);
 extern void panic(const char *msg);
+extern pid_t STD_PIDS[3];
+#define STDIN_FILENO    STD_PIDS[0]
+#define STDOUT_FILENO   STD_PIDS[1]
+#define STDERR_FILENO   STD_PIDS[2]
 
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
