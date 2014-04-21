@@ -10,7 +10,7 @@ extern int printf(const char *fmt,...){
     void *p = NULL;
     va_start(args,fmt);
     len = vsprintf(buf,fmt,args);
-    p = (void*)_push(buf,len);
+    p = _push(buf,len);
     run(CONS_PID,WRITE,0,0,p);
     _pop(p);
     return len;

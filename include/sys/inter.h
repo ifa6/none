@@ -51,8 +51,8 @@ extern void panic(const char *msg);
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
 #define syscall(_sys_call,obj,fn,r1,r2,r3) ({\
-        int __v__; \
-        asm("int $0x80":"=a"(__v__):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
+        long __v__; \
+        __asm__("int $0x80":"=a"(__v__):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
         __v__; })
 #define lock()      cli()
 #define unlock()    sti()
