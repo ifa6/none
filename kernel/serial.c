@@ -26,16 +26,17 @@ static int rs_handler(int irq){
     return OK;
 }
 
-static void _add(IOInq *in){
+static void rs_push(IOInq *in){
     if(!inq){
         inq = in;
         tail = inq;
     }
-    tail->next = inq;
-    tail = inq;
+    tail->next = in;
+    tail = in;
+    tail->next = NULL;
 }
 
-static void _sub(void){
+static void rs_pop(void){
     IOInq *in;
     if(inq){
         in = inq;
@@ -51,8 +52,9 @@ static void rs_write(Object *this){
         in->admit = this->admit;
         in->buffer = this->buffer;
         in->offset = 0;
+        in->next = NULL;
         in->count = this->count;
-        _add(in);
+        rs_push(in);
     }
     outb(inb_p(0x3f8 + 1) | 0x02,0x3f8 + 1);
 }
@@ -67,13 +69,15 @@ static void _io(Object *this){
                 case 6: inb_p(0x3fd);break;
                 case 4: printk("%c",inb_p(0x3f8));break;
                 case 2: 
+again:
                         if(inq){
                             if(inq->offset < inq->count){
                                 outb_p(inq->buffer[inq->offset],0x3f8);
                                 inq->offset++;
                             }else{
                                 ret(inq->admit,OK);
-                                _sub();
+                                rs_pop();
+                                goto again;
                             }
                         }else{
                            outb_p(inb_p(0x3f9) & 0xd,0x3f9);

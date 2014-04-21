@@ -23,8 +23,10 @@
 # vim swap file
 *.swap
 # ctags
-tags
+tags G*
 # debug file
 *.src
 # 临时文件夹
 mnt/*
+objs/
+lib/
