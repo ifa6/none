@@ -21,9 +21,10 @@
 *.d
 
 # vim swap file
-*.swap
+*.swp
 # ctags
-tags G*
+tags 
+G*
 # debug file
 *.src
 # 临时文件夹

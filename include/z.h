@@ -1,10 +1,14 @@
-#ifndef  __Z_H__
+#ifndef __Z_H__
 #define __Z_H__
 
 /*! Now, we open a new programming !*/
 
 #ifndef UNUSED
 #define UNUSED(x)   (void)(x)
+#endif
+
+#ifndef eprint
+#define eprint()
 #endif
 
 #define choose_expr __builtin_choose_expr
@@ -22,7 +26,6 @@
 #define _STRING(x)  #x
 
 /*! ~~~~~~~~~~~~~~~~~~~~~~~ excoption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !*/
-#define retail(v)  __v1 = v;
 #define try(expr,code,...) ({\
         __typeof__(code) __v1 = code;\
         if(test(expr __v1)){\
@@ -30,7 +33,7 @@
             __VA_ARGS__;\
         }__v1;})
 
-#define throw(excpt)    goto excpt
+#define throw            goto
 #define CATCH0(arg)      arg:
 #define CATCH1(arg,...)  CATCH0(arg) 
 #define CATCH2(arg,...)  CATCH0(arg) CATCH1(__VA_ARGS__)

@@ -10,43 +10,73 @@
 #define fs_log(fmt,...)
 #endif
 
+#define eprint(fmt,...) printk("%4d "fmt" %s\n",__LINE__,##__VA_ARGS__,__func__)
+
+#include <z.h>
+
 MinixSuperBlock *super;
 MinixInode root_inode;
 
-/*! 测试加载ELF文件 !*/
-static char buff[BLOCK_SIZE];
+#define MIN(a,b)    ((a) < (b) ? (a) : (b))
+#define MAX(a,b)    ((a) > (b) ? (a) : (b))
+        
+static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
+    zone_t  zone = (offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    static char   block[BLOCK_SIZE];
+    count_t read_count = BLOCK_SIZE - (offset % BLOCK_SIZE);
+    read_count = MIN(count ,read_count);
+    if(read_count){
+        try(ERROR == ,zone_rw(inode,READ,zone,block),throw e_zone_rw);
+        memcpy(buffer,block + (offset % BLOCK_SIZE),read_count);
+    }
+    count -= read_count;
+    zone++;
+    /*! ~~~~~~~~~~~~~~~~~~~~~~~ 第二步,拷贝BLOCK_SIZE对齐的块 ~~~~~~~~~~~~~~~~~~ ~*/
+    count_t n = count / BLOCK_SIZE;
+    foreach(i,0,n){
+        try(ERROR == ,zone_rw(inode,READ,zone,buffer + read_count),throw e_zone_rw);
+        count -= BLOCK_SIZE;
+        read_count += BLOCK_SIZE;
+        zone++;
+    }
+    /*! ~~~~~~~~~~~~~~~~~~~~~ 第三步,拷贝剩下的不足BLOCK_SIZE的块 ~~~~~~~~~~~~~ !*/
+    if(count){
+        try(ERROR ==,zone_rw(inode,READ,zone,block),throw e_zone_rw);
+        memcpy(buffer + read_count,block,count);
+        read_count += count;
+    }
 
+    catch(e_zone_rw){ 
+        return read_count;
+    }
+}
+
+/*! 测试加载ELF文件 !*/
 #if 1
 static void load_elf(Object *this) {
-    static char buffer[BLOCK_SIZE];
-    static char shdr_buff[BLOCK_SIZE];
-    static Elf32_Ehdr *ehdr = (void *)buff;
-    static Elf32_Phdr *phdr;
-    static Elf32_Shdr *shdr;
-    MinixInode *inode = &(((File*)this)->inode);
-    zone_rw(inode,READ,0,buff);
-    phdr = (void*)(buff + ehdr->e_phoff);
-    //shdr = (void*)(buff + ehdr->e_shoff);
-    zone_t zone = phdr->p_offset / BLOCK_SIZE;
+    File *file = _FILE(this);
+    static Elf32_Ehdr ehdr;
+    static Elf32_Phdr phdr;
+    static Elf32_Shdr shdr;
+    MinixInode *inode = &(file->inode);
+    int (*fn)(void);
+    do_read(inode,&ehdr,0,sizeof(ehdr));
+    do_read(inode,&phdr,ehdr.e_phoff,ehdr.e_phentsize);
+    fn = (void*)ehdr.e_entry;
+#if 0
     for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
         if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
         memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
     }
-    zone = (ehdr->e_shoff / BLOCK_SIZE);
-    if(ERROR == zone_rw(inode,READ,zone,shdr_buff)) panic("-_-|||\n");
-    shdr = (void*)(shdr_buff + (ehdr->e_shoff % BLOCK_SIZE));
-    for(int i = 0;i < ehdr->e_shnum;i++){
-        shdr++;
-        zone = shdr->sh_offset / BLOCK_SIZE;
-        if(shdr->sh_type == SHT_PROGBITS){
-            for(int j = 0;j < (shdr->sh_size + BLOCK_SIZE - 1) / BLOCK_SIZE;j++){
-                if(ERROR == zone_rw(inode,READ,zone + j,buffer)) panic("-_-|||\n");
-                memcpy((void*)(shdr->sh_addr + j * BLOCK_SIZE),buffer,BLOCK_SIZE);
-            }
+#endif
+    do_read(inode,&shdr,ehdr.e_shoff,ehdr.e_shentsize);
+    for(int i = 0;i < ehdr.e_shnum;i++){
+        if((shdr.sh_type == SHT_PROGBITS) && (shdr.sh_flags & SHF_ALLOC)){
+            printk("addr: %8p offset : %4x size : %4x\n",shdr.sh_addr,shdr.sh_offset,shdr.sh_size);
+            do_read(inode,(void*)shdr.sh_addr,shdr.sh_offset,shdr.sh_size);
         }
+        do_read(inode,&shdr,ehdr.e_shoff + sizeof(shdr),);
     }
-    int (*fn)(void);
-    fn = (void*)ehdr->e_entry;
     ret(this->admit,OK);
     fn();
     run(MM_PID,CLOSE,0,0,0);
@@ -55,36 +85,57 @@ static void load_elf(Object *this) {
 
 static void fs_read(Object *this){
     File    *file = _FILE(this);
+    count_t read_count;
+    read_count = do_read(&(file->inode),this->buffer,file->offset,this->count);
+    file->offset += read_count;
+    ret(this->admit,read_count); 
+}
+
+/*! !*/
+static void fs_write(Object *this){
+    File    *file = _FILE(this);
     void *buffer = this->buffer;
     count_t count = this->count;
+    count_t write_count;
+    static char buff[BLOCK_SIZE];
+
     zone_t  zone = (file->offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
     off_t   offset = file->offset;
     if(offset + count > file->inode.i_size){
         count = file->inode.i_size - offset;
     }
-    fs_log("read %d bytes offset %d for %s\n",count,zone,this->name);
-    if(ERROR == zone_rw(&(file->inode),READ,zone,buff)){
-        ret(this->admit,ERROR);
-    }else{
-        file->offset += count;
-        memcpy(buffer,buff,count);
-        ret(this->admit,count);
-    }
-}
 
-
-/*! !*/
-static void fs_write(Object *this){
-    File *file = _FILE(this);
-    void *buffer = this->buffer;
-    count_t count = this->count;
-    zone_t  zone = (file->offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    memcpy(buff,buffer,count);
-    if(ERROR == zone_rw(&(file->inode),WRITE,zone,buff)){
-        ret(this->admit,ERROR);
+    fs_log("write %d bytes offset %d for %s\n",count,zone,this->name);
+    /*! ~~~~~~~~~~~~~~~~~~~ 第一步,拷贝开头不足一个区部分 ~~~~~~~~~~~~~~~~~~~~~~~ !*/
+    write_count = BLOCK_SIZE - (offset % BLOCK_SIZE);
+    write_count = MIN(count ,write_count);
+    if(write_count){
+        try(ERROR == ,zone_rw(&(file->inode),READ,zone,buff),throw e_zone_rw);
+        memcpy(buff + (offset % BLOCK_SIZE),buffer,write_count);
+        try(ERROR == ,zone_rw(&(file->inode),WRITE,zone,buff),throw e_zone_rw);
     }
-    file->offset += count;
-    ret(this->admit,count);
+    count -= write_count;
+    zone++;
+    /*! ~~~~~~~~~~~~~~~~~~~~~~~ 第二步,拷贝BLOCK_SIZE对齐的块 ~~~~~~~~~~~~~~~~~~ ~*/
+    count_t n = count / BLOCK_SIZE;
+    foreach(i,0,n){
+        memcpy(buff,buffer + write_count,BLOCK_SIZE);
+        try(ERROR == ,zone_rw(&(file->inode),WRITE,zone,buff),throw e_zone_rw);
+        count -= BLOCK_SIZE;
+        write_count += BLOCK_SIZE;
+        zone++;
+    }
+    /*! ~~~~~~~~~~~~~~~~~~~~~ 第三步,拷贝剩下的不足BLOCK_SIZE的块 ~~~~~~~~~~~~~ !*/
+    if(count){
+        memcpy(buff,buffer + write_count,count);
+        try(ERROR ==,zone_rw(&(file->inode),WRITE,zone,buff),throw e_zone_rw);
+        write_count += write_count;
+    }
+
+    catch(e_zone_rw){ 
+        this->offset += write_count;
+        ret(this->admit,write_count); 
+    }
 }
 
 static void fs_close(Object *this){
