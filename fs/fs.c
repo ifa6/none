@@ -1,4 +1,5 @@
 #include    "fs.h"
+#define eprint(fmt,...) printk("%4d "fmt" %s\n",__LINE__,##__VA_ARGS__,__func__)
 #include    "../kernel/kernel.h"
 #include    <elf.h>
 
@@ -10,18 +11,16 @@
 #define fs_log(fmt,...)
 #endif
 
-#define eprint(fmt,...) printk("%4d "fmt" %s\n",__LINE__,##__VA_ARGS__,__func__)
-
-#include <z.h>
-
 MinixSuperBlock *super;
 MinixInode root_inode;
 
 #define MIN(a,b)    ((a) < (b) ? (a) : (b))
 #define MAX(a,b)    ((a) > (b) ? (a) : (b))
+
+static char buff[BLOCK_SIZE];
         
 static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
-    zone_t  zone = (offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    zone_t  zone = offset / BLOCK_SIZE;
     static char   block[BLOCK_SIZE];
     count_t read_count = BLOCK_SIZE - (offset % BLOCK_SIZE);
     read_count = MIN(count ,read_count);
@@ -34,7 +33,8 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
     /*! ~~~~~~~~~~~~~~~~~~~~~~~ 第二步,拷贝BLOCK_SIZE对齐的块 ~~~~~~~~~~~~~~~~~~ ~*/
     count_t n = count / BLOCK_SIZE;
     foreach(i,0,n){
-        try(ERROR == ,zone_rw(inode,READ,zone,buffer + read_count),throw e_zone_rw);
+        try(ERROR == ,zone_rw(inode,READ,zone,block),throw e_zone_rw);
+        memcpy(buffer + read_count,block,count);
         count -= BLOCK_SIZE;
         read_count += BLOCK_SIZE;
         zone++;
@@ -56,26 +56,18 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
 static void load_elf(Object *this) {
     File *file = _FILE(this);
     static Elf32_Ehdr ehdr;
-    static Elf32_Phdr phdr;
-    static Elf32_Shdr shdr;
+    static Elf32_Shdr *shdr;
     MinixInode *inode = &(file->inode);
     int (*fn)(void);
     do_read(inode,&ehdr,0,sizeof(ehdr));
-    do_read(inode,&phdr,ehdr.e_phoff,ehdr.e_phentsize);
     fn = (void*)ehdr.e_entry;
-#if 0
-    for(int i = 0;i < (phdr->p_memsz + BLOCK_SIZE - 1) / BLOCK_SIZE;i++){
-        if(ERROR == zone_rw(inode,READ,zone + i,buffer)) panic("-_-|||\n");
-        memcpy((void*)(ehdr->e_entry + i * BLOCK_SIZE),buffer,BLOCK_SIZE);
-    }
-#endif
-    do_read(inode,&shdr,ehdr.e_shoff,ehdr.e_shentsize);
-    for(int i = 0;i < ehdr.e_shnum;i++){
-        if((shdr.sh_type == SHT_PROGBITS) && (shdr.sh_flags & SHF_ALLOC)){
-            printk("addr: %8p offset : %4x size : %4x\n",shdr.sh_addr,shdr.sh_offset,shdr.sh_size);
-            do_read(inode,(void*)shdr.sh_addr,shdr.sh_offset,shdr.sh_size);
+    do_read(inode,buff,ehdr.e_shoff,ehdr.e_shentsize * ehdr.e_shnum);
+    shdr = (void*)buff; 
+    foreach(i,0,ehdr.e_shnum){
+        if((shdr->sh_type == SHT_PROGBITS) && (shdr->sh_flags & SHF_ALLOC)){
+            do_read(inode,(void*)shdr->sh_addr,shdr->sh_offset,shdr->sh_size);
         }
-        do_read(inode,&shdr,ehdr.e_shoff + sizeof(shdr),);
+        shdr++;
     }
     ret(this->admit,OK);
     fn();
@@ -97,9 +89,8 @@ static void fs_write(Object *this){
     void *buffer = this->buffer;
     count_t count = this->count;
     count_t write_count;
-    static char buff[BLOCK_SIZE];
+    zone_t  zone = file->offset / BLOCK_SIZE;
 
-    zone_t  zone = (file->offset + BLOCK_SIZE - 1) / BLOCK_SIZE;
     off_t   offset = file->offset;
     if(offset + count > file->inode.i_size){
         count = file->inode.i_size - offset;

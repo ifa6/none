@@ -5,7 +5,7 @@
 #当前目录
 MODULE_NAME := $(notdir $(shell pwd))
 MODULE		:= lib$(MODULE_NAME).a
-BUILD		:= LIB
+BUILD		:= LIBRARY
 
 ifeq ($(ROOT_DIR),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)

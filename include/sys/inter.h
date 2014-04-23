@@ -46,6 +46,7 @@ typedef enum {
 extern void* get_free_page(void);
 extern int free_page(Pointer);
 extern int printk(const char *fmt,...);
+extern void printx(const char *data,count_t count);
 extern void panic(const char *msg);
 extern pid_t STD_PIDS[3];
 #define STDIN_FILENO    STD_PIDS[0]

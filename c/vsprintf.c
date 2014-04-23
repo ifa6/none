@@ -121,7 +121,7 @@ extern int vsprintf(char *buf,const char *fmt,va_list args){
     HexBase base = DECIMAL;
     char *str,*s;
     
-    enum type{ _long = 'L', _int = 'l' , _short = 'h' }_type = _int;  //数据类型,long long,int,short
+    enum type{ _long = 'L', _int = 'l' , _short = 'h' , _char = 'H'}_type = _int;  //数据类型,long long,int,short
 
     for( str = buf; *fmt; fmt++){
         if(*fmt == '%'){
@@ -143,7 +143,7 @@ repeat:
                 width = va_arg(args,int);
             }
             _type = _int;
-            if(*fmt == 'h' || *fmt == 'l' || *fmt == 'L'){
+            if(*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'H'){
                 _type = (enum type)(*fmt);
                 fmt++;
             }
@@ -170,18 +170,25 @@ repeat:
                 case 'u': break;
                 default: if(*fmt) *str++ = *fmt; continue;
             }
-            if ( _long == _type )
+            if ( _long == _type ){
                 num = va_arg( args, unsigned long long);
-            else if ( _short == _type ){
-                if ( _true == sign )
+            } else if ( _char == _type){
+                if ( _true == sign){
+                    num = va_arg( args, char);
+                } else {
+                    num = va_arg( args, unsigned char);
+                }
+            } else if ( _short == _type ){
+                if ( _true == sign ){
                     num = va_arg( args, short );
-                else
+                } else {
                     num = va_arg( args, unsigned short );
-            }
-            else if ( _true == sign )
+                }
+            } else if ( _true == sign ) {
                 num = va_arg( args, int );
-            else
+            } else {
                 num = va_arg( args, unsigned int );
+            }
 
             str = _toNumber(str,num,
                     _false,base,width,style);

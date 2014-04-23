@@ -71,7 +71,7 @@ MODULE 	:= $(addprefix $(OBJS_DIR)/,$(MODULE_NAME))
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(MODULE) : $(OBJS) $(LIBS)
-	$Q echo "    Install    $@"
+	$Q echo "  [$(BUILD)]	Builder    $@"
 	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
 endif
 
@@ -80,16 +80,16 @@ MODULE := $(MODULE_NAME)
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(BUILD): $(OBJS) $(LIBS)
+	$Q echo "  [$(BUILD)]	Builder    $(MODULE)"
 	$Q for exec in $(basename $(OBJS));do\
-		echo "    Install    $$exec";\
 		$(LD) $$exec.o $(LDFLAGS) -e main -Ttext $(ENTRY) -o $$exec;\
 	done
 endif
 
-ifeq ($(BUILD),LIB)
+ifeq ($(BUILD),LIBRARY)
 MODULE := $(LIB_DIR)/lib$(MODULE_NAME).a
 $(MODULE): $(OBJS)
-	$Q echo "    Install    $(MODULE)"
+	$Q echo "  [$(BUILD)]	Builder    $(MODULE)"
 	$Q $(AR) -r $@ $? > /dev/null 2>&1
 else
 all:
@@ -99,23 +99,23 @@ endif
 clean:
 	$Q -rm -f -- *.doa
 ifdef CLEANS
-	$Q echo "$(CLEANS) will remove"
+	$Q echo "  [CLEAN]	Clean	$(CLEANS)"
 	$Q -rm -f $(CLEANS)
 endif
 ########################################################################
 #	编译规则
 ########################################################################
 $(OBJS_DIR)/%.o: %.c
-	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
+	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 # 调用了C预处理的汇编文件 
 $(OBJS_DIR)/%.o: %.S	
-	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
+	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 $(OBJS_DIR)/%.o: %.s
-	$Q echo  "    Compiler   $(notdir $(MODULE))   <=== $<"
+	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(AS) $< -o $@ $(ASFLAGS) -c
 
 

@@ -16,3 +16,22 @@ extern int printk(const char *fmt,...){
     return i;
 
 }
+
+extern void printx(const char *data,count_t count){
+    foreach(i,0,count){
+        if(!(i % 16)){
+            if(i){
+                printk("  ");
+                foreach(j,0,16){
+                    char c = data[i - 16 + j];
+                    printk("%c",((c > ' ')  && (c < 127)) ? c : '.');
+                }
+                printk("\n");
+            }
+            printk("%04X : ",i);
+        }else if(!(i % 8 )){
+            printk("   ");
+        }
+        printk("%02HX ",data[i]);
+    }
+}

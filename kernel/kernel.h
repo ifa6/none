@@ -1,14 +1,15 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
-#include    <const.h>
-#include    <types.h>
-#include    <x86/io.h>
-#include    <sys/inter.h>
-#include    <stdio.h>
-#include    <stdlib.h>
-#include    <string.h>
-#include    <task.h>
+#include <const.h>
+#include <types.h>
+#include <x86/io.h>
+#include <sys/inter.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <task.h>
+#include <z.h>
 
 
 extern Task *leading;
