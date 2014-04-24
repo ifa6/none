@@ -12,14 +12,14 @@ int main(void){
     char *buffer;
     char *argv[10];
     int  argc = 0;
-    printf("\ey$ \ew");
     for(;;){
+        printf("\ey$ \ew");
         buffer = getline();
-        printf("%s",buffer);
-        while(1);
         argc = parse(buffer,argv,10);
         if(OK != exec(argv[0],argc,argv))
             printf("%s : No usch file or directory\n",argv[0]);
+        else
+            run(MM_PID,15,0,0,0);
     }
     run(MM_PID,CLOSE,0,0,0);
     return 0;
@@ -39,6 +39,7 @@ static int parse(char *buffer,char **argv,int len){
                 argv[argc] = pos;
                 break;
         }
+        pos++;
     }
     return argc;
 }
@@ -46,8 +47,7 @@ static int parse(char *buffer,char **argv,int len){
 static int exec(const char *path,int argc,char **argv){
     ObjectDesc o = open(path,0);
     if(o != ERROR){
-        run(o,RUN,argc,0,argv);
-        run(MM_PID,15,0,0,0);
+        return run(o,RUN,argc,0,argv);
     }
     return -1;
 }
@@ -58,11 +58,9 @@ static char *getline(void){
     int i;
     for(i = 0;i < 511;i++){
         ch = getchar();
-        printf("%c",ch);
         if(ch == '\n') break;
         buff[i] = ch;
     }
     buff[i] = 0;
-    printf("%s",buff);
     return buff;
 }
