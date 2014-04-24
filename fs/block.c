@@ -17,7 +17,7 @@ int block_rw(const dev_t dev,const int cmd,void *buff,off_t offset,size_t count)
 static zone_t  _get_zone(MinixInode *inode,zone_t zone){
     if(zone > _MAX_ZONE(inode)) return 0;
     dev_t     dev = inode->i_dev; 
-    if((0 <= zone) && (zone <= V2_NR_DZONES)){ /*! 直接块 !*/
+    if((0 <= zone) && (zone < V2_NR_DZONES)){ /*! 直接块 !*/
         return inode->i_zone[zone];
     }else{
         int n;
