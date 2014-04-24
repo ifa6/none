@@ -122,7 +122,7 @@ int dohook(unsigned long fn,Methon hook){
     return ERROR;
 }
 
-int dofn(ObjectDesc o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
+int dofn(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object*obj = toObject(o);
     if(isNullp(obj)) return ERROR;
     /*! 目标有事务在处理,则,将本次请求挂入队列 !*/
@@ -142,7 +142,7 @@ int dofn(ObjectDesc o,unsigned long fn,unsigned long r1,unsigned long r2,unsigne
 
 /*! 中断具有高优先级,必须优先处理 !*/
 /*! 我很讨厌定义多个接口,接口太多太不美.但是,能有什么更好的办法呢? !*/
-int doint(ObjectDesc o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
+int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object *obj = toObject(o);
     if(isNullp(obj)) panic("\er doint   \eb[\rnull\eb]\n");
     if(!isSleep(obj)){
@@ -242,6 +242,6 @@ void god_init(void){
     tss->ldt = 0;
     tss->io = 0xffff0000;
     tss->eflags = 0x200;
-    asm("ltr %0"::"m"(tr));
+    __asm__("ltr %0"::"m"(tr));
     do_switch();
 }

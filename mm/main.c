@@ -54,6 +54,7 @@ static PageItem *copy_items(PageItem *items,int start,int end){
 #define TABLE_INDEX(x)  (((x) >> 12) & 0x3ff)
 
 static inline void put_item(PageItem *items,void *page,int index,int mode){
+    (void)mode;
     items[index] = (PageItem)(toPointer((Pointer)page) | 7);
 }
 
@@ -146,7 +147,7 @@ static int put_page(PageItem *dirs,void *va){
 }
 
 static void np_page(Object *this){
-    void *ptr = this->pointer;
+    void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     ret(this->admit,put_page((PageItem *)t->core,ptr));
 }
@@ -183,7 +184,7 @@ static PageItem *_un_page(PageItem *table,void *va){
 }
 
 static void nw_page(Object *this){
-    void *ptr = this->pointer;
+    void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     PageItem *table = _un_table((PageItem *)t->core,ptr);
     if(isNullp(table)) ret(this->admit,ERROR);
@@ -241,7 +242,7 @@ static Task* make_task(String name,int (*entry)(void)){
 #endif
 
 static void _wait(Object *this){
-    ;
+    (void)this;
 }
 
 static void _mm_init(void){

@@ -71,7 +71,7 @@ static void load_elf(Object *this) {
     }
     ret(this->admit,OK);
     fn();
-    run(MM_PID,CLOSE,0,0,0);
+    run(MM_PID,CLOSE);
 }
 #endif
 
@@ -131,7 +131,7 @@ static void fs_write(Object *this){
 
 static void fs_close(Object *this){
     printk("\eRFIXME\ew : FS colse\n");
-    run(MM_PID,CLOSE,0,0,0);
+    run(MM_PID,CLOSE);
 }
 
 static void fs_open(Object *this){

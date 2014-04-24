@@ -6,7 +6,6 @@
 #define NR_METHON           0x10
 #define NR_OBJECT           0x300       /*! 当前版本所允许的最大对象数量 !*/
 
-typedef long  ObjectDesc;         /*! 对象描述符 ,(文件描述符对象版)!*/
 typedef struct _object Object;      /*! 对象,none中的一切,当然,现实中很匮乏 ~*/
 typedef struct _ilink   iLink;      /*! 中断请求链 !*/
 
@@ -39,12 +38,23 @@ struct _object{
     Purview prw;                        /*! 对象权限 !*/
     size_t  cnt;                        /*! 对象引用计数，当该标记为0时，系统可以将其释放 !*/
     char    name[OBJECT_NAME_LEN];      /*! 对象名称，用来给人看的，与机器无关 !*/
-    union{
-        struct{ unsigned long r1,r2,r3;};
-        struct{ off_t offset;count_t count;void *buffer;};
-        struct{ void *pointer;};
-        struct{ int status;};
-    };
+    union{ struct{
+        union{
+            long status;
+            unsigned long mode;
+            unsigned long r1;
+            off_t offset;
+        };
+        union{
+            unsigned long r2;
+            count_t count;
+        };
+        union{
+            unsigned long r3;
+            void *buffer;
+            void *ptr;
+        };
+    }; };
     Object  *admit;                     /*! 调用者 !*/
     Object  *wait;                      /*! 这个类等待你的回复 !*/
     int     talk;                       /*! 与爱人之间的桥梁 !*/
@@ -79,7 +89,7 @@ struct _object{
 extern  Object *object_table[NR_OBJECT];     /*! 对象表,在该表中的对象才是真正的对象 !*/
 extern void dorun(void);
 extern Object *cloneObject(Object *obj);
-extern ObjectDesc byName(String);
-extern ObjectDesc byId(id_t id);
+extern object_t byName(String);
+extern object_t byId(id_t id);
 
 #endif

@@ -4,7 +4,7 @@
 
 
 #define clear_page(p)   \
-    asm("rep stosl\n\t\t"::"a"(0),"c"(0x1000 >> 2),"D"(p));
+    __asm__("rep stosl\n\t\t"::"a"(0),"c"(0x1000 >> 2),"D"(p));
 
 #define mm_error(fmt,...)   printk("\eg[KMEM ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
 #define mm_log(fmt,...)   printk("[KMEM ] : |LOG     | "fmt"\n",##__VA_ARGS__)

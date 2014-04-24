@@ -1,7 +1,7 @@
 #include    <string.h>
 #include    <stddef.h>
 void *memcpy(void *dest,const void *src,int n){
-    asm("cld\n\t"
+    __asm__("cld\n\t"
             "rep\n\t"
             "movsb\n\t"
             :
@@ -11,7 +11,7 @@ void *memcpy(void *dest,const void *src,int n){
     return dest;
 }
 void *memset(void *dest,int ch,int n){
-    asm("0:movb  %%al,(%1)\n\t"
+    __asm__("0:movb  %%al,(%1)\n\t"
         "inc %1\n\t"
         "loop 0b\n\t"
         :
@@ -21,7 +21,7 @@ void *memset(void *dest,int ch,int n){
 }
 
 char *strcpy(char *dest,const  const char *src){
-    asm("0:lodsb\n\t\t"
+    __asm__("0:lodsb\n\t\t"
         "stosb\n\t\t"
         "test %%al,%%al\n\t\t"
         "jne 0b\n\t\t"
@@ -39,7 +39,7 @@ size_t strlen(const char *str){
 
 int strncmp(const char *s1,const char *s2,size_t len){
     int same;
-    asm("cld\n\t\t"
+    __asm__("cld\n\t\t"
         "rep;cmpsb\n\t"
         "setnz %%al\n\t"
         :"=a" (same)

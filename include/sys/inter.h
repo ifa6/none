@@ -55,14 +55,22 @@ extern pid_t STD_PIDS[3];
 
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
-#define syscall(_sys_call,obj,fn,r1,r2,r3) ({\
+#define syscall(_sys_call,obj,fn,r1,r2,r3,...) ({\
         long __v__; \
         __asm__("int $0x80":"=a"(__v__):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
         __v__; })
 #define lock()      cli()
 #define unlock()    sti()
 
-#define run(obj,fn,r1,r2,r3) syscall(_NR_run,obj,fn,r1,r2,r3)
+static inline long _run( object_t o,long fn, sysarg_t args){
+    return syscall(_NR_run,o,fn,args.r1,args.r2,args.r3);
+};
+#define run(o,fn,...)    _run(o,fn,(sysarg_t){__VA_ARGS__})
+#if 0
+#define _syscall_args   0,0,0
+#define __run(obj,fn,...)   syscall(_NR_run,obj,fn,__VA_ARGS__)
+#define run(obj,fn,...)    _run(obj,fn,##__VA_ARGS__,_syscall_args)
+#endif
 #define ret(_obj,_talk) syscall(_NR_ret,_obj,_talk,0,0,0)
 #define get()   (Object *)syscall(_NR_get,0,0,0,0,0)
 #define hook(fn,methon) syscall(_NR_hook,fn,methon,0,0,0)

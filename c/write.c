@@ -6,7 +6,7 @@
 int write(int fd,void *buffer,int count){
     int len;
     void *buff = _push(buffer,count);
-    len = run(fd,WRITE,0,count,buff);
+    len = run(fd,WRITE,.count = count,.buffer = buff);
     _pop(buff);
     return len;
 }

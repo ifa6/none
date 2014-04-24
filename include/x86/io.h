@@ -6,36 +6,36 @@
  *  等人看到不会揍我,我是无辜的:-)
  */
 #define outb(value,port)   \
-    asm("out    %%al,%%dx"::"a"(value),"d"(port))
+    __asm__("out    %%al,%%dx"::"a"(value),"d"(port))
 #define outw(value,port)   \
-    asm("out    %%ax,%%dx"::"a"(value),"d"(port))
+    __asm__("out    %%ax,%%dx"::"a"(value),"d"(port))
 //下面这个其实我不是很理解,为何这样就能返回_v的值`
 #define inb(port)           ({\
     unsigned    char    _v; \
-    asm volatile("in     %%dx,%%al":"=a"(_v):"d"(port));   \
+    __asm__ volatile("in     %%dx,%%al":"=a"(_v):"d"(port));   \
     _v;\
     })
 #define inw(port)           ({\
     unsigned    short    _v; \
-    asm volatile("in     %%dx,%%ax":"=a"(_v):"d"(port));   \
+    __asm__ volatile("in     %%dx,%%ax":"=a"(_v):"d"(port));   \
     _v;\
     })
 //下面是带延时功能的
 #define outb_p(value,port)  \
-    asm("out    %%al,%%dx\n"\
+    __asm__("out    %%al,%%dx\n"\
         "jmp    1f\n"       \
         "1:jmp  1f\n"       \
         "1:"::"a"(value),"d"(port) \
        )
 #define outw_p(value,port)  \
-    asm("out    %%ax,%%dx\n"\
+    __asm__("out    %%ax,%%dx\n"\
         "jmp    1f\n"       \
         "1:jmp  1f\n"       \
         "1:"::"a"(value),"d"(port) \
        )
 #define inb_p(port)         ({\
     unsigned    char    _v; \
-    asm volatile("in    %%dx,%%al\n"    \
+    __asm__ volatile("in    %%dx,%%al\n"    \
                  "jmp   1f\n"           \
                  "1:jmp 1f\n"           \
                  "1:":"=a"(_v):"d"(port));\
@@ -43,18 +43,18 @@
     })
 #define inw_p(port)         ({\
     unsigned    short    _v; \
-    asm volatile("in    %%dx,%%ax\n"    \
+    __asm__ volatile("in    %%dx,%%ax\n"    \
                  "jmp   1f\n"           \
                  "1:jmp 1f\n"           \
                  "1:":"=a"(_v):"d"(port));\
     _v;                                 \
     })
 
-#define sti()   asm("sti")
-#define cli()   asm("cli")
-#define wait()  asm("wait")
-#define hlt()   asm("hlt")
+#define sti()   __asm__("sti")
+#define cli()   __asm__("cli")
+#define wait()  __asm__("wait")
+#define hlt()   __asm__("hlt")
 #define invalidate()   \
-    asm("mov    %%cr3,%%eax\n\t"    \
+    __asm__("mov    %%cr3,%%eax\n\t"    \
         "mov    %%eax,%%cr3\n\t"    \
         :::"%eax")

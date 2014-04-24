@@ -16,10 +16,10 @@
 
 #define min(a,b)    (((a) > (b)) ? (b) : (a))
 #define port_read(port,buf,nr)\
-    asm("cld;rep;insw"::"d"(port),"D"(buf),"c"(nr))
+    __asm__("cld;rep;insw"::"d"(port),"D"(buf),"c"(nr))
 
 #define port_write(port,buf,nr)\
-    asm("cld;rep;outsw"::"d"(port),"S"(buf),"c"(nr))
+    __asm__("cld;rep;outsw"::"d"(port),"S"(buf),"c"(nr))
 
 
 typedef struct _ioInq{
@@ -78,8 +78,8 @@ static bool at_isbusy(void){
     return true;
 }
 
-void at_cmd(Byte cmd,Byte ftr,Byte count,unsigned long long offset,bool slave){
-    Byte low,mid,high,device;
+void at_cmd(byte_t cmd,byte_t ftr,byte_t count,unsigned long long offset,bool slave){
+    byte_t low,mid,high,device;
     device = 0xE0;
     if(slave) device |= AT_SLAVE;
     device |= ((offset >> 24) & 0xf);
@@ -134,6 +134,7 @@ static void _rw(Object *this){
 
 
 static int at_handler(int irq){
+    (void)irq;
     int status = inb(AT_STATUS);	/* acknowledge interrupt */
     doint(AT_PID,HARDWARE,status,0,0);
     return OK;

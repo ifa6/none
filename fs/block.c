@@ -5,9 +5,8 @@
 
 /*! 读取在dev设备的offset逻辑扇区读写count块数据到buffer !*/
 int block_rw(const dev_t dev,const int cmd,void *buff,off_t offset,size_t count){
-    return run(dev,cmd,BLOCK(offset),BLOCK(count),buff);
+    return run(dev,cmd,.offset = BLOCK(offset),.count =  BLOCK(count),.buffer = buff);
 }
-
 
 /*!
  *  参数里面的zone是inode内部逻辑区号,从0到 (i_size + (BLOCK_SIZE - 1)) / (BLOCK_SIZE) 

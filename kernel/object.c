@@ -2,7 +2,7 @@
 
 Object *object_table[NR_OBJECT];     /*! 对象指示 !*/
 
-static ObjectDesc getFreeObject(void){
+static object_t getFreeObject(void){
     for(int i = 0;i < NR_OBJECT;i++){
         if(object_table[i] == NULL) return i;
     }
@@ -11,7 +11,7 @@ static ObjectDesc getFreeObject(void){
 
 
 Object *cloneObject(Object *obj){
-    ObjectDesc od = getFreeObject();
+    object_t od = getFreeObject();
     if(!isE(0,od)){
         Object *o = get_free_page();
         if(!isNullp(o)){
@@ -25,11 +25,12 @@ Object *cloneObject(Object *obj){
 }
 
 /*! 由文件名返回一个对象 !*/
-ObjectDesc byName(String name){
-    return run(FS_PID,OPEN,0,0,name);
+object_t byName(String name){
+    return run(FS_PID,OPEN,.name = name);
 }
 
 /*! 由ID返回一个对象 !*/
-ObjectDesc byId(id_t id){
+object_t byId(id_t id){
+    (void)id;
     return 0;
 }

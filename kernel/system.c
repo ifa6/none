@@ -24,12 +24,12 @@ String taskName[] = {
 
 
 static void shell(void){
-    ObjectDesc o = run(FS_PID,OPEN,0,0,"shell");
-    run(o,RUN,0,0,0);
+    object_t o = run(FS_PID,OPEN,.ptr = "shell");
+    run(o,RUN);
 }
 
 int system_main(void){
-    int i = 0;
+    count_t i = 0;
     id_t id = 0;
 hel:
     id = fork();
