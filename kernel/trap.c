@@ -52,6 +52,7 @@ extern int      sys_call(int EAX,int EBX,int ECX,int EDX);
 static unsigned long (* const idt)[2] = (unsigned long  (*const)[2])(IDT_TABLE);
 
 IrqHandler irq_table[NR_IRQ_VECTORS];
+object_t irq_object_table[NR_IRQ_VECTORS];
 
 #define set_int(nr,func,section,attr) {\
     idt[nr][0] = ((((unsigned int)func)&0xffff)|((unsigned short )(section)<<16));\
@@ -198,7 +199,8 @@ extern void enable_irq(int irq){
     sti();
 }
 
-static int spurious_irq(int irq){
+static int spurious_irq(object_t o,int irq){
+    (void)o;
     if(irq < 0 || irq >= NR_IRQ_VECTORS)
         panic("invalid call to spurious_irq");
     printk("spurious irq %d \n",irq);
@@ -214,6 +216,7 @@ extern void put_irq_handler(int irq,IrqHandler handler){
         panic("attempt to register second irq handler for irq");
     disable_irq(irq);
     irq_table[irq] = handler;
+    irq_object_table[irq] = self()->id;
     enable_irq(irq);
 }
 

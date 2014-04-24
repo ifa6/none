@@ -4,6 +4,7 @@
 
 #define OBJECT_NAME_LEN     0x10
 #define NR_METHON           0x10
+#define NR_FRIEND           3
 #define NR_OBJECT           0x300       /*! 当前版本所允许的最大对象数量 !*/
 
 typedef struct _object Object;      /*! 对象,none中的一切,当然,现实中很匮乏 ~*/
@@ -38,6 +39,7 @@ struct _object{
     Purview prw;                        /*! 对象权限 !*/
     size_t  cnt;                        /*! 对象引用计数，当该标记为0时，系统可以将其释放 !*/
     char    name[OBJECT_NAME_LEN];      /*! 对象名称，用来给人看的，与机器无关 !*/
+    pid_t   friend[NR_FRIEND];          /*! friend都是可直接访问的对象,他们是祖先指定的,祖先可信任,则他们就可信任 !*/
     union{ struct{
         union{
             long status;
@@ -84,7 +86,10 @@ struct _object{
 #define OBJECT(_) ((Object *)(_))
 #endif
 
-#define toObject(_)   (object_table[_])
+#define toObject(_)   ({\
+        __auto_type _v = _;\
+        if((_v < NR_FRIEND) && _v >= 0){ _v = self()->friend[_];}\
+        object_table[_v];})
 
 extern  Object *object_table[NR_OBJECT];     /*! 对象表,在该表中的对象才是真正的对象 !*/
 extern void dorun(void);

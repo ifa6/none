@@ -17,7 +17,7 @@ typedef long        clock_t;
 typedef long        time_t;
 typedef long        object_t;
 
-typedef int (*IrqHandler)(int);
+typedef int (*IrqHandler)(object_t,int);
 
 typedef enum{
     false = 0,

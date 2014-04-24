@@ -27,12 +27,12 @@ typedef enum{
 /*! Const task PID !*/
 typedef enum {
     GOD = 0,
-    MM_PID,
+    CONS_PID = 1,
+    MM_PID = 3,
     SYSTEM_PID,
     CLOCK_PID,
-    AT_PID,
+    AT_PID = 7,
     FS_PID,
-    CONS_PID,
     RS_PID
 }PID;
 /* System Call type */
@@ -48,10 +48,9 @@ extern int free_page(Pointer);
 extern int printk(const char *fmt,...);
 extern void printx(const char *data,count_t count);
 extern void panic(const char *msg);
-extern pid_t STD_PIDS[3];
-#define STDIN_FILENO    STD_PIDS[0]
-#define STDOUT_FILENO   STD_PIDS[1]
-#define STDERR_FILENO   STD_PIDS[2]
+#define STDIN_FILENO    0
+#define STDOUT_FILENO   1
+#define STDERR_FILENO   2
 
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 

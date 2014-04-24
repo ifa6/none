@@ -253,6 +253,7 @@ static void _mm_init(void){
     hook(WP_PAGE,nw_page);
     hook(EXIT,free_child);
     hook(15,_wait);
+    self()->friend[MM_PID] = MM_PID;
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();

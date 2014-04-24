@@ -21,8 +21,9 @@ static void sl_init(int port){
     (void)inb(port);
 }
 
-static int rs_handler(int irq){
-    doint(RS_PID,HARDWARE,0,0,0);
+static int rs_handler(object_t o,int irq){
+    (void)irq;
+    doint(o,HARDWARE,0,0,0);
     return OK;
 }
 
@@ -60,6 +61,7 @@ static void rs_write(Object *this){
 }
 
 static void _io(Object *this){
+    (void)this;
     int status;
     if(inq){
         status = inb_p(0x3fa);

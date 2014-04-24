@@ -195,6 +195,12 @@ Object *doget(void){
     return self();
 }
 
+static inline void gam(Object *this){
+    this->friend[0]         = 6;
+    this->friend[1]         = 6;
+    this->friend[2]         = 6;
+}
+
 static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int (*entry)()){
     Task *task;
     task = (Task *)get_free_page();
@@ -222,6 +228,7 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
             .eflags = 0x200,
             },sizeof(Registers));
     object_table[id] = OBJECT(task);
+    gam(OBJECT(task));
     ready(task);
     return task;
 }

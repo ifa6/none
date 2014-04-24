@@ -55,7 +55,7 @@
 .globl  cr3
 
 .globl  NR_syscalls,sys_call_table
-.globl  irq_table,
+.globl  irq_table,irq_object_table
 
 
 
@@ -207,8 +207,9 @@ none:
     movl    $irq,%eax;\
     sti; \
     push    $irq;   \
+    pushl   irq_object_table(,%eax,4);\
     call    *irq_table(,%eax,4);    \
-    addl    $4,%esp;    \
+    addl    $8,%esp;    \
     cli; \
     inb     $INT_CTLMASK,%al;    \
     andb    $(~(1<<(irq))),%al; \
@@ -238,8 +239,9 @@ hwint00:
 #sti; 
     pushl   $0
     movl    $0,%eax
-    call    *irq_table(,%eax,4)     //不用恢复ESP
-    addl    $4,%esp;    \
+    pushl   irq_object_table(,%eax,4)
+    call    *irq_table(,%eax,4)
+    addl    $8,%esp;    \
     push    %esp
     call    sched
     movl    %eax,%esp
@@ -279,8 +281,9 @@ hwint07:
     movl    $irq,%eax;\
     sti;     \
     pushl   $irq;   \
+    pushl   irq_object_table(,%eax,4);\
     call    *irq_table(,%eax,4);  \
-    addl    $4,%esp;\
+    addl    $8,%esp;\
     cli;         \
     inb     $INT2_CTLMASK,%al;   \
     andb    $(~(1<<(irq-8))),%al;   \

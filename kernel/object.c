@@ -3,7 +3,7 @@
 Object *object_table[NR_OBJECT];     /*! 对象指示 !*/
 
 static object_t getFreeObject(void){
-    for(int i = 0;i < NR_OBJECT;i++){
+    for(int i = MM_PID;i < NR_OBJECT;i++){
         if(object_table[i] == NULL) return i;
     }
     return 0;

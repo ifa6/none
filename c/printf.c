@@ -3,7 +3,6 @@
 #include    <stdio.h>
 #include <stdlib.h>
 #include    <sys/inter.h>
-pid_t STD_PIDS[3] = {CONS_PID,CONS_PID,CONS_PID};
 static  char buf[1024] = {0};
 extern int printf(const char *fmt,...){
     va_list args;

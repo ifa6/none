@@ -7,9 +7,10 @@ static  time_t startup_time;
 /*! 时钟中断,可能不太合群,不太协调,毕竟他是整个系统的脉搏,任务繁重 ~*/
 
 
-int clock_handler(int irq){
+int clock_handler(object_t o,int irq){
+    (void)irq;
     if(TASK(leading)->ucount) TASK(leading)->ucount--;
-    if(!(jiffies % 10)) doint(CLOCK_PID,HARDWARE,0,0,0);   /*!-------!*/
+    if(!(jiffies % 10)) doint(o,HARDWARE,0,0,0);   /*!-------!*/
     return OK;
 }
 
@@ -90,6 +91,7 @@ static void _print(Object *this){
 }
 
 static void _clk(Object *this){
+    (void)this;
 }
 
 static void clock_init(void){

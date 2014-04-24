@@ -8,17 +8,17 @@ extern int rs_main();
 
 int (*tasks[])() = {
     clock_main,
+    cons_main,
     at_main,
     fs_main,
-    cons_main,
     rs_main,
 };
 
 String taskName[] = {
     "Clock",
+    "Conslo",
     "AT Hardware",
     "FS",
-    "Conslo",
     "Serial"
 };
 
@@ -40,7 +40,6 @@ hel:
         tasks[i]();
     }else{
         i++;
-        /* printk("ID = %d %s\n",id,self()->name); */
         if(i < sizeof(tasks) / sizeof(void*)) goto hel;
         else shell();
     }

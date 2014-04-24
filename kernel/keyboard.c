@@ -58,15 +58,16 @@ static inline unsigned char pop(void){
 #undef  full
 
 
-static int keyboard_handler(int nr){
+static int keyboard_handler(object_t o,int nr){
+    (void)nr;
     unsigned char in = inb(0x60);
     push(in);
-    doint(CONS_PID,HARDWARE,0,0,0);
+    doint(o,HARDWARE,0,0,0);
     return OK;
 }
 
 static char buffer[52];
-static int index = 0;
+static count_t index = 0;
 
 
 static Object *admit = NULL;
@@ -74,6 +75,7 @@ static count_t count = 0;
 static void *_buf = NULL;
 
 static void _input(Object *this){
+    (void)this;
     static bool shift = false;
     unsigned char ch = pop();
     const unsigned char *str = 0;

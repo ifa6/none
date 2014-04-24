@@ -133,10 +133,10 @@ static void _rw(Object *this){
 }
 
 
-static int at_handler(int irq){
+static int at_handler(object_t o,int irq){
     (void)irq;
     int status = inb(AT_STATUS);	/* acknowledge interrupt */
-    doint(AT_PID,HARDWARE,status,0,0);
+    doint(o,HARDWARE,status,0,0);
     return OK;
 }
 
