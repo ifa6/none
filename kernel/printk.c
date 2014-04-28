@@ -34,4 +34,5 @@ extern void printx(const char *data,count_t count){
         }
         printk("%02HX ",data[i]);
     }
+    printk("\n");
 }

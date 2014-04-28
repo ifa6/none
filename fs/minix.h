@@ -1,6 +1,5 @@
 #ifndef __MINIX_FS_H__
 #define __MINIX_FS_H__
-#include    "types.h"
 
 typedef unsigned short u16_t;
 

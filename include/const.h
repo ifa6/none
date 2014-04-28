@@ -24,15 +24,15 @@
 #define TR_DESC         0x38    /*      */
 #define KERNEL_STACK    0x7ff000    /*! 内核栈虚拟地址 !*/
 
-
+#define     RAMDISK_ADDR    0x315000     /*! ramdisk 起始地址 !*/
 #define     MMAP_BASE       0x100000    /* 内存空闲位图开始物理地址 */
 #define     MMAP_END        0x200000    /* 空闲内存位图结束物理地址 */
 #define     CONST_MEM       0x800000    /* 内核空间 */
 #define     PAGE_START      0x0
 #define     KMEM            0x40000000  /* 内核对等映射顶端 */
-#define     DIE_DIR         0x203000        /* die进程页目录,在内核启动之前,由boot设置,这里的boot是内核boot,*/
-#define     DIE_TABLE       0x204000        /*  前4MB的页表 */
-#define     KERNEL_TABLE    0x205000        /* 0X205000 ~ 0X305000 内核映射页表 256项,共占1MB内存 */
+#define     DIE_DIR         0x203000    /* die进程页目录,在内核启动之前,由boot设置,这里的boot是内核boot,*/
+#define     DIE_TABLE       0x204000    /*  前4MB的页表 */
+#define     KERNEL_TABLE    0x205000    /* 0X205000 ~ 0X305000 内核映射页表 256项,共占1MB内存 */
 
 #define LATCH   1193180
 

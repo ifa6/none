@@ -31,6 +31,7 @@ static zone_t  _get_zone(MinixInode *inode,zone_t zone){
         nz = (zone_t *)block;
         return nz[zone % ZONE_IN_BLOCK];
     }
+    zerror("get_zone failure,%d",__LINE__);
     return 0;
 }
 /*! 读写inode节点的zone区块 !*/

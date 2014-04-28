@@ -7,7 +7,7 @@
 # root directories
 ROOT_DIR := $(PWD)
 d 		:= a.img
-h 		:= n.hd
+h 		:= ramdisk.img
 s 		:= objs/kernel/none
 
 boot    := mnt/boot
@@ -18,11 +18,13 @@ COMMONDIR 	:= c
 KERNELDIR 	:= kernel
 TESTSDIR 	:= tests
 MMDIR 		:= mm
+DEVICEDIR	:= device
 EXECS 		:= $(addprefix objs/,$(basename $(wildcard $(TESTSDIR)/*.c)))
 SUBDIRS 	:= \
 	$(COMMONDIR)\
 	$(FSDIR)\
 	$(MMDIR)\
+	$(DEVICEDIR)\
 	$(KERNELDIR)\
 	$(TESTSDIR) \
 
@@ -39,6 +41,8 @@ all :
 debug:
 	@objdump -d $(OBJS)/kernel/none > t.src
 
+host:
+	@cp $s $h /boot/
 install: $s
 	@-mount -o loop -t ext2 $d $(boot)
 	@-mount $h $(hw)

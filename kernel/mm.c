@@ -80,6 +80,12 @@ void mm_init(void){
 #define lhigh    map->length_high
     memory_map_t *map = (memory_map_t *)envp->mmap_addr;
     memory_map_t *end = (memory_map_t *)(envp->mmap_addr + envp->mmap_length);
+    module_t     *module = (void*)(envp->mods_addr);
+    void *  mod_start = (void*)module->mod_start;
+    count_t count = module->mod_end - module->mod_start;
+
+    /*! 将让ramdisk 拷贝到合适的位置 !*/
+    memcpy((void*)RAMDISK_ADDR,mod_start,count);
 
     unsigned char busy = 100;
 

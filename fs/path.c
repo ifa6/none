@@ -26,7 +26,7 @@ static MinixInode *search_dir(MinixInode *di,String name){
     zone_t dnoze = FULL_BLOCK(di->i_size);
     for(int i = 0;i < dnoze;i++){
         if(ERROR == zone_rw(di,READ,i,block)){
-            zerror("search_dir : zone_rw fail");
+            zerror("search_dir : zone_rw fail\n");
             goto error_ret;
         }
         for(int j = 0;j < DIR_IN_BLOCK;j++){

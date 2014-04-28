@@ -5,11 +5,12 @@ extern int fs_main();
 extern int cons_main();
 extern int clock_main();
 extern int rs_main();
+extern int ramdisk_main();
 
 int (*tasks[])() = {
     clock_main,
     cons_main,
-    at_main,
+    ramdisk_main,
     fs_main,
     rs_main,
 };
@@ -17,9 +18,10 @@ int (*tasks[])() = {
 String taskName[] = {
     "Clock",
     "Conslo",
-    "AT Hardware",
+    "RamDisk",
     "FS",
     "Serial"
+    "AT Hardware",
 };
 
 

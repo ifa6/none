@@ -130,13 +130,14 @@ static void fs_write(Object *this){
 }
 
 static void fs_close(Object *this){
+    (void)this;
     printk("\eRFIXME\ew : FS colse\n");
     run(MM_PID,CLOSE);
 }
 
 static void fs_open(Object *this){
     MinixInode *inode = eat_path(this->buffer);
-    fs_log("|OPEN| inode %p\n",inode);
+    fs_log("|OPEN| inode %p,file : %s\n",inode,this->buffer);
     if(!isNullp(inode)){
         id_t id = fork();
         if(0 == id){
@@ -163,6 +164,7 @@ static void fs_init(void){
     if(super == NULL) panic("\erDon't read super block!\ew\n");
     else{
         if(ERROR == get_inode(MINIX_ROOT_INO,&root_inode)) panic("\erDon't read inode block!\ew\n");
+
     }
 }
 
