@@ -88,9 +88,9 @@ divide_error:
     pushl   $do_divide_error
 error_code:
     xchgl   %eax,4(%esp)        #保存%eax,并将错误号放入%eax
-    xchgl   %ebx,(%esp)         #保存%ebx,并将处理函数指针放入%ebx
-    pushl   %ecx
+    xchgl   %ecx,(%esp)         #保存%ecx,并将处理函数指针放入%ecx
     pushl   %edx
+    pushl   %ebx
     pushl   %ebp
     pushl   %esi
     pushl   %edi
@@ -104,7 +104,7 @@ error_code:
     movw    %ax,%ds
     movw    %ax,%es
     movw    %ax,%fs
-    call    *%ebx
+    call    *%ecx
     addl    $8,%esp
     popl    %gs
     popl    %fs
@@ -113,9 +113,9 @@ error_code:
     popl    %edi
     popl    %esi
     popl    %ebp
+    popl    %ebx
     popl    %edx
     popl    %ecx
-    popl    %ebx
     popl    %eax
     iret
 
