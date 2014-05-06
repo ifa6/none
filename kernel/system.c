@@ -7,21 +7,16 @@ extern int clock_main();
 extern int rs_main();
 extern int ramdisk_main();
 
-int (*tasks[])() = {
-    clock_main,
-    cons_main,
-    ramdisk_main,
-    fs_main,
-    rs_main,
-};
-
-String taskName[] = {
-    "Clock",
-    "Conslo",
-    "RamDisk",
-    "FS",
-    "Serial"
-    "AT Hardware",
+struct {
+    String name;
+    int (*entry)();
+}tasks[] = {
+    {.name = "Clock",         .entry = clock_main},
+    {.name = "Conslo",        .entry = cons_main},
+    {.name = "AT Hard",       .entry = at_main},
+    {.name = "File System",   .entry = fs_main},
+    {.name = "Serial",        .entry = rs_main},
+    {.name = "Ram Disk",      .entry = ramdisk_main},
 };
 
 
@@ -38,11 +33,11 @@ hel:
     if(ERROR == id){
         printk("Fork Failt\n");
     }else if(0 == id){
-        memcpy(self()->name,taskName[i],strlen(taskName[i]) + 1);
-        tasks[i]();
+        memcpy(self()->name,tasks[i].name,strlen(tasks[i].name) + 1);
+        tasks[i].entry();
     }else{
         i++;
-        if(i < sizeof(tasks) / sizeof(void*)) goto hel;
+        if(i < ARRAY_SIZE(tasks)) goto hel;
         else shell();
     }
     dorun();

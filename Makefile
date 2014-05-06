@@ -7,7 +7,11 @@
 # root directories
 ROOT_DIR := $(PWD)
 d 		:= a.img
+ifeq ("$(RAMDISK)",1)
 h 		:= ramdisk.img
+else
+h		:= n.hd
+endif
 s 		:= objs/kernel/none
 
 boot    := mnt/boot
