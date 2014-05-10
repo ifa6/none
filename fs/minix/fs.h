@@ -5,7 +5,7 @@
 #include    <types.h>
 #include    <stdio.h>
 #include    <object.h>
-#include    "minix.h"
+#include    <fs/minix.h>
 #include    "file.h"
 
 
