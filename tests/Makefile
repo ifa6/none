@@ -4,9 +4,7 @@
 .PHONY:all clean
 # LIBS 
 STATIC_LIBARY := c
-BUILD		  := BINARYS
-ENTRY 		  := 0xc00000
-CLEANS		  := $(basename $(wildcard *.c))
+SUBDIR		  := true
 
 ifeq ($(ROOT_DIR),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)

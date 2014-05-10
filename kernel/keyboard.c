@@ -118,9 +118,15 @@ void copy_buffer(Object *o,void *buf,count_t len){
     }
 }
 
+static void _reset(Object *thiz){
+    outb_p(0xfe,0x64);
+    ret(thiz->admit,OK);
+}
+
 void keyboard_init(void){
     kb_in.head = kb_in.tail = 0;
     kb_in.full = false;
     self()->fns[HARDWARE] = _input;
+    self()->fns[EXIT] = _reset;
     put_irq_handler(1,keyboard_handler);
 }

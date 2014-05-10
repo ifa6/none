@@ -11,9 +11,6 @@ typedef struct _buffer{
 }Buffer;
 static Buffer   *first = NULL;
 
-#define BUFFER_START    0x10000
-#define BUFFER_END      0xa0000
-#define BUFFER_COUNT    ((BUFFER_END - BUFFER_START) >> 12)
 void buffer_init(void){
     int i = 0;
     Buffer  *buf = (void*)BUFFER_START;

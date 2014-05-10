@@ -12,7 +12,7 @@ h 		:= ramdisk.img
 else
 h		:= n.hd
 endif
-s 		:= objs/kernel/none
+s 		:= bin/none
 
 boot    := mnt/boot
 hw		:= mnt/hw
@@ -23,7 +23,6 @@ KERNELDIR 	:= kernel
 TESTSDIR 	:= tests
 MMDIR 		:= mm
 DEVICEDIR	:= device
-EXECS 		:= $(addprefix objs/,$(basename $(wildcard $(TESTSDIR)/*.c)))
 SUBDIRS 	:= \
 	$(COMMONDIR)\
 	$(FSDIR)\
@@ -39,7 +38,7 @@ $(shell mkdir -p $(boot) $(hw))
 
 all :
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+		$(MAKE)  -s -C $$dir $$* || exit 1;\
 	done
 
 debug:
@@ -51,7 +50,7 @@ install: $s
 	@-mount -o loop -t ext2 $d $(boot)
 	@-mount $h $(hw)
 	@chmod a+w $(hw) $(boot)
-	@-cp $(EXECS) $(hw)
+	@-cp bin/* $(hw)
 	@sleep 1
 
 uninstall:
@@ -66,6 +65,7 @@ go: install uninstall
 	@bochs
 
 clean:
+	@-rm -rf -- bin/
 	@-rm -rf -- lib/
 	@-rm -rf -- objs/
 	@-rm -f -- *.out *.src tags *.swap

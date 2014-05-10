@@ -8,7 +8,7 @@ ifeq ("$(ROOT_DIR)","")
 	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 endif
 
-ifeq ("$(V)",1)
+ifeq ("$(V)","1")
 	Q :=
 else
 	Q := @
@@ -23,6 +23,7 @@ LOCAL_PATH  := $(shell pwd)
 INCLUDE_DIR := $(ROOT_DIR)/include
 LIB_DIR 	:= $(ROOT_DIR)/lib
 OBJS_DIR	:= $(subst $(ROOT_DIR),$(ROOT_DIR)/objs,$(LOCAL_PATH))
+BIN_DIR	    := $(ROOT_DIR)/bin
 
 vpath %.h $(INCLUDE_DIR)
 vpath %.a $(LIB_DIR)
@@ -35,9 +36,14 @@ ifndef SRC_FILES
 SRC_FILES	:= $(wildcard *.[cSs])
 endif
 
-$(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/)
-sub-dir = $Q for dir in `find ./ -type d -maxpdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
-
+$(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/ $(BIN_DIR)/)
+#sub-dir = $Q for dir in `find ./ -type d -maxdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
+define sub-dir
+	$Q for f in `find ./ -mindepth 2 -maxdepth 2 -name "Makefile" `;do\
+		dir=`dirname $$f`;\
+		$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+	done;
+endef
 
 ##########################################################################
 # 	工具定义	
@@ -71,29 +77,27 @@ MODULE 	:= $(addprefix $(OBJS_DIR)/,$(MODULE_NAME))
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
 $(MODULE) : $(OBJS) $(LIBS)
-	$Q echo "  [$(BUILD)]	Builder    $@"
-	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
+ifeq ($(SUBDIR),true)
+	$(call sub-dir,$$*)
 endif
-
-ifeq ($(BUILD),BINARYS)
-MODULE := $(MODULE_NAME)
-LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
-LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
-$(BUILD): $(OBJS) $(LIBS)
-	$Q echo "  [$(BUILD)]	Builder    $(MODULE)"
-	$Q for exec in $(basename $(OBJS));do\
-		$(LD) $$exec.o $(LDFLAGS) -e main -Ttext $(ENTRY) -o $$exec;\
-	done
+	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
+	$Q echo "  [$(BUILD)]	Install    bin/   <=== "`basename $@`
+	$Q cp $@ $(BIN_DIR)/
 endif
 
 ifeq ($(BUILD),LIBRARY)
 MODULE := $(LIB_DIR)/lib$(MODULE_NAME).a
 $(MODULE): $(OBJS)
-	$Q echo "  [$(BUILD)]	Builder    $(MODULE)"
+ifeq ($(SUBDIR),true)
+	$(call sub-dir,$$*)
+endif
+	$Q echo "  [$(BUILD)]	Install    lib/   <=== "`basename $(MODULE)`
 	$Q $(AR) -r $@ $? > /dev/null 2>&1
 else
 all:
-	$Q echo "What do you want fuck?"
+ifeq ($(SUBDIR),true)
+	$(call sub-dir,$$*)
+endif
 endif
 
 clean:
