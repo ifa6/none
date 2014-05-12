@@ -33,8 +33,8 @@ static void ramdisk_init(void){
     ramdisk = (void*)RAMDISK_ADDR;
     ramdiskCount = 0x28000;
 #endif
-    self()->write = ramdisk_write;
-    self()->read = ramdisk_read;
+    hook(WRITE,ramdisk_write);
+    hook(READ,ramdisk_read);
 
 }
 

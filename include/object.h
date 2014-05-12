@@ -65,20 +65,7 @@ struct _object{
     iLink   *ilink;                         /*! 优先执行链(中断请求) !*/
     struct{
         int     fn;
-        union{
-            struct{
-                /*! 对象访问方法,至于怎么访问,由具体对象决定,比如文件对象就是读文件内容,进程就访问进程内存影像 !*/
-                Methon  read;          
-                Methon  write;         /*! 道理同上 !*/
-                Methon  open;
-                Methon  close;
-                Methon  clone; /*! 克隆对象拷贝一个对象的镜像,但是这个镜像是一个独立的对象,同一个对象由引用计数控制 !*/
-                Methon  hw;
-                Methon  ioctl;
-            };
-            /*! 自定义方法 !*/
-            Methon  fns[NR_METHON];
-        };
+        Methon  fns[NR_METHON];
     };
 };
 
