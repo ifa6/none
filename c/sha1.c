@@ -23,10 +23,7 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <errno.h>
 
 #undef BIG_ENDIAN_HOST
 typedef unsigned int u32;
