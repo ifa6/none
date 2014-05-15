@@ -1,5 +1,5 @@
 #include    "kernel.h"
-#include    <multiboot.h>
+#include    <boot/multiboot.h>
 #include    "buffer.h"
 
 

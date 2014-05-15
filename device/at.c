@@ -36,7 +36,7 @@ static  IOInq *admit = NULL;   /*! 当前处理任务 !*/
 
 /*! 将请求添加到队列中 !*/
 static void _add(IOInq *iq){
-    if(isNullp(inq)){
+    if(!inq){
         inq = iq;
         inq->next = inq;
         inq->prev = inq;
@@ -57,7 +57,7 @@ static void _add(IOInq *iq){
 
 /*! 从队列中剔除请求,并将资源释放 !*/
 static void _sub(void){
-    if(!isNullp(admit)){
+    if(admit){
         IOInq *next = admit->next;
         IOInq *prev = admit->prev;
         next->prev = prev;
@@ -118,14 +118,14 @@ static void _doio(){
 /*! 请求的处理 !*/
 static void _rw(Object *this){
     IOInq *in = malloc(sizeof(IOInq));
-    if(!isNullp(in)){
+    if(in){
         in->inq = this->admit;
         in->cmd = (this->fn == READ ? AT_READ : AT_WRITE);
         in->offset = this->offset;
         in->count = this->count;
         in->buffer = this->buffer;
         _add(in);
-        if(isNullp(admit)){
+        if(!admit){
             admit = in;
             _doio();
         }
@@ -143,7 +143,7 @@ static int at_handler(object_t o,int irq){
 
 /*! 发送读写设备给硬盘,然后返回等待硬盘准备好 !*/
 static void _io(Object *this){
-    if(!isNullp(admit)){
+    if(admit){
         int status = this->status;
         void *buffer = admit->buffer;
         if(at_isbusy()) ret(admit->inq,ERROR);
@@ -161,7 +161,7 @@ static void _io(Object *this){
         if(admit->count <= 0){
             ret(admit->inq,OK);
             _sub();
-            if(!isNullp(admit)){
+            if(admit){
                 _doio();
             }
         }

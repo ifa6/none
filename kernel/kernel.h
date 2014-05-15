@@ -1,14 +1,14 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
-#include <const.h>
-#include <types.h>
-#include <x86/io.h>
+#include <none/const.h>
+#include <none/types.h>
+#include <none/task.h>
 #include <sys/inter.h>
+#include <x86/io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <task.h>
 #include <z.h>
 
 

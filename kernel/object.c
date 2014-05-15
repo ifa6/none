@@ -12,9 +12,9 @@ static object_t getFreeObject(void){
 
 Object *cloneObject(Object *obj){
     object_t od = getFreeObject();
-    if(!isE(0,od)){
+    if(0 != od){
         Object *o = get_free_page();
-        if(!isNullp(o)){
+        if(o){
             memcpy(o,obj,PAGE_SIZE);
             object_table[od] = o;
             o->id = od;

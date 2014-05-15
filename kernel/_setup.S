@@ -13,8 +13,8 @@
 /*  汇编代码    */
 #define ASM
 /*  multiboot规范头文件,该文件直接拷贝于grub_0.98/docs/multiboot.h */
-#include    <multiboot.h>
-#include    <const.h>
+#include    <boot/multiboot.h>
+#include    <none/const.h>
 
 #define CreateSection(base,limit,attr) \
     .short  limit&0xffff;\

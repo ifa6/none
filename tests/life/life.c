@@ -3,6 +3,7 @@
 #include    <x86/io.h>
 #include    <sys/inter.h>
 #define     edprint(fmt,...) printf("\er%4d : \ew"fmt"\n",__LINE__,##__VA_ARGS__)
+#include    <none/const.h>
 #include    <z.h>
 
 #define VGABASE ((void *)0x0)

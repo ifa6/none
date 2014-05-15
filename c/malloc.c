@@ -2,10 +2,10 @@
  *  Copy form linux 0.12 .
  *
  */
-#include    <const.h>
 #include    <stdio.h>
-#include    <types.h>
 #include    <sys/inter.h>
+#include    <none/const.h>
+//#include    <types.h>
 
 #define isnull(p)   (!(p))
 /* get page pointer */
@@ -20,7 +20,7 @@ typedef struct _bucket{
 }Bucket;
 
 struct _bucket_dir{
-    int     size;
+    unsigned int     size;
     Bucket  *bucket;
 };
 
@@ -88,7 +88,7 @@ void *malloc(unsigned int len){
     return retval;
 }
 
-void free_s(void *obj,int size){
+void free_s(void *obj,unsigned int size){
     void    *page;
     struct _bucket_dir *bdir;
     Bucket  *bdesc,*prev;

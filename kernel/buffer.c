@@ -23,16 +23,15 @@ void buffer_init(void){
 
 static void *get_buffer(void){
     Buffer *buff = NULL;
-    if(!isNullp(first)){
+    if(first){
         buff = first;
         first = first->next;
     }
     return buff;
-
 }
 
 static void free_buffer(Buffer *buff){
-    if(isNullp(buff)) panic("free_buffer error\n");
+    if(!buff) panic("free buffer error\n");
     buff = (void*)(((Pointer)buff) & (~0xfff));
     buff->next = first;
     first = buff;
@@ -43,7 +42,7 @@ void *dobuffer(int fn,void *s,size_t len){
     len &= 0xfff;
     if(fn == WRITE){
         buff = get_buffer();
-        if(!isNullp(buff) && !isNullp(s) && len){
+        if(and(,buff,s,len)){
             memcpy(buff,s,len);
         }
     }else if(fn == READ){

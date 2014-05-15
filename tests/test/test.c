@@ -2,7 +2,9 @@
 #include    <string.h>
 #include    <x86/io.h>
 #include    <sys/inter.h>
+#include    <none/const.h>
 #include    "bmp.h"
+#include <z.h>
 
 #define VGABASE ((void *)0x0)
 #define VGALIMIT    0x10000
@@ -156,6 +158,7 @@ static void drawCircle(int xc, int yc, int r, int fill, long c) {
 }
 
 static void drawPixel(int mode,int x,int y,unsigned short color){
+    unused(mode);
     unsigned int pos = y * 640 + x;
     unsigned short _page = pos >> 16;
     /*! FIXME : 暂时将就下吧, !*/

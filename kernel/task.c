@@ -1,4 +1,3 @@
-#include    "task.h"
 #include    "kernel.h"
 
 static Task    *rdy_head[NR_PRI];  /*! 调度队列头,参考MINIX设计 !*/
@@ -50,7 +49,7 @@ static Registers *pick_task(Registers *reg){
 }
 
 Registers *sched(Registers *reg){
-    if(!isNullp(rdy_head[PRI_USER]) && (!rdy_head[PRI_USER]->ucount)){
+    if(rdy_head[PRI_USER] && rdy_head[PRI_USER]->ucount){
         rdy_tail[PRI_USER]->next = rdy_head[PRI_USER];
         rdy_tail[PRI_USER] = rdy_head[PRI_USER];
         rdy_head[PRI_USER] = rdy_head[PRI_USER]->next;
@@ -62,8 +61,8 @@ Registers *sched(Registers *reg){
 
 /*! 接受党和人民考验的时候到了,是时候派我上场啦?你是说我还要排队,shit !*/
 /*static */void ready(Task *rt){
-    if(isNullp(rt)) panic("\erReady    \eb[rTask is <null>\eb]");
-    if(isNullp(rdy_head[rt->pri]))
+    if(!rt) panic("\erReady \eb[rTask is <null>\eb]");
+    if(!rdy_head[rt->pri])
         rdy_head[rt->pri] = rt;
     else
         rdy_tail[rt->pri]->next = rt;
@@ -73,7 +72,7 @@ Registers *sched(Registers *reg){
 
 static void unready(Task *rt){
     Task *xt;
-    if(isNullp(rt)) panic("\erUnready    \eb[\erTask is <null>\eb]");
+    if(!rt) panic("\erUnready   \eb[\erTask is <null>\eb]");
     if(NULL != (xt = rdy_head[rt->pri])){ 
         if(xt == rt){
             rdy_head[rt->pri] = rt->next;
@@ -124,10 +123,10 @@ int dohook(unsigned long fn,Methon hook){
 
 int dofn(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object*obj = toObject(o);
-    if(isNullp(obj)) return ERROR;
+    if(!obj) return ERROR;
     /*! 目标有事务在处理,则,将本次请求挂入队列 !*/
     if(!isSleep(obj)){
-        if(isNullp(obj->wlink)) obj->wlink = self();
+        if(!obj->wlink) obj->wlink = self();
         else obj->wtail->wnext = self();
         self()->wnext = NULL;
         obj->wtail = self();
@@ -144,14 +143,14 @@ int dofn(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned 
 /*! 我很讨厌定义多个接口,接口太多太不美.但是,能有什么更好的办法呢? !*/
 int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object *obj = toObject(o);
-    if(isNullp(obj)) panic("\er doint   \eb[\rnull\eb]\n");
+    if(!obj) panic("\er doint   \eb[\rnull\eb]\n");
     if(!isSleep(obj)){
         iLink   *in = malloc(sizeof(iLink));
-        if(isNullp(in)) panic("\er doint \eb[\ermemory full\eb]\n");
+        if(!in) panic("\er doint \eb[memory full\eb]\n");;
         in->fn = fn; in->r1 = r1;
         in->r2 = r2; in->r3 = r3;
         in->admit = self(); in->inext = NULL;
-        if(!isNullp(obj->ilink)) in->inext = obj->ilink;
+        if(obj->ilink) in->inext = obj->ilink;
         obj->ilink = in;
     }else{
         _admit(obj,fn,r1,r2,r3);
@@ -161,7 +160,7 @@ int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned
 
 int doret(Object *obj,unsigned long talk){
     /*! Object *obj = toObject(o); !*/
-    if(!isNullp(obj) && isWaitMe(obj)){
+    if(obj && isWaitMe(obj)){
         obj->talk = talk;
         _wakeup(obj);
     }
@@ -169,7 +168,7 @@ int doret(Object *obj,unsigned long talk){
 }
 
 Object *doget(void){
-    if(!isNullp(self()->ilink)){
+    if(self()->ilink){
         iLink   *in = self()->ilink;
 #define eval(v,x)   ((v)->x = (v)->ilink->x)
 #define getInt(this)    {\
@@ -183,7 +182,7 @@ Object *doget(void){
         self()->ilink = in->inext;
         free(in);
         return self();
-    }else if(!isNullp(self()->wlink)){
+    }else if(self()->wlink){
         self()->admit = self()->wlink;
         self()->wlink = self()->wlink->wnext;
     }else{      /*! 如果当前没有请求,则进入睡眠,等待请求将其唤醒 !*/

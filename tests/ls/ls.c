@@ -9,6 +9,7 @@
 #include    <stdlib.h>
 #include    <stdio.h>
 #include    <fs/minix.h>
+#include <sys/inter.h>
 MinixDirentry   dir[10];
 int main(void){
     int curr = open("/boot",0);    

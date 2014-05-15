@@ -1,7 +1,5 @@
 #include    <sys/inter.h> 
 #include    <string.h>
-#include    <types.h>
-#include    <object.h>
 
 int read(int fd,void *buffer,int count){
     int len;

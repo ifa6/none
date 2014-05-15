@@ -5,7 +5,7 @@
 #   X86硬件相关处理包括x86中断,时钟中断,硬件中断等入口,系统调用入口也在该文件处理
 #   
 #
-#include    <const.h>
+#include    <none/const.h>
 #include    "i8259.h"
 
 .globl	divide_error               # 除法出错

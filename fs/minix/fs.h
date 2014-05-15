@@ -2,9 +2,9 @@
 #define __FS_H__
 
 #include    <sys/inter.h>
-#include    <types.h>
+//#include    <types.h>
 #include    <stdio.h>
-#include    <object.h>
+//#include    <object.h>
 #include    <fs/minix.h>
 #include    "file.h"
 

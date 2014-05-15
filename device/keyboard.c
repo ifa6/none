@@ -88,7 +88,7 @@ static void _input(Object *this){
             buffer[index++] = str[ch];
             printk("%c",buffer[index - 1]);
             if(index >= 52) index = 0;
-            if(!isNullp(admit) && index){
+            if(admit && index){
                 copy_buffer(admit,_buf,count);
                 admit = NULL;
                 count = 0;
@@ -100,7 +100,7 @@ static void _input(Object *this){
 
 void copy_buffer(Object *o,void *buf,count_t len){
     int _v = 0;;
-    if(isE(0,index)){
+    if(0 == index){
         admit = o;
         count = len;
         _buf = buf;

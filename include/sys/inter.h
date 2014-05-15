@@ -2,7 +2,7 @@
 #define INTER_H
 
 #include    <x86/io.h>
-#include    <types.h>
+#include    <none/types.h>
 
 /* 任意进程 */
 #define ANY         -1
@@ -48,9 +48,13 @@ extern int free_page(Pointer);
 extern int printk(const char *fmt,...);
 extern void printx(const char *data,count_t count);
 extern void panic(const char *msg);
+
 #define STDIN_FILENO    0
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2
+
+#define OK  0
+#define ERROR   -1
 
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
@@ -64,12 +68,8 @@ extern void panic(const char *msg);
 static inline long _run( object_t o,long fn, sysarg_t args){
     return syscall(_NR_run,o,fn,args.r1,args.r2,args.r3);
 };
+
 #define run(o,fn,...)    _run(o,fn,(sysarg_t){__VA_ARGS__})
-#if 0
-#define _syscall_args   0,0,0
-#define __run(obj,fn,...)   syscall(_NR_run,obj,fn,__VA_ARGS__)
-#define run(obj,fn,...)    _run(obj,fn,##__VA_ARGS__,_syscall_args)
-#endif
 #define ret(_obj,_talk) syscall(_NR_ret,_obj,_talk,0,0,0)
 #define get()   (Object *)syscall(_NR_get,0,0,0,0,0)
 #define hook(fn,methon) syscall(_NR_hook,fn,methon,0,0,0)

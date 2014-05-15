@@ -41,7 +41,7 @@ typedef union _pageItem{
 static PageItem *copy_items(PageItem *items,int start,int end){
     PageItem *nitm = NULL;
     nitm = (void *)get_free_page();
-    if(isNullp(nitm)) panic("copy_items failt : memory out!");
+    if(!nitm) panic("copy_item failt : memory out!");
     for(int i = start;i < end;i++){
         //clrWrite(items + i);
         clrPresent(items + i);
@@ -72,7 +72,7 @@ static PageItem *clone_space(PageItem *space,void *page){
 static void clone(Object *this){
     Task *ot = TASK(this->admit);
     Task *nt = TASK(cloneObject(OBJECT(ot)));
-    if(isNullp(nt)){
+    if(!nt){
         ret(this->admit,ERROR);
     }else{
         nt->core = (Pointer)clone_space((void *)(ot->core),nt);
@@ -122,7 +122,7 @@ static void delete(Object *this){
 static void free_child(Object *this){
     Task *t = TASK(this->admit);
     Object *child = toObject(this->r1);
-    if(isNullp(child)) ret(this->admit,ERROR);
+    if(!child) ret(this->admit,ERROR);
     if(TASK(child)->father == t){
         object_table[child->id] = NULL;
         ret(this->admit,OK);
@@ -136,11 +136,11 @@ static int put_page(PageItem *dirs,void *va){
     void *page = NULL;
     if(!isPresent(dirs + DIR_INDEX((Pointer)va))){
         table = get_free_page();
-        if(isNullp(table)) return ERROR;
+        if(!table) return ERROR;
         put_item(dirs,table,DIR_INDEX((Pointer)va),7);
     }
     page = get_free_page();
-    if(isNullp(page)) return ERROR;
+    if(!page) return ERROR;
     table = (void *)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
     put_item(table,page,TABLE_INDEX((Pointer)va),7);
     return OK;
@@ -163,7 +163,7 @@ static PageItem *_un_table(PageItem *dirs,void *va){
     if(mmap[DIR_INDEX((Pointer)va)] > 1){
         mmap[DIR_INDEX((Pointer)va)]--; 
         new_table = (void*)get_free_page();
-        if(isNullp(new_table)) return NULL;
+        if(!new_table) return NULL;
         copy_page(new_table,table);
         table = new_table;
     }
@@ -176,7 +176,7 @@ static PageItem *_un_page(PageItem *table,void *va){
     if(mmap[TABLE_INDEX((Pointer)va)] > 1){
         mmap[TABLE_INDEX((Pointer)va)]--;
         new_page = (void*)get_free_page();
-        if(isNullp(page)) return NULL;
+        if(!new_page) return NULL;
         copy_page(new_page,page);
         page = new_page;
     }
@@ -187,10 +187,10 @@ static void nw_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     PageItem *table = _un_table((PageItem *)t->core,ptr);
-    if(isNullp(table)) ret(this->admit,ERROR);
+    if(!table) ret(this->admit,ERROR);
     put_item((PageItem*)t->core,table,DIR_INDEX((Pointer)ptr),7);
     void *page = _un_page(table,ptr);
-    if(isNullp(page)) ret(this->admit,ERROR);
+    if(!page) ret(this->admit,ERROR);
     put_item(table,page,TABLE_INDEX((Pointer)ptr),7);
     ret(this->admit,OK);
 }
@@ -199,7 +199,7 @@ static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *nsp = (void*)get_free_page();
     PageItem *ntp = (void*)get_free_page();
     PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
-    if(isNullp(nsp) || isNullp(ntp)) panic("memory very full!-_-|||");
+    if(or(!,nsp,ntp)) panic("memeory very full!-_-|||");
     copy_page(nsp,space);
     for(int i = CMEM>>22;i < 1024;i++){
         clrPresent(nsp + i);

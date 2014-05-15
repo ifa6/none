@@ -138,7 +138,7 @@ static void fs_close(Object *this){
 static void fs_open(Object *this){
     MinixInode *inode = eat_path(this->buffer);
     fs_log("|OPEN| inode %p,file : %s\n",inode,this->buffer);
-    if(!isNullp(inode)){
+    if(inode){
         id_t id = fork();
         if(0 == id){
             File *file = (void*)self();

@@ -8,10 +8,13 @@ typedef unsigned long size_t;
 #define NULL    ((void *)0)
 #endif
 
-#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#define offsetof(TYPE,MEMBER)   __builtin_offsetof(TYPE,MEMBER)
 
-#ifndef offsetof
-#define offsetof(s,m)   ((size_t)&((s *)0)->m)
+#ifndef container_of
+#define container_of(ptr,type,member) ({\
+        const typeof(((type *)0)->member) *_mptr = (ptr); \
+        (type *)((char *)_mptr - offsetof(type,member));})
 #endif
+
 
 #endif

@@ -1,4 +1,4 @@
-#include <multiboot.h>
+#include <boot/multiboot.h>
 #include "../kernel/kernel.h"
 #define min(a,b)    (((a) > (b)) ? (b) : (a))
 

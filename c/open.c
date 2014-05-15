@@ -1,7 +1,5 @@
 #include    <sys/inter.h> 
 #include    <string.h>
-#include    <types.h>
-#include    <object.h>
 
 object_t open(String path,int mode){
     object_t o = 0;
