@@ -51,4 +51,9 @@ extern void disable_irq(int irq);
 extern void enable_irq(int irq);
 extern void put_irq_handler(int irq,IrqHandler handler);
 
+extern void *kalloc(unsigned int);
+extern void kfree_s(void *,int);
+#define kfree(p)    kfree_s(p,0)
+
+
 #endif

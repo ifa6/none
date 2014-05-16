@@ -42,13 +42,13 @@ static void rs_pop(void){
     if(inq){
         in = inq;
         inq = inq->next;
-        free(in);
+        kfree(in);
     }
 }
 
 
 static void rs_write(Object *this){
-    IOInq *in = malloc(sizeof(IOInq));
+    IOInq *in = kalloc(sizeof(IOInq));
     if(in){
         in->admit = this->admit;
         in->buffer = this->buffer;

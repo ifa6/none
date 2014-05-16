@@ -1,129 +1,234 @@
-/*
- *  Copy form linux 0.12 .
- *
- */
 #include    <stdio.h>
-#include    <sys/inter.h>
-#include    <none/const.h>
-//#include    <types.h>
+#include    <stdlib.h>
+#include    <stdint.h>
+#include    <string.h>
+#include    <z.h>
 
-#define isnull(p)   (!(p))
-/* get page pointer */
-#define get_pointer(p)      ((p) & 0xfffff000)
+#define mm_error(fmt,...)   printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
+#define mm_warning(fmt,...) printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
 
-typedef struct _bucket{
-    void    *page;
-    struct  _bucket *next;
-    void    *freeptr;
-    unsigned short refcnt;
-    unsigned short bucket_size;
-}Bucket;
+#ifndef isNullp
+#define isNullp(x)  (!(x))
+#endif
 
-struct _bucket_dir{
-    unsigned int     size;
-    Bucket  *bucket;
+#define M_BUSY      (!0)
+#define M_UNBUSY    (0)
+
+#ifndef typeof
+#define typeof  __typeof__
+#endif
+
+#define log2(n) ({                      \
+        int _v;                         \
+        for(_v = 0;n > (1 << _v);_v++); \
+        _v; })
+#define exp2(n) (1 << n)
+
+#define NR_MOBJECT              32
+#define HEAP_LIMIT              ((MObject*)(((void*)heap->chunk) + heap->length))
+#define AFTER(x)                ((MObject*)(((void*)(x)) + (x)->length))
+#define isHeapOverflow(x)       (AFTER(x) >= HEAP_LIMIT)
+#define isLog2Overflow(x)       ((x) >= NR_MOBJECT || (x) < 0)
+
+#define _TAIL(x)    ({          \
+        if(!isHeapOverflow(x)){             \
+            AFTER(x)->before = x;   \
+        }})
+
+#define exit(n) while(n)
+
+typedef struct _MObject MObject;
+typedef struct _MHeap   MHeap;
+
+struct _MObject{
+    MObject     *before;    /*!指向上一个对象,由上一个对象维护(什么,这个对象的成员由上个对象维护?)!*/
+    long        busy;
+    size_t      length;     /*! 整个对象长度,包括prev,length,所占空间在内 !*/
+    union{
+        struct{MObject *next,*prev;};   /*! 空闲对象链 !*/
+        int8_t  chunk[0];               /*! 对象管理的数据块 !*/
+    };
 };
 
-struct _bucket_dir bucket_dir[] = {
-    {16,NULL},
-    {32,NULL},
-    {64,NULL},
-    {128,NULL},
-    {256,NULL},
-    {512,NULL},
-    {1024,NULL},
-    {2048,NULL},
-    {4096,NULL},
-    {0,NULL},
+struct _MHeap{
+    MObject *objectList[NR_MOBJECT];
+    size_t  length;
+    int8_t  chunk[0];
+}*heap = NULL;
+
+/*******************************************************************************
+ *  delMObject
+ *      从链表里面删除节点,并返回被删除的节点
+ *  ARGS:
+ *      mobject     将被删除的节点
+ * *****************************************************************************/
+static inline MObject *delMObject(MObject *mobject){
+    MObject *next,*prev;
+    if(isNullp(mobject)){
+        mm_error("Trying to remove an empty object");
+        return NULL;
+    }
+    next = mobject->next;
+    prev = mobject->prev;
+    if(!isNullp(prev)){
+        prev->next = next;
+    }else{
+        heap->objectList[log2(mobject->length)] = next;
+    }
+    if(!isNullp(next)){
+        next->prev = prev;
+    }
+    mobject->busy = M_BUSY;
+    return mobject;
+}
+
+static inline MObject *insertMObject(MObject *head,MObject *new){
+    if(isNullp(new)){
+        mm_error("Trying to insert an empty object");
+        return NULL;
+    }
+    new->next = head;
+    new->prev = NULL;
+    new->busy = M_UNBUSY;
+    if(!isNullp(head)){
+        head->prev = new;
+    }
+    return new;
+}
+
+static inline MObject *splitMObject(MObject *mobject){
+    int log2n;
+    size_t nl;
+    MObject *tail;
+    if(isNullp(mobject)){
+        mm_error("Trying to split an empty object");
+        return NULL;
+    }
+    nl = mobject->length >> 1;
+    log2n = log2(nl);
+    tail = ((void*)mobject) + nl;
+    *tail = (MObject){
+        .before = mobject,
+        .length = nl,
+    };
+    _TAIL(tail);
+    heap->objectList[log2n] = insertMObject(heap->objectList[log2n],tail);
+    mobject->length = nl;
+    return mobject;
+}
+
+static inline MObject *mergerMObject(MObject *head,MObject *tail){
+    if(isNullp(head) || isNullp(tail)){
+        mm_error("Trying to merger emptry objects");
+        exit(1);
+    }
+    if(AFTER(head) != tail){
+        mm_error("Trying to merger noncontiguous objects\nhead : %p length : %x\ntail : %p length : %x",head,head->length,tail,tail->length);
+        exit(1);
+    }
+    if(head->length == tail->length){
+        head->length <<= 1;
+        _TAIL(head);
+    }
+    return head;
+}
+
+static MObject *getMObject(int log2n){
+    MObject *mobject;
+    if(isLog2Overflow(log2n)){
+        return NULL;
+    }
+    mobject = heap->objectList[log2n];
+    if(mobject){
+        mobject = delMObject(mobject);
+        return mobject;
+    }
+    mobject = getMObject(log2n + 1);
+    if(isNullp(mobject)){
+        return NULL;
+    }
+    return splitMObject(mobject);
+}
+
+static int realizeMHeap(size_t length){
+    int log2n;
+    MObject *mobject;
+    if(heap){
+        mm_error("Heap already exists");
+    }
+    length += (sizeof(MHeap));
+    log2n = log2(length);
+    if(isLog2Overflow(log2n)){
+        mm_error("Can only create heap 0 ~ %d,but requesting %d",exp2(31) - sizeof(MHeap),length);
+        return -1;
+    }
+    heap = malloc(sizeof(MHeap) + exp2(log2n));
+    if(isNullp(heap)){
+        mm_error("oops,the memory is full,tell your boss");
+        return -1;
+    }
+    memset(heap,0,sizeof(MHeap) + exp2(log2n));
+    heap->length = exp2(log2n);
+    mobject = (MObject *)heap->chunk;
+    *mobject = (MObject){
+        .before = NULL,
+        .length = exp2(log2n),
+        .busy   = M_UNBUSY,
+        .next   = NULL,
+        .prev   = NULL,
+    };
+    heap->objectList[log2n] = mobject;
+    return 0;
+}
+
+static void *domalloc(size_t length){
+    int log2n;
+    MObject *mobject;
+    length += (sizeof(MObject) - sizeof(struct{MObject *next,*prev;}));
+    log2n = log2(length);
+    if(isLog2Overflow(log2n)){
+        mm_error("Can only alloc  0 ~ %d,but requesting %d",exp2(31) - sizeof(MHeap) - sizeof(MObject),length);
+        return NULL;
+    }
+    mobject = getMObject(log2n);
+    if(mobject){
+        return mobject->chunk;
+    }
+    return NULL;
+}
+
+void free(void *ptr){
+    int log2n;
+    MObject *mobject = container_of(ptr,MObject,chunk);
+    if(isNullp(ptr) || mobject > (MObject*)HEAP_LIMIT || mobject < (MObject*)heap->chunk){
+        mm_error("Trying to free non-heap memory %p",ptr);
+        return ;
+    }
+    if(!isNullp(mobject->before)){
+        MObject *head = mobject->before;
+        if((head->busy == M_UNBUSY)){
+            head = delMObject(head);
+            mobject = mergerMObject(head,mobject);
+        }
+    }
+    if(!isHeapOverflow(mobject)){
+        MObject *tail = AFTER(mobject);
+        if(tail->busy == M_UNBUSY){
+            tail = delMObject(tail);
+            mobject = mergerMObject(mobject,tail);
+        }
+    }
+    log2n = log2(mobject->length);
+    heap->objectList[log2n] = insertMObject(heap->objectList[log2n],mobject);
+}
+
+static void *realize(size_t length);
+static void *(*alloc)(size_t) = realize; 
+static void *realize(size_t length){
+    realizeMHeap(0x4000000);
+    alloc = domalloc;
+    return domalloc(length);
 };
-
-Bucket *free_bucket = NULL;
-
-static inline void bucket_init(void){
-    Bucket *first,*bdesc;
-    
-    first = bdesc = (Bucket *)(get_free_page());
-    if(isnull(bdesc)) panic("Out of memory in init bucket_init!\n");
-    for(int i = PAGE_SIZE / sizeof(Bucket);i > 1;i--){
-        bdesc->next = bdesc + 1;
-        bdesc++;
-    }
-    bdesc->next = free_bucket; 
-    free_bucket = first;
-}
-
-void *malloc(unsigned int len){
-    Bucket *bdesc;
-    struct _bucket_dir *bdir;
-    void *retval = NULL;
-    for(bdir = bucket_dir;bdir->size;bdir++)
-        if(bdir->size > len)
-            break;
-    if(!bdir->size) panic("Don't alloc the memory!\n");
-    lock();
-    for(bdesc = bdir->bucket;bdesc;bdesc = bdesc->next)
-        if(bdesc->freeptr)
-            break;
-    if(isnull(bdesc)){
-        char *cp = NULL;
-        if(isnull(free_bucket)) bucket_init();
-        bdesc = free_bucket;
-        free_bucket = free_bucket->next;
-        bdesc->refcnt = 0;
-        bdesc->bucket_size = bdir->size;
-        bdesc->page = bdesc->freeptr = cp = (void *)(get_free_page());
-        if(isnull(cp)) panic("Out of memory in kernel malloc()\n");
-        for(int i = PAGE_SIZE / bdir->size;i > 1;i--){
-            *((char **)cp) = cp + bdir->size;
-            cp += bdir->size;
-        }
-        *((char **)cp) = NULL;
-        bdesc->next = bdir->bucket;
-        bdir->bucket = bdesc;
-    }
-    retval = bdesc->freeptr;
-    bdesc->freeptr = *((void **) retval);
-    bdesc->refcnt++;
-    unlock();
-    return retval;
-}
-
-void free_s(void *obj,unsigned int size){
-    void    *page;
-    struct _bucket_dir *bdir;
-    Bucket  *bdesc,*prev;
-
-    page = (void *)(get_pointer((Pointer)obj));
-
-    for(bdir = bucket_dir;bdir->size;bdir++){
-        prev = NULL;
-        if(bdir->size < size) continue;
-        for(bdesc = bdir->bucket;bdesc;bdesc = bdesc->next){
-            if(bdesc->page == page)
-                goto found;
-            prev = bdesc;
-        }
-    }
-    panic("Bad address passed to kernel free_s()");
-found:
-    lock();
-    *((void **)obj) = bdesc->freeptr;
-    bdesc->refcnt--;
-    if(bdesc->refcnt == 0){
-        if((prev && (prev->next != bdesc)) || (!prev && (bdir->bucket != bdesc)))
-            for(prev = bdir->bucket;prev;prev = prev->next)
-                if(prev->next == bdesc)
-                    break;
-        if(prev)
-            prev->next = bdesc->next;
-        else{
-            if(bdir->bucket != bdesc)
-                panic("malloc bucket corrupted\n");
-            bdir->bucket = bdesc->next;
-        }
-        free_page((Pointer)bdesc->page);
-        bdesc->next = free_bucket;
-        free_bucket = bdesc;
-    }
-    unlock();
-}
+void* malloc(size_t length){
+    return alloc(length);
+};

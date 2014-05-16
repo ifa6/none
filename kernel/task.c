@@ -145,7 +145,7 @@ int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned
     Object *obj = toObject(o);
     if(!obj) panic("\er doint   \eb[\rnull\eb]\n");
     if(!isSleep(obj)){
-        iLink   *in = malloc(sizeof(iLink));
+        iLink   *in = kalloc(sizeof(iLink));
         if(!in) panic("\er doint \eb[memory full\eb]\n");;
         in->fn = fn; in->r1 = r1;
         in->r2 = r2; in->r3 = r3;
@@ -180,7 +180,7 @@ Object *doget(void){
 #undef  eval
 #undef  getInt
         self()->ilink = in->inext;
-        free(in);
+        kfree(in);
         return self();
     }else if(self()->wlink){
         self()->admit = self()->wlink;

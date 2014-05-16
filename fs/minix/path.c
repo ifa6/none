@@ -20,7 +20,7 @@ static MinixInode *search_dir(MinixInode *di,String name){
     if(!di) return NULL;
     static char block[BLOCK_SIZE];
     MinixDirentry *drp = (MinixDirentry *)block;
-    MinixInode *inode = malloc(sizeof(MinixInode));
+    MinixInode *inode = kalloc(sizeof(MinixInode));
     if(inode == NULL) goto error_ret;
 
     zone_t dnoze = FULL_BLOCK(di->i_size);
@@ -38,7 +38,7 @@ static MinixInode *search_dir(MinixInode *di,String name){
         }
     }
 error_ret:
-    if(inode) free(inode);
+    if(inode) kfree(inode);
     return NULL;
 }
 

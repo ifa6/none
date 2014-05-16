@@ -62,7 +62,7 @@ static void _sub(void){
         IOInq *prev = admit->prev;
         next->prev = prev;
         prev->next = next;
-        free(admit);
+        kfree(admit);
         if(prev != next) admit = next;
         else inq = admit = NULL;
     }
@@ -117,7 +117,7 @@ static void _doio(){
 
 /*! 请求的处理 !*/
 static void _rw(Object *this){
-    IOInq *in = malloc(sizeof(IOInq));
+    IOInq *in = kalloc(sizeof(IOInq));
     if(in){
         in->inq = this->admit;
         in->cmd = (this->fn == READ ? AT_READ : AT_WRITE);
