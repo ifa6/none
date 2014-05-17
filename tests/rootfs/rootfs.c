@@ -83,7 +83,7 @@ RFS *newRFSTree(RFS *old,const RFS *new,const char *name){
 
 int main(/*int argc,char **argv*/void){
     char *argv[] = {
-        "/none.txt", "/gpl.txt",
+        "rootfs","/gpl.txt", "/none.txt",
     };
     int argc = ARRAY_SIZE(argv);
     unused(RFSName);
@@ -93,19 +93,21 @@ int main(/*int argc,char **argv*/void){
     if(argc < 2) return -1;
     RFS *rfs = NULL;
     for(var i = 1;i < argc;i++){
+        len = 1024;
         RFS *new;
         fd = try(-1 == ,open(argv[i],0),{
             throw e_fial;
         });
+        printf("read %s length : %d fd = %d\n",argv[i],len,fd);
         buffer = try(NULL == ,malloc(len),{
             throw e_fial;
         });
-        printf("read %s length : %d\n",argv[i],len);
         len = read(fd,buffer,len);
         new = newRFS(buffer,RFS_BLOB,len);
         rfs = newRFSTree(rfs,new,argv[i]);
         catch(e_fial){
             TEST_AND_FREE(free,buffer,NULL);
+            TEST_AND_FREE(close,fd,-1);
             continue;
         }
     }

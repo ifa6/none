@@ -8,3 +8,8 @@ object_t open(String path,int mode){
     _pop(buff);
     return o;
 }
+
+
+void close(object_t obj){
+    run(obj,CLOSE);
+}
