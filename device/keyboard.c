@@ -1,25 +1,54 @@
 #include    "keyboard.h"
 
-#define ESC '\e'
-#define BACKSPACE '\b'
-#define TAB '\t'
-#define ENTER   '\n'
-#define CTRL_L  '\r'
-#define SHIFT_L '\r'
-#define SHIFT_R '\r'
+#define KEY_ESC         '\e'
+#define KEY_TAB         '\t'
+#define KEY_ENTER       '\n'
+#define KEY_CTRL_L      '\0'
+#define KEY_SHIFT_L     '\0'
+#define KEY_SHIFT_R     '\0'
+#define KEY_PRTSCREEN   '\0'
+#define KEY_ALT_L       '\0'
+#define KEY_ALT_R       '\0'
+#define KEY_CAPLOCK     '\0'
+#define KEY_F1          '\0'
+#define KEY_F2          '\0'
+#define KEY_F3          '\0'
+#define KEY_F4          '\0'
+#define KEY_F5          '\0'
+#define KEY_F6          '\0'
+#define KEY_F7          '\0'
+#define KEY_F8          '\0'
+#define KEY_F9          '\0'
+#define KEY_F10         '\0'
+#define KEY_F11         '\0'
+#define KEY_F12         '\0'
+#define KEY_NUM         '\0'
+#define KEY_SCRL        '\0'
+#define KEY_HOME        '\0'
+#define KEY_END         '\0'
+#define KEY_PAGEUP      '\0'
+#define KEY_PAGEDONW    '\0'
+#define KEY_UP          '\0'
+#define KEY_LEFT        '\0'
+#define KEY_RIGHT       '\0'
+#define KEY_DONW        '\0'
+#define KEY_5           '5'
 
-static const unsigned char keymap[][55] = {
+
+static const unsigned char keymap[][0x7f] = {
     {
-        0,ESC,'1','2','3','4','5','6','7','8','9','0','-','=',BACKSPACE,
-        TAB,'q','w','e','r','t','y','u','i','o','p','[',']',ENTER,
-        CTRL_L,'a','s','d','f','g','h','j','k','l',';','\'','`',SHIFT_L,'\\', 
-        'z','x','c','v','b','n','m',',','.','/',SHIFT_R,
+        0,KEY_ESC ,'1','2','3','4','5','6','7','8','9','0','-','=','\b',
+          KEY_TAB ,'q','w','e','r','t','y','u','i','o','p','[',']',KEY_ENTER,
+        KEY_CTRL_L,'a','s','d','f','g','h','j','k','l',';','\'','`',KEY_SHIFT_L,
+        '\\'      ,'z','x','c','v','b','n','m',',','.','/',KEY_SHIFT_R,KEY_ALT_L, ' ',
+        KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
     },
     {
-        0,ESC,'!','@','#','$','%','^','&','*','(',')','_','+',BACKSPACE,
-        TAB,'Q','W','E','R','T','Y','U','I','O','P','{','}',ENTER,
-        CTRL_L,'A','S','D','F','G','H','J','K','L',':','"','~',SHIFT_L,'|',
-        'Z','X','C','V','B','N','M','<','>','?',SHIFT_R,
+        0,KEY_ESC ,'!','@','#','$','%','^','&','*','(',')','_','+','\b',
+          KEY_TAB ,'Q','W','E','R','T','Y','U','I','O','P','{','}',KEY_ENTER,
+        KEY_CTRL_L,'A','S','D','F','G','H','J','K','L',':','"','~',KEY_SHIFT_L,
+        '|'       ,'Z','X','C','V','B','N','M','<','>','?',KEY_SHIFT_R,KEY_ALT_L, ' ',
+        KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
     }
 };
 
@@ -84,7 +113,14 @@ static void _input(Object *this){
     else{
         if(shift) str = keymap[1];
         else str = keymap[0];
-        if((ch < 55) && (ch > 0)){
+
+        switch(ch){
+        case 0x02 ... 0x29 : 
+        case 0x2b ... 0x35 :
+        case 0x39:
+        case 0x4a:
+        case 0x4c:
+        case 0x4e:
             buffer[index++] = str[ch];
             printk("%c",buffer[index - 1]);
             if(index >= 52) index = 0;
@@ -94,6 +130,9 @@ static void _input(Object *this){
                 count = 0;
                 _buf = NULL; 
             }
+            break;
+        case 0x49: printk("\eD"); break;
+        case 0x51: printk("\eU"); break;
         }
     }
 }

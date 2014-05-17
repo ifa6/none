@@ -1,7 +1,7 @@
 #ifndef __ROOTFS_H__
 #define __ROOTFS_H__
 #include <stdint.h>
-#include "list.h"
+#include <none/list.h>
 #define     RFS_NAME_LENGTH (256 - 20 - sizeof(void*))
 
 typedef enum{RFS_BLOB,RFS_TREE}RFSType;

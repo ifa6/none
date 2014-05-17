@@ -1,21 +1,15 @@
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 /*!  import by none !*/
-#define  eprint(fmt,...)   fprintf(stderr,fmt,##__VA_ARGS__)
+#define  eprint(fmt,...)   printf(fmt,##__VA_ARGS__)
 #include <string.h>
 #include "z.h"
 #include "rootfs.h"
 #include "sha1.h"
 
 #define DIGIT_STRING    "0123456789abcdef"
-#define TEST_AND_FREE(fn,x,v)   do{if(x == v){fn(x);} x = v;}while(0)
+#define TEST_AND_FREE(fn,x,v)   do{if(x != v){fn(x);} x = v;}while(0)
 
 #define container_of(ptr,type,member) ({\
         const __auto_type _mptr = (ptr); \
@@ -47,6 +41,7 @@ static void RFSHA1(RFS *rfs){
 static void RFSName(char *name,RFS *rfs){
     sha1ToString(name,rfs->sha1);
 }
+
 
 
 RFS* newRFS(void *data,RFSType type ,size_t len){
@@ -86,33 +81,31 @@ RFS *newRFSTree(RFS *old,const RFS *new,const char *name){
     return newRFS(tree,RFS_TREE,size + sizeof(RFSTree));
 }
 
-int main(int argc,char **argv){
+int main(/*int argc,char **argv*/void){
+    char *argv[] = {
+        "/none.txt", "/gpl.txt",
+    };
+    int argc = ARRAY_SIZE(argv);
+    unused(RFSName);
     int fd = -1;
-    off_t len = -1;
+    off_t len = 1024;
     void *buffer = NULL;
     if(argc < 2) return -1;
     RFS *rfs = NULL;
     for(var i = 1;i < argc;i++){
         RFS *new;
-        fd = try(-1 == ,open(argv[i],O_RDONLY),{
-            perror(argv[i]);
+        fd = try(-1 == ,open(argv[i],0),{
             throw e_fial;
         });
-        len = try(-1 == ,lseek(fd,0,SEEK_END),{
-            perror(argv[i]);
-            throw e_fial;
-        });
-        lseek(fd,0,SEEK_SET);
         buffer = try(NULL == ,malloc(len),{
-            perror(argv[i]);
             throw e_fial;
         });
+        printf("read %s length : %d\n",argv[i],len);
         len = read(fd,buffer,len);
         new = newRFS(buffer,RFS_BLOB,len);
         rfs = newRFSTree(rfs,new,argv[i]);
         catch(e_fial){
             TEST_AND_FREE(free,buffer,NULL);
-            TEST_AND_FREE(close,fd,-1);
             continue;
         }
     }
@@ -130,8 +123,12 @@ int main(int argc,char **argv){
                     sha1ToString(sha1,rfs->tree[j].sha1);
                     printf("  %s %s %s ","|-",((char *[]){"BLOB","TREE"})[rfs->tree[j].type],sha1);
                     for(var k = 0;k < RFS_NAME_LENGTH;k++)
-                        putchar(rfs->tree[j].name[k]);
-                    putchar('\n');
+                        printf("%c",rfs->tree[j].name[k]);
+                    printf("\n");
+                }
+            }else{
+                for(var j = 0;j < rfs->size;j++){
+                    printf("%c",rfs->blob[j]);
                 }
             }
         }

@@ -2,14 +2,12 @@
 #include    <stdlib.h>
 #include    <stdint.h>
 #include    <string.h>
+#define eprint  printf
 #include    <z.h>
 
 #define mm_error(fmt,...)   printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
 #define mm_warning(fmt,...) printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
 
-#ifndef isNullp
-#define isNullp(x)  (!(x))
-#endif
 
 #define M_BUSY      (!0)
 #define M_UNBUSY    (0)
@@ -64,18 +62,18 @@ struct _MHeap{
  * *****************************************************************************/
 static inline MObject *delMObject(MObject *mobject){
     MObject *next,*prev;
-    if(isNullp(mobject)){
+    if(!(mobject)){
         mm_error("Trying to remove an empty object");
         return NULL;
     }
     next = mobject->next;
     prev = mobject->prev;
-    if(!isNullp(prev)){
+    if(!!(prev)){
         prev->next = next;
     }else{
         heap->objectList[log2(mobject->length)] = next;
     }
-    if(!isNullp(next)){
+    if(!!(next)){
         next->prev = prev;
     }
     mobject->busy = M_BUSY;
@@ -83,14 +81,14 @@ static inline MObject *delMObject(MObject *mobject){
 }
 
 static inline MObject *insertMObject(MObject *head,MObject *new){
-    if(isNullp(new)){
+    if(!(new)){
         mm_error("Trying to insert an empty object");
         return NULL;
     }
     new->next = head;
     new->prev = NULL;
     new->busy = M_UNBUSY;
-    if(!isNullp(head)){
+    if(!!(head)){
         head->prev = new;
     }
     return new;
@@ -100,7 +98,7 @@ static inline MObject *splitMObject(MObject *mobject){
     int log2n;
     size_t nl;
     MObject *tail;
-    if(isNullp(mobject)){
+    if(!(mobject)){
         mm_error("Trying to split an empty object");
         return NULL;
     }
@@ -118,7 +116,7 @@ static inline MObject *splitMObject(MObject *mobject){
 }
 
 static inline MObject *mergerMObject(MObject *head,MObject *tail){
-    if(isNullp(head) || isNullp(tail)){
+    if(!(head) || !(tail)){
         mm_error("Trying to merger emptry objects");
         exit(1);
     }
@@ -144,7 +142,7 @@ static MObject *getMObject(int log2n){
         return mobject;
     }
     mobject = getMObject(log2n + 1);
-    if(isNullp(mobject)){
+    if(!(mobject)){
         return NULL;
     }
     return splitMObject(mobject);
@@ -155,6 +153,7 @@ static int realizeMHeap(size_t length){
     MObject *mobject;
     if(heap){
         mm_error("Heap already exists");
+        return -1;
     }
     length += (sizeof(MHeap));
     log2n = log2(length);
@@ -162,8 +161,9 @@ static int realizeMHeap(size_t length){
         mm_error("Can only create heap 0 ~ %d,but requesting %d",exp2(31) - sizeof(MHeap),length);
         return -1;
     }
-    heap = malloc(sizeof(MHeap) + exp2(log2n));
-    if(isNullp(heap)){
+    extern char _end;
+    heap = (void*)&_end; /*! malloc(sizeof(MHeap) + exp2(log2n)); !*/
+    if(!(heap)){
         mm_error("oops,the memory is full,tell your boss");
         return -1;
     }
@@ -200,11 +200,11 @@ static void *domalloc(size_t length){
 void free(void *ptr){
     int log2n;
     MObject *mobject = container_of(ptr,MObject,chunk);
-    if(isNullp(ptr) || mobject > (MObject*)HEAP_LIMIT || mobject < (MObject*)heap->chunk){
+    if(!(ptr) || mobject > (MObject*)HEAP_LIMIT || mobject < (MObject*)heap->chunk){
         mm_error("Trying to free non-heap memory %p",ptr);
         return ;
     }
-    if(!isNullp(mobject->before)){
+    if((mobject->before)){
         MObject *head = mobject->before;
         if((head->busy == M_UNBUSY)){
             head = delMObject(head);
@@ -225,7 +225,9 @@ void free(void *ptr){
 static void *realize(size_t length);
 static void *(*alloc)(size_t) = realize; 
 static void *realize(size_t length){
-    realizeMHeap(0x4000000);
+    try(-1 == ,realizeMHeap(0x400000),{
+        return NULL;
+    });
     alloc = domalloc;
     return domalloc(length);
 };

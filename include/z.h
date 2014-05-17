@@ -20,17 +20,18 @@
 #define STRING(x)   _STRING(x)
 #define _STRING(x)  #x
 
+#define var __auto_type
 /*! ~~~~~~~~~~~~~~~~~~~~~~~ excoption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !*/
 #define try(expr,code,...) ({\
-        __typeof__(code) _v = code;\
+        var _v = code;\
         if(test(expr _v)){\
-            eprint("Exception : " #code "\nUnfold    : "STRING(code));\
+            eprint("Exception : " #code "\n");\
             __VA_ARGS__;\
         }_v;})
 
 #define throw    goto
 
-#define foreach(index,start,end) for(__typeof__(end) index = start;index < end;index++)
+#define foreach(index,start,end) for(var index = start;index < end;index++)
 #define ARRAY_SIZE(v)  (sizeof(v) / sizeof(__typeof__(v[0])) + __must_be_array(v))
 
 

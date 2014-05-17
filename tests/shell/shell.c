@@ -14,6 +14,7 @@ int main(void){
         printf("\ey$ \ew");
         buffer = getline();
         argc = parse(buffer,argv,10);
+        if(argc == 0) continue;
         if(OK != exec(argv[0],argc,argv))
             printf("%s : No usch file or directory\n",argv[0]);
         else
@@ -39,6 +40,7 @@ static int parse(char *buffer,char **argv,int len){
         }
         pos++;
     }
+    if(pos != buffer) argc++;
     return argc;
 }
 
@@ -57,6 +59,10 @@ static char *getline(void){
     for(i = 0;i < 511;i++){
         ch = getchar();
         if(ch == '\n') break;
+        if(ch == '\b' && i){
+            i--;
+            continue;
+        }
         buff[i] = ch;
     }
     buff[i] = 0;

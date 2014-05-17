@@ -3,12 +3,7 @@
 
 #define MAX_CONSOLES    1
 
-
-
-
-
-
-static  unsigned long video_mem_base;   /* base of video memory */
+static  unsigned long video_mem_base;       /* base of video memory */
 static  unsigned long video_num_columns;    /* Number of text columns */
 static  unsigned long video_num_lines;      /* NUmber of text lines */
 static  unsigned long video_size_row;       /* Byte per row */
@@ -63,10 +58,11 @@ static inline void set_cur(int cons){
 
 static inline void scrup(int cons){
 
+    if(bottom > pos) return;
     top += video_size_row;
     bottom += video_size_row;
-    //pos += video_size_row;
 
+#if 0
     if(bottom > mem_end){
         __asm__ __volatile__("rep movsl\n\t\t"
                 "movl video_num_columns,%%ecx\n\t\t"
@@ -77,28 +73,41 @@ static inline void scrup(int cons){
         bottom -= top - mem_start; 
         pos -=top - mem_start;
         top = mem_start;
-    }else{
+    }
+
+#endif
+    set_top(cons);
+}
+
+static inline void scrtop(int cons){
+    if(bottom > mem_end){
+        __asm__ __volatile__("rep movsl\n\t\t"
+                "movl video_num_columns,%%ecx\n\t\t"
+                "rep stosw\n\t\t"
+                ::"c"(((video_num_lines - 1)*(video_size_row))>>2),
+                "D"(mem_start),"S"(top),"a"(erase_char)
+                );
+        bottom -= top - mem_start; 
+        pos -= top - mem_start;
+        top = mem_start;
+    } else {
         __asm__ __volatile__("rep stosw\n\t\t"
                 ::"D"(bottom),"c"(video_num_columns),"a"(erase_char));
     }
-
     set_top(cons);
-    //set_cur(cons);
 }
 
 static inline void scrdown(int cons){
     if(top - video_size_row <= mem_start) return;
     top -= video_size_row;
     bottom -= video_size_row;
-    pos -= video_size_row;
 
     set_top(cons);
-    set_cur(cons);
 }
 
 static inline void lf(int cons){
 
-    if(pos + video_size_row > bottom) scrup(cons);
+    if(pos + video_size_row > bottom) scrtop(cons);
     pos += video_size_row;
     set_cur(cons);
 }
@@ -108,21 +117,20 @@ static inline void cr(int cons){
     set_cur(cons);
 }
 
+#if 0
 static inline void ri(int cons){
     if(pos - video_size_row < top) scrdown(cons);
     pos -= video_size_row;
     set_cur(cons);
 }
-
-static inline void set_attr(int cons,unsigned char _attr){
-    attr = _attr;
-}
+#endif
 
 static inline void del(int cons){
     if((pos - mem_start)% video_size_row){
         pos -= 2;
         *(unsigned short *)pos = erase_char;
     }
+    set_cur(cons);
 }
 
 
@@ -141,30 +149,33 @@ extern void cons_print(int cons,const char * buf){
     while((ch = (*buf++))){
         if(state == 1){
             switch(ch){
-                case    'o':attr = (attr & 0xf0) | 0x00;break;
+                case    'o':attr = (attr & 0xf0) | 0x00;break;  /*! normal !*/
                 case    'O':attr = (attr & 0x0f) | 0x00;break;
-                case    'b':attr = (attr & 0xf0) | 0x01;break;
+                case    'b':attr = (attr & 0xf0) | 0x01;break;  /*! blue !*/
                 case    'B':attr = (attr & 0x0f) | 0x10;break;
-                case    'g':attr = (attr & 0xf0) | 0x02;break;
+                case    'g':attr = (attr & 0xf0) | 0x02;break;  /*! green !*/
                 case    'G':attr = (attr & 0x0f) | 0x20;break;
-                case    'y':attr = (attr & 0xf0) | 0x03;break;
+                case    'y':attr = (attr & 0xf0) | 0x03;break;  /*! yellow !*/
                 case    'Y':attr = (attr & 0x0f) | 0x30;break;
-                case    'r':attr = (attr & 0xf0) | 0x04;break;
+                case    'r':attr = (attr & 0xf0) | 0x04;break;  /*! red !*/
                 case    'R':attr = (attr & 0x0f) | 0x40;break;
-                case    'p':attr = (attr & 0xf0) | 0x05;break;
-                case    'P':attr = (attr & 0x0f) | 0x50;break;
-                case    'h':attr = (attr & 0xf0) | 0x06;break;
-                case    'H':attr = (attr & 0x0f) | 0x60;break;
+                case    'v':attr = (attr & 0xf0) | 0x05;break;  /*! !*/
+                case    'V':attr = (attr & 0x0f) | 0x50;break;
+                case    'h':attr = (attr & 0xf0) | 0x06;break;  
+                case    'H':attr = (attr & 0x0f) | 0x60;break;  /*! wirte !*/
                 case    'w':attr = (attr & 0xf0) | 0x07;break;
                 case    'W':attr = (attr & 0x0f) | 0x70;break;
-                case    'l':attr |= 0x08;break;
+                case    'l':attr |= 0x08;break;     /*! hight light !*/
                 case    'L':attr &= 0xf7;break;
-                case    'f':attr |= 0x80;break;
+                case    'f':attr |= 0x80;break;     /*! !*/
                 case    'F':attr &= 0x7f;break;
+                case    'D': scrdown(cons);break;
+                case    'U': scrup(cons);break;
             }
             state = 0;
         } 
         else if(ch == '\e') state = 1;
+        else if(ch == '\b') del(cons);
         else if(ch == '\n'){
             lf(cons);
             cr(cons);
