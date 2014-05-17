@@ -86,7 +86,6 @@ int main(/*int argc,char **argv*/void){
         "rootfs","/gpl.txt", "/none.txt",
     };
     int argc = ARRAY_SIZE(argv);
-    unused(RFSName);
     int fd = -1;
     off_t len = 1024;
     void *buffer = NULL;
@@ -98,7 +97,6 @@ int main(/*int argc,char **argv*/void){
         fd = try(-1 == ,open(argv[i],0),{
             throw e_fial;
         });
-        printf("read %s length : %d fd = %d\n",argv[i],len,fd);
         buffer = try(NULL == ,malloc(len),{
             throw e_fial;
         });
@@ -117,7 +115,7 @@ int main(/*int argc,char **argv*/void){
         struct hlist_node *r;
         hlist_for_each(r,&dir[i]){
             rfs = hlist_entry(r,RFS,hlist);
-            sha1ToString(sha1,rfs->sha1);
+            RFSName(sha1,rfs);
             printf("%s %s %2x\n",((char *[]){"BLOB","TREE"})[rfs->type],sha1,i);
             if(rfs->type == RFS_TREE){
                 for(var j = 0;rfs && j < rfs->size / sizeof(RFSTree);j++){

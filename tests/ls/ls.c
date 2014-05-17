@@ -6,16 +6,18 @@
  *  巫术:
  *      只能打印当前目录的ls
  * *****************************************************************************/
-#include    <stdlib.h>
-#include    <stdio.h>
-#include    <fs/minix.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fs/minix.h>
 #include <sys/inter.h>
+#include <z.h>
 MinixDirentry   dir[10];
 int main(void){
-    int curr = open("/boot",0);    
+    int curr = open("/usr/bin",0);
+    size_t len;
     if(curr != ERROR){
-        if(ERROR != read(curr,dir,512)){
-            for(int i = 0;i < 10;i++){
+        while(0 < (len = read(curr,dir,sizeof(dir)))){
+            for(var i = 0;i < (len / sizeof(dir[0]));i++){
                 printf("%s\n",dir[i].name);
             }
         }

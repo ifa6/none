@@ -32,7 +32,7 @@ static int parse(char *buffer,char **argv,int len){
         switch(*pos){
             case ' ' : 
                 *pos = 0;
-                while(*(++pos) && *pos != ' ');
+                while(*(++pos) && *pos == ' ');
                 argc++;
                 if(argc >= len) return argc;
                 argv[argc] = pos;
@@ -60,7 +60,7 @@ static char *getline(void){
         ch = getchar();
         if(ch == '\n') break;
         if(ch == '\b' && i){
-            i--;
+            buff[--i] = 0;
             continue;
         }
         buff[i] = ch;

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <sys/inter.h>
-#include <object.h>
+#include <none/object.h>
 #include <z.h>
 
 static void vfs_open(Object *thiz){

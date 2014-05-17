@@ -40,15 +40,15 @@ static const unsigned char keymap[][0x7f] = {
         0,KEY_ESC ,'1','2','3','4','5','6','7','8','9','0','-','=','\b',
           KEY_TAB ,'q','w','e','r','t','y','u','i','o','p','[',']',KEY_ENTER,
         KEY_CTRL_L,'a','s','d','f','g','h','j','k','l',';','\'','`',KEY_SHIFT_L,
-        '\\'      ,'z','x','c','v','b','n','m',',','.','/',KEY_SHIFT_R,KEY_ALT_L, ' ',
-        KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
+        '\\'      ,'z','x','c','v','b','n','m',',','.','/',KEY_SHIFT_R,KEY_ALT_L, 
+        [0x39] = ' ', KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
     },
     {
         0,KEY_ESC ,'!','@','#','$','%','^','&','*','(',')','_','+','\b',
           KEY_TAB ,'Q','W','E','R','T','Y','U','I','O','P','{','}',KEY_ENTER,
         KEY_CTRL_L,'A','S','D','F','G','H','J','K','L',':','"','~',KEY_SHIFT_L,
-        '|'       ,'Z','X','C','V','B','N','M','<','>','?',KEY_SHIFT_R,KEY_ALT_L, ' ',
-        KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
+        '|'       ,'Z','X','C','V','B','N','M','<','>','?',KEY_SHIFT_R,KEY_ALT_L, 
+        [0x39] = ' ', KEY_CAPLOCK,KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
     }
 };
 

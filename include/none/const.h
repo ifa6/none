@@ -33,7 +33,9 @@
 #define DIE_TABLE       0x204000    /*  前4MB的页表 */
 #define KERNEL_TABLE    0x205000    /* 0X205000 ~ 0X305000 内核映射页表 256项,共占1MB内存 */
 
-#define LATCH   1193180
+#define HZ              100
+#define CLOCK_TICK_RATE 1193183
+#define LATCH   ((CLOCK_TICK_RATE + HZ / 2) / HZ)
 
 #define NR_TASKS 0x100
 

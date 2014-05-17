@@ -1,8 +1,9 @@
 #ifndef INTER_H
 #define INTER_H
 
-#include    <x86/io.h>
-#include    <none/types.h>
+#include <x86/io.h>
+#include <none/types.h>
+#include <z.h>
 
 /* 任意进程 */
 #define ANY         -1
