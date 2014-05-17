@@ -3,7 +3,7 @@
 #include <sys/inter.h>
 #include <z.h>
 
-static int exec(const char *path,int argc,char **argv);
+static int _exec(const char *path,int argc,char **argv);
 static char *getline(void);
 static int parse(char *buffer,char **argv,int len);
 int main(void){
@@ -15,7 +15,7 @@ int main(void){
         buffer = getline();
         argc = parse(buffer,argv,10);
         if(argc == 0) continue;
-        if(OK != exec(argv[0],argc,argv))
+        if(OK != _exec(argv[0],argc,argv))
             printf("%s : No usch file or directory\n",argv[0]);
         else
             run(MM_PID,15);
@@ -44,12 +44,17 @@ static int parse(char *buffer,char **argv,int len){
     return argc;
 }
 
-static int exec(const char *path,int argc,char **argv){
-    object_t o = open(path,0);
-    if(o != ERROR){
-        return run(o,RUN,.count = argc,.ptr = argv);
+static int _exec(const char *path,int argc,char **argv){
+    object_t o;
+    if(0 < (o = fork())){
+        printf("clild :%d\n",o);
+        return 0;
+    }else if(o == 0){
+        printf("Father :%d\n",o);
+        return exec(path,argc,argv);
+    } else {
+        return -1;
     }
-    return -1;
 }
 
 static char buff[512];

@@ -43,8 +43,8 @@ static PageItem *copy_items(PageItem *items,int start,int end){
     nitm = (void *)get_free_page();
     if(!nitm) panic("copy_item failt : memory out!");
     for(int i = start;i < end;i++){
-        //clrWrite(items + i);
-        clrPresent(items + i);
+        clrWrite(items + i);
+        //clrPresent(items + i);
     }
     copy_page(nitm,items);
     return nitm;
@@ -253,7 +253,7 @@ static void _mm_init(void){
     hook(WP_PAGE,nw_page);
     hook(EXIT,free_child);
     hook(15,_wait);
-    self()->friend[MM_PID] = MM_PID;
+    //self()->friend[MM_PID] = MM_PID;
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();

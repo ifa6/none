@@ -131,9 +131,19 @@ static void fs_write(Object *this){
 }
 
 static void fs_close(Object *thiz){
-    printk("\eRFIXME\ew : FS colse\eO\n");
+    printk("\eRFIXME\ew : FS close\eO\n");
     ret(thiz->admit,OK);
     run(MM_PID,CLOSE);
+}
+
+static void fs_seek(Object *thiz){
+    File *file = (void*)self();
+    switch(thiz->whence){
+    case SEEK_SET: file->offset = thiz->offset;break;
+    case SEEK_CUR: file->offset += thiz->offset;break;
+    case SEEK_END: file->offset = thiz->offset + file->inode.i_size;break;
+    };
+    ret(thiz->admit,file->offset);
 }
 
 static void fs_open(Object *this){
@@ -151,12 +161,14 @@ static void fs_open(Object *this){
             hook(WRITE,fs_write);
             hook(RUN,load_elf);
             hook(CLOSE,fs_close);
+            hook(SEEK,fs_seek);
             dorun();
         }else if(id > 0){
             ret(this->admit,id);
         }
+    } else {
+        ret(this->admit,ERROR);
     }
-    ret(this->admit,ERROR);
 }
 
 static void fs_init(void){

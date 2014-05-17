@@ -22,16 +22,26 @@
 
 #define var __auto_type
 /*! ~~~~~~~~~~~~~~~~~~~~~~~ excoption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !*/
+#ifdef  __clang__   /*! only ycm !*/
+#define foreach(index,start,end) for(__typeof__(end) index = start;index < end;index++)
+#define try(expr,code,...) ({\
+        __typeof__(code) _v = code;\
+        if(test(expr _v)){\
+            eprint("Exception : " #code "\n");\
+            __VA_ARGS__;\
+        }_v;})
+#else
 #define try(expr,code,...) ({\
         var _v = code;\
         if(test(expr _v)){\
             eprint("Exception : " #code "\n");\
             __VA_ARGS__;\
         }_v;})
+#define foreach(index,start,end) for(var index = start;index < end;index++)
+#endif
 
 #define throw    goto
 
-#define foreach(index,start,end) for(var index = start;index < end;index++)
 #define ARRAY_SIZE(v)  (sizeof(v) / sizeof(__typeof__(v[0])) + __must_be_array(v))
 
 

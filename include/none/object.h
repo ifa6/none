@@ -48,6 +48,7 @@ struct _object{
             off_t offset;
         };
         union{
+            int     whence;
             unsigned long r2;
             count_t count;
         };

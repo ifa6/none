@@ -23,6 +23,7 @@ typedef enum{
     WP_PAGE     ,
     EXIT        ,
     RUN         ,
+    SEEK        ,
 }DefaultMothon;
 
 /*! Const task PID !*/
@@ -53,6 +54,11 @@ extern void panic(const char *msg);
 #define STDIN_FILENO    0
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2
+
+#define SEEK_SET    0
+#define SEEK_CUR    1
+#define SEEK_END    2
+
 
 #define OK  0
 #define ERROR   -1
