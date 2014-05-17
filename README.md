@@ -31,6 +31,7 @@
 *   [近期计划](#target)
 
 <h2 id="overview">概述</h2>
+![None新特性预览](http://r.photo.store.qq.com/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/8f5clD6S9VIPUSTIu8Oa52PZh58NjPIIgMlTow0Hi6A!/o/dMaLGsdKEAAA&bo=oAWEA6AFhAMCACQ!&t=5&rf=viewer_311)
 <h3 id="what-is-fuck">什么是none</h3>
 [none][]是[lzy][]编写的,一个微内核,不兼容POSIX,不可工作的实验性质的操作系统,项目开源,并且[lzy][]希望它是自由的.编写目的是**just for fun**.编写的最初目的是因为[lzy][]初次接触**GNU/Linux**的时候,觉得**GNU/Linux**太复杂了,我的参考目标是**MS-DOS**.**MS-DOS**只需要`io.sys`,`command.com`两个文件即可跑起来,然后根据需要自己添加需要的程序.整个系统都在掌控之中.而**GNU/Linux**,一装上就几百个目录,几千个文件,看起来十分复杂.于是萌生了写一个**MS-DOS**一样简洁(看起来简洁),**GNU/Linux**一样强大的操作系统.项目几经波折,数次重写,数次更名,两次更换托管方式,却都因本人水平太菜,进展缓慢,[none][]的编写过程就是本人学习的过程.如今,[none][]看起来像是一个内核了,可以执行程序,读写文件,打印图像.[none][]当前托管在[GITHUB][].
 <h3 id="schedule">当前none是什么样子</h3>
