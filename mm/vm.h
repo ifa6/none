@@ -19,7 +19,7 @@ typedef struct{
     struct list_head list;
 }VM;
 
-int mkvm(Task *,struct list_head *,const char *path);
+int mkvm(Object *thiz,Registers *reg);
 void *dovm(struct list_head *,void *vaddr);
 void copyvm(struct list_head *);
 void delvm(struct list_head *vm);

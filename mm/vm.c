@@ -8,18 +8,15 @@
 #define vm_entry(ptr)   list_entry(ptr,VM,list)
 
 
-int mkvm(Task *task,struct list_head *vm,const char *path){
-    object_t obj = -1;
+int mkvm(Object *thiz,Registers *reg){
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr = NULL; /*! only ycm !*/
     int rlen = 0;
-    obj = try(-1 ==,open(path,0),throw e_fail);
-    rlen = try(-1 == ,read(obj,&ehdr,sizeof(ehdr)),throw e_fail);
-    task->registers->eip = ehdr.e_entry;
-    //task->registers->esp = 0x7fffff;
+    rlen = try(-1 == ,read(thiz->lng,&ehdr,sizeof(ehdr)),throw e_fail);
+    reg->eip = ehdr.e_entry;
     shdr = try(NULL == ,kalloc(ehdr.e_shentsize * ehdr.e_shnum),throw e_fail);
-    lseek(obj,ehdr.e_shoff,SEEK_SET);
-    rlen = try(-1 == ,read(obj,shdr,ehdr.e_shnum * ehdr.e_shentsize),throw e_fail); 
+    lseek(thiz->lng,ehdr.e_shoff,SEEK_SET);
+    rlen = try(-1 == ,read(thiz->lng,shdr,ehdr.e_shnum * ehdr.e_shentsize),throw e_fail); 
     foreach(i,0,ehdr.e_shnum){
         if((shdr->sh_type)){
             VM *new = try(NULL == ,kalloc(sizeof(*new)),throw e_fail);
@@ -28,16 +25,15 @@ int mkvm(Task *task,struct list_head *vm,const char *path){
             new->addr = (void*)shdr->sh_addr;
             new->offset = shdr->sh_offset;
             new->type = shdr->sh_type;
-            new->object = obj;
+            new->object = thiz->lng;
             new->size = shdr->sh_size;
-            list_add(vm,&(new->list));
+            list_add(&(TASK(thiz)->vm),&(new->list));
         }
         shdr++;
     }
     return 0;
     catch(e_fail){
         TEST_AND_FREE(kfree,shdr,NULL);
-        TEST_AND_FREE(close,obj,-1);
     }
     unused(rlen);
     return -1;
@@ -64,8 +60,9 @@ void copyvm(struct list_head *vm){
 
 void *dovm(struct list_head *vm,void *vaddr){
     list_for_each(_pos,vm){
-        printk("%p\n",_pos);
         VM *pos = vm_entry(_pos);
+        //printk("[  VM] : %p\n",pos);
+        //printk("self()->%s\n",self()->name);
         if(vaddr >= pos->addr && vaddr < pos->addr + pos->size){
             void *page = try(NULL ==, get_free_page(),throw e_fail);
             if(pos->type != SHT_NOBITS){

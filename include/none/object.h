@@ -45,6 +45,7 @@ struct _object{
             long status;
             unsigned long mode;
             unsigned long r1;
+            object_t      lng;
             off_t offset;
         };
         union{

@@ -9,7 +9,8 @@
 #define mm_error(fmt,...)   printk("\eg[MM   ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
 
 #ifdef  MM_LOG
-#define mm_log(fmt,...) printk("[  MM] : "fmt,##__VA_ARGS__)
+#define mm_log(fmt,...) printk("[  MM] : %-4d "fmt,__LINE__,##__VA_ARGS__)
+
 #else
 #define mm_log(fmt,...)
 #endif
@@ -106,9 +107,23 @@ static int delete_table(PageItem *table){
 }
 #endif
 
+static void _delete(PageItem *dir){
+    for(int i = CMEM >>22;i < 1024;i++){
+        if(isPresent(dir + i)){
+            if((ERROR == delete_table((PageItem *)(toPointer(dir[i].pointer)))) || 
+                    (ERROR == free_page(dir[i].pointer))){
+                mm_error("  dir[%d] = %08x",i,dir[i].pointer);
+                panic("free page fail");
+            }
+        }
+    }
+}
+
 static void delete(Object *this){
     Task *t = TASK(this->admit);
     PageItem *nsp = (PageItem *)t->core;
+    _delete(nsp);
+#if 0
     for(int i = CMEM >>22;i < 1024;i++){
         if(isPresent(nsp + i)){
             if((ERROR == delete_table((PageItem *)(toPointer(nsp[i].pointer)))) || 
@@ -118,6 +133,7 @@ static void delete(Object *this){
             }
         }
     }
+#endif
     if(ERROR == free_page((Pointer)(nsp))){
         panic("free page fail");
     }
@@ -156,6 +172,7 @@ static void np_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     void *page = dovm(&(t->vm),ptr);
+    mm_log("%p\n",ptr);
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
@@ -175,6 +192,11 @@ static PageItem *_un_table(PageItem *dirs,void *va){
         table = new_table;
     }
     return table;
+}
+
+static void *__va(PageItem *dirs,void *va){
+    PageItem *table = (void*)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
+    return (void*)((((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff)) + (((Pointer) va) & 0xfff));
 }
 
 static PageItem *_un_page(PageItem *table,void *va){
@@ -259,17 +281,24 @@ static Task* make_task(String name,int (*entry)(void)){
 }
 #endif
 
+
 static void execvp(Object *thiz){
-    unused(thiz);
-    Task * t = TASK(thiz);
+    Task * t = TASK(thiz->admit);
+    Registers *reg = __va((void*)(t->core),t->registers);
     struct {
-        char *path;
         char *argv[32];
         char env[0];
     } *buff = thiz->ptr;
     delvm(&(t->vm));
-    mkvm(TASK(thiz->admit),&(t->vm),buff->path);
-    mm_log("gs : %08x\n",TASK(thiz->admit));
+    mkvm(thiz,reg);
+    _delete((void*)t->core);
+    strcpy(thiz->admit->name,buff->argv[0]);
+    mm_log("gs : %08x reg : %08x\n",reg->gs,reg);
+    mm_log("es : %08x esi : %08x\n",reg->es,reg->esi);
+    mm_log("ds : %08x edi : %08x\n",reg->ds,reg->edi);
+    mm_log("ss : %08x esp : %08x\n",reg->ss,reg->esp);
+    mm_log("cs : %08x eip : %08x\n",reg->cs,reg->eip);
+    ret(thiz->admit,OK);
 }
 
 static void _wait(Object *this){
