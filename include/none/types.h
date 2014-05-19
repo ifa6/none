@@ -6,12 +6,12 @@ typedef unsigned long size_t;
 typedef unsigned long off_t;
 typedef unsigned char byte_t;
 typedef unsigned long count_t;
-typedef long    ssize_t; 
 
 typedef const char * String;
 
+typedef long        ssize_t; 
 typedef long        id_t;
-typedef int         pid_t;
+typedef long        pid_t;
 typedef long        clock_t;
 typedef long        time_t;
 typedef long        object_t;

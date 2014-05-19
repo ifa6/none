@@ -23,6 +23,7 @@ typedef enum{
     WP_PAGE     ,
     EXIT        ,
     RUN         ,
+    EXEC        ,
     SEEK        ,
 }DefaultMothon;
 

@@ -23,9 +23,7 @@ volatile unsigned long cr3 = 0;
 
 #define TASK_GOD()  TASK(toObject(GOD))   /*! 和上帝对话,我想你大概不会很喜欢他 !*/
 
-#if 0
-#define PRINT_SCHED
-#endif
+//#define PRINT_SCHED
 
 static Registers *pick_task(Registers *reg){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
@@ -209,6 +207,7 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
     task->ucount = 20;
     task->core = getcr3();
     task->registers = (void*)(STACK(task)->stackp) - sizeof(Registers);
+    INIT_LIST_HEAD(&(task->vm));
     strcpy(OBJECT(task)->name,name);
     memcpy(task->registers,&(Registers){
             .gs = data,

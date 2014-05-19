@@ -9,7 +9,6 @@
 #include "sha1.h"
 
 #define DIGIT_STRING    "0123456789abcdef"
-#define TEST_AND_FREE(fn,x,v)   do{if(x != v){fn(x);} x = v;}while(0)
 
 #define container_of(ptr,type,member) ({\
         const __auto_type _mptr = (ptr); \

@@ -1,9 +1,18 @@
 #include    "../kernel/kernel.h"
+#include "vm.h"
+
+#define MM_LOG
 
 /*! BUG !*/
 #define CMEM  0xC00000   //CONST_MEM
 
 #define mm_error(fmt,...)   printk("\eg[MM   ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
+
+#ifdef  MM_LOG
+#define mm_log(fmt,...) printk("[  MM] : "fmt,##__VA_ARGS__)
+#else
+#define mm_log(fmt,...)
+#endif
 
 extern unsigned char *mmap; 
 
@@ -77,6 +86,7 @@ static void clone(Object *this){
     }else{
         nt->core = (Pointer)clone_space((void *)(ot->core),nt);
         nt->father = ot;
+        copyvm(&(nt->vm));
         ret(OBJECT(nt),OK);
         ret(this->admit,OBJECT(nt)->id);
     }
@@ -86,7 +96,6 @@ static void clone(Object *this){
 static int delete_table(PageItem *table){
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
-            //printk("[MM   ] : |LOG    | i = %04x table = %08x\n",i,table[i].pointer);
             if(ERROR == free_page(table[i].pointer)){
                 mm_error("table[%d] = %08x",i,table[i].pointer);
                 return ERROR;
@@ -102,8 +111,6 @@ static void delete(Object *this){
     PageItem *nsp = (PageItem *)t->core;
     for(int i = CMEM >>22;i < 1024;i++){
         if(isPresent(nsp + i)){
-            //printk("[MM   ] : |LOG    | i = %04x\n",i);
-            //printk("[MM   ] : |LOG    | pointer = %08x\n",nsp[i].pointer);
             if((ERROR == delete_table((PageItem *)(toPointer(nsp[i].pointer)))) || 
                     (ERROR == free_page(nsp[i].pointer))){
                 mm_error("  dir[%d] = %08x",i,nsp[i].pointer);
@@ -114,6 +121,7 @@ static void delete(Object *this){
     if(ERROR == free_page((Pointer)(nsp))){
         panic("free page fail");
     }
+    delvm(&(t->vm));
     /*! object_table[this->admit->id] = NULL; !*/
     ret(OBJECT(t->father),this->admit->id);
     /*! free_page((Pointer)t); !*/
@@ -131,15 +139,13 @@ static void free_child(Object *this){
 }
 
 
-static int put_page(PageItem *dirs,void *va){
+static int put_page(PageItem *dirs,void *va,void *page){
     PageItem *table = NULL;
-    void *page = NULL;
     if(!isPresent(dirs + DIR_INDEX((Pointer)va))){
         table = get_free_page();
         if(!table) return ERROR;
         put_item(dirs,table,DIR_INDEX((Pointer)va),7);
     }
-    page = get_free_page();
     if(!page) return ERROR;
     table = (void *)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
     put_item(table,page,TABLE_INDEX((Pointer)va),7);
@@ -149,7 +155,8 @@ static int put_page(PageItem *dirs,void *va){
 static void np_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
-    ret(this->admit,put_page((PageItem *)t->core,ptr));
+    void *page = dovm(&(t->vm),ptr);
+    ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
 static PageItem *_un_table(PageItem *dirs,void *va){
@@ -213,12 +220,23 @@ static PageItem *__clone_space__(PageItem *space,void *page){
 #if 1
 static Task* make_task(String name,int (*entry)(void)){
     Task *task;
+    VM *vm;
     task = TASK(cloneObject(self()));
     task->core = (Pointer)__clone_space__((void *)(TASK(self())->core),task);
     task->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     task->pri = PRI_TASK;
     task->count = 20;
     task->ucount = 20;
+    INIT_LIST_HEAD(&(task->vm));
+    vm = kalloc(sizeof(vm));
+    vm->object = 0;
+    vm->offset = 0;
+    vm->type   = SHT_NOBITS;
+    vm->count  = 2; /*! never eq 0 ,it's right !*/
+    vm->addr   = NULL;
+    vm->size   = -1; /*! MAX size !*/
+    list_add(&(vm->list),&(task->vm));
+
     strcpy(OBJECT(task)->name,name);
     /*! 之前COPY到KERBEL_STACK,这是不对的,因为还没有切换到那个页去,谨记 !*/
     memcpy(STACK(task)->stackp - sizeof(Registers),&(Registers){
@@ -241,6 +259,19 @@ static Task* make_task(String name,int (*entry)(void)){
 }
 #endif
 
+static void execvp(Object *thiz){
+    unused(thiz);
+    Task * t = TASK(thiz);
+    struct {
+        char *path;
+        char *argv[32];
+        char env[0];
+    } *buff = thiz->ptr;
+    delvm(&(t->vm));
+    mkvm(TASK(thiz->admit),&(t->vm),buff->path);
+    mm_log("gs : %08x\n",TASK(thiz->admit));
+}
+
 static void _wait(Object *this){
     (void)this;
 }
@@ -252,8 +283,8 @@ static void _mm_init(void){
     hook(NO_PAGE,np_page);
     hook(WP_PAGE,nw_page);
     hook(EXIT,free_child);
+    hook(EXEC,execvp);
     hook(15,_wait);
-    //self()->friend[MM_PID] = MM_PID;
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();

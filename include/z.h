@@ -10,6 +10,8 @@
 #define types_p     __builtin_types_compatible_p
 #define is_const    __builtin_constant_p
 
+#define TEST_AND_FREE(fn,v,value) do{if(v != value){fn(v);} v = value;}while(0)
+
 #define build_buf_on(e)         (sizeof(char[1 - 2 * !!(e)]))
 #define build_bug_on_zero(e)    (sizeof(char[1 - 2 * !!(e)]) - 1)
 #define __must_be_array(a)  build_bug_on_zero(types_p(__typeof__(a),__typeof__(&a[0])))

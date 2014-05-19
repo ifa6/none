@@ -47,10 +47,8 @@ static int parse(char *buffer,char **argv,int len){
 static int _exec(const char *path,int argc,char **argv){
     object_t o;
     if(0 < (o = fork())){
-        printf("clild :%d\n",o);
         return 0;
     }else if(o == 0){
-        printf("Father :%d\n",o);
         return exec(path,argc,argv);
     } else {
         return -1;

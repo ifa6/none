@@ -75,7 +75,7 @@ struct _object{
 #endif
 
 #define toObject(_)   ({\
-        __auto_type _v = _;\
+        object_t _v = _;\
         if((_v < NR_FRIEND) && _v >= 0){ _v = self()->friend[_];}\
         object_table[_v];})
 
