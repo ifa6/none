@@ -23,7 +23,5 @@ int main(void){
         }
         close(curr);
     }
-    exit(0);
-    printf("Level\n");
     return 0;
 }

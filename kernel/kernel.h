@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define eprint(fmt,...) printk(fmt" %s %d\n",##__VA_ARGS__,__FILE__,__LINE__)
 #include <z.h>
 
 
@@ -55,6 +57,8 @@ extern void* get_free_page(void);
 extern void* get_kfree_page(void);
 #define get_free_object get_kfree_page
 extern int free_page(Pointer);
+extern int share_page(Pointer);
+extern int page_share_nr(Pointer page);
 extern int printk(const char *fmt,...);
 extern void printx(const char *data,count_t count);
 extern void panic(const char *msg);

@@ -6,7 +6,7 @@
 #define clear_page(p)   \
     __asm__("rep stosl\n\t\t"::"a"(0),"c"(0x1000 >> 2),"D"(p));
 
-#define mm_error(fmt,...)   printk("\eg[KMEM ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
+#define mm_error(fmt,...)   printk("\er[KMEM ] : \ew"fmt"\n",##__VA_ARGS__)
 #define mm_log(fmt,...)   printk("[KMEM ] : |LOG     | "fmt"\n",##__VA_ARGS__)
 
 Pointer MEMORY_END  =   0;
@@ -16,7 +16,7 @@ unsigned char *mmap = (unsigned char *)MMAP_BASE;
 /* get a free page by physical address */
 void *get_free_page(void){
     while(1){
-        for(int i = CONST_MEM >> 12;i < KMEM >> 12;i++){
+        foreach(i,CONST_MEM >> 12,KMEM >> 12){
             if(mmap[i] == 0){
                 mmap[i]++;
                 /* clear the page */
@@ -38,6 +38,19 @@ void *get_kfree_page(void){
         }
     }
     return NULL;
+}
+
+int share_page(Pointer page){
+    if(page < OBJECT_START) {
+        mm_error("Address %08x, does not require a shared kernel memory",page);
+        return ERROR;
+    }
+    mmap[page >> 12]++;
+    return OK;
+}
+
+int page_share_nr(Pointer page){
+    return mmap[page >> 12];
 }
 
 /* free a page in space */

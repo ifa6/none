@@ -7,7 +7,7 @@ STATIC_LIBARY := c
 BUILD		  := BINARY
 SUBDIR		  := true
 ENTRY 		  := 0xc00000
-LDFLAGS	 	  := -e main
+#LDFLAGS	 	  := -e main
 CLEANS		  := $(basename $(wildcard *.c))
 
 ifeq ($(ROOT_DIR),"")

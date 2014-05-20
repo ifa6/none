@@ -6,6 +6,10 @@
 #define UNUSED(x)   ((void)x)
 #endif
 
+#ifndef eprint
+#define eprint(...)
+#endif
+
 #define choose_expr __builtin_choose_expr
 #define types_p     __builtin_types_compatible_p
 #define is_const    __builtin_constant_p
@@ -29,14 +33,14 @@
 #define try(expr,code,...) ({\
         __typeof__(code) _v = code;\
         if(test(expr _v)){\
-            eprint("Exception : " #code "\n");\
+            eprint("Exception : " #code);\
             __VA_ARGS__;\
         }_v;})
 #else
 #define try(expr,code,...) ({\
         var _v = code;\
         if(test(expr _v)){\
-            eprint("Exception : " #code "\n");\
+            eprint("Exception : " #code);\
             __VA_ARGS__;\
         }_v;})
 #define foreach(index,start,end) for(var index = start;index < end;index++)

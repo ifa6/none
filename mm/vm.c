@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "vm.h"
 #include "../kernel/kernel.h"
-#define  eprint(fmt,...) printk("[ VM] : %-4d "fmt" %s\n",__LINE__,__func__)
 #include <z.h>
 
 #define vm_entry(ptr)   list_entry(ptr,VM,list)
@@ -65,13 +64,13 @@ void *dovm(struct list_head *vm,void *vaddr){
     list_for_each(_pos,vm){
         VM *pos = vm_entry(_pos);
         //printk("[  VM] : %p\n",pos);
-        if(vaddr >= pos->addr && vaddr < pos->addr + pos->size){
+        if((vaddr >= pos->addr) && vaddr < (pos->addr + pos->size)){
             void *page = try(NULL ==, get_free_page(),throw e_fail);
             if(pos->type != SHT_NOBITS){
-                lseek(pos->object,pos->offset + (vaddr - pos->addr),SEEK_SET);
-                read(pos->object,page,PAGE_SIZE);
+                lseek(pos->object,pos->offset + ((vaddr - pos->addr) & (~0xfff)),SEEK_SET);
+                try(-1 ==,read(pos->object,page,PAGE_SIZE),throw e_fail);
             }
-            //printk("self()->%s page = %p\n",self()->name,page);
+            //printk("self()->%s virtual = %p\npos->addr : %p pos->size : %x\n",self()->name,vaddr,pos->addr,pos->size);
             return page;
         }
     }

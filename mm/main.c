@@ -4,9 +4,9 @@
 #define MM_LOG
 
 /*! BUG !*/
-#define CMEM  0xC00000   //CONST_MEM
+#define CMEM   0xC00000   //CONST_MEM
 
-#define mm_error(fmt,...)   printk("\eg[MM   ] : \er|ERROR   | \ew"fmt"\n",##__VA_ARGS__)
+#define mm_error(fmt,...)   printk("\er[MM   ] : \ew"fmt"\n",##__VA_ARGS__)
 
 #ifdef  MM_LOG
 #define mm_log(fmt,...) printk("[  MM] : %-4d "fmt,__LINE__,##__VA_ARGS__)
@@ -15,9 +15,6 @@
 #define mm_log(fmt,...)
 #endif
 static void trace(Object *);
-
-
-extern unsigned char *mmap; 
 
 typedef union _pageItem{
     union _pageItem *table;
@@ -43,22 +40,26 @@ typedef union _pageItem{
 #define copy_page(t,f) \
     __asm__("cld;rep movsl;"::"S"(f),"D"(t),"c"(1024));
 
-#if 0
-#define get_free_page() ({\
-        void* _v = get_free_page();\
-        if(_v == (void*)0x00ffc000) printk("%d\n",__LINE__);\
-        _v;})
-#endif
+static void share_items(PageItem *item){
+    foreach(i,0,1024){
+        if(item[i].present)
+            share_page(item[i].pointer);
+    }
+}
 
-static PageItem *copy_items(PageItem *items,int start,int end){
+static PageItem *copy_dir(PageItem *dir){
     PageItem *nitm = NULL;
     nitm = (void *)get_free_page();
     if(!nitm) panic("copy_item failt : memory out!");
-    for(int i = start;i < end;i++){
-        clrWrite(items + i);
+    foreach(i,CMEM >> 22,1024){
+        clrWrite(dir + i);
+        if(dir[i].present){
+            share_items((PageItem*)toPointer(dir[i].pointer));
+            share_page(dir[i].pointer);
+        }
         //clrPresent(items + i);
     }
-    copy_page(nitm,items);
+    copy_page(nitm,dir);
     return nitm;
 }
 
@@ -70,12 +71,14 @@ static inline void put_item(PageItem *items,void *page,int index,int mode){
     items[index] = (PageItem)(toPointer((Pointer)page) | 7);
 }
 
+
 static PageItem *clone_space(PageItem *space,void *page){
     PageItem *nsp = NULL;
     PageItem *ntb = NULL;
     PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
-    nsp = copy_items(space,CMEM >> 22,1024);
-    ntb = copy_items(tmp,0,0);
+    nsp = copy_dir(space);
+    ntb = try(NULL == ,get_free_page());
+    copy_page(ntb,tmp);//copy_items(tmp,0,0);
     put_item(ntb,page,TABLE_INDEX(KERNEL_STACK),7);
     put_item(nsp,ntb,DIR_INDEX(KERNEL_STACK),7);
     return nsp;
@@ -99,11 +102,11 @@ static void clone(Object *this){
 static int delete_table(PageItem *table){
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
-            table[i].present = 0;
-            if(ERROR == free_page(table[i].pointer)){
+            //table[i].present = 0;     /*! share table !*/
+            try(ERROR ==,free_page(table[i].pointer),{
                 mm_error("table[%d] = %08x",i,table[i].pointer);
                 return ERROR;
-            }
+            });
         }
     }
     return OK;
@@ -113,7 +116,7 @@ static int delete_table(PageItem *table){
 static void _delete(PageItem *dir){
     for(int i = CMEM >>22;i < 1024;i++){
         if(isPresent(dir + i)){
-            dir[i].present = 0;
+            dir[i].present = 0; /*! non-share dir !*/
             if((ERROR == delete_table((PageItem *)(toPointer(dir[i].pointer)))) || 
                     (ERROR == free_page(dir[i].pointer))){
                 mm_error("  dir[%d] = %08x",i,dir[i].pointer);
@@ -127,17 +130,17 @@ static void delete(Object *this){
     Task *t = TASK(this->admit);
     PageItem *nsp = (PageItem *)t->core;
     _delete(nsp);
-    if(ERROR == free_page((Pointer)(nsp))){
+    try(ERROR ==,free_page((Pointer)(nsp)),{
         panic("free page fail");
-    }
+    });
     delvm(&(t->vm));
     /*! object_table[this->admit->id] = NULL; !*/
-    trace(OBJECT(t->father));
+    //trace(OBJECT(t->father));
     ret(OBJECT(t->father),this->admit->id);
-    mm_log("Level\n");
     /*! free_page((Pointer)t); !*/
 }
 
+#if 0
 static void free_child(Object *this){
     Task *t = TASK(this->admit);
     Object *child = toObject(this->r1);
@@ -145,9 +148,10 @@ static void free_child(Object *this){
     if(TASK(child)->father == t){
         object_table[child->id] = NULL;
         ret(this->admit,OK);
-        free_page((Pointer)child);
+        try(ERROR == ,free_page((Pointer)child));
     }
 }
+#endif
 
 
 static int put_page(PageItem *dirs,void *va,void *page){
@@ -171,16 +175,25 @@ static void np_page(Object *this){
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
-static PageItem *_un_table(PageItem *dirs,void *va){
-    PageItem *table = (void*)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
+static PageItem *_un_table(PageItem *dir,void *va){
+    PageItem *table = (void*)(((Pointer)dir[DIR_INDEX((Pointer)va)].table) & (~0xfff));
     PageItem *new_table = NULL;
+    if(!(dir[DIR_INDEX((Pointer)va)].present)){
+        mm_error("Virtual address %08x",va);
+        return NULL;
+    };
+
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
             table[i].write = 0;
         }
     }
-    if(mmap[DIR_INDEX((Pointer)va)] > 1){
-        mmap[DIR_INDEX((Pointer)va)]--; 
+
+    if(page_share_nr(DIR_INDEX((Pointer)va)) > 1){
+        try(ERROR == ,free_page(DIR_INDEX((Pointer)va)),{
+            mm_error("Not release the virtual memory address %08x",va);
+            trace(self()->admit);
+        });
         new_table = (void*)get_free_page();
         if(!new_table) return NULL;
         copy_page(new_table,table);
@@ -189,16 +202,20 @@ static PageItem *_un_table(PageItem *dirs,void *va){
     return table;
 }
 
-static void *__va(PageItem *dirs,void *va){
-    PageItem *table = (void*)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
-    return (void*)((((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff)) + (((Pointer) va) & 0xfff));
-}
 
 static PageItem *_un_page(PageItem *table,void *va){
     PageItem *page = (void*)(((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff));
     PageItem *new_page = NULL;
-    if(mmap[TABLE_INDEX((Pointer)va)] > 1){
-        mmap[TABLE_INDEX((Pointer)va)]--;
+
+    if(!(table[TABLE_INDEX((Pointer)va)].present)){
+        mm_error("Virtual address %08x",va);
+        return NULL;
+    };
+
+    if(page_share_nr(TABLE_INDEX((Pointer)va)) > 1){
+        try(ERROR == ,free_page(TABLE_INDEX((Pointer)va)),{
+            mm_error("Not release the virtual memory address %08x",va);
+        });
         new_page = (void*)get_free_page();
         if(!new_page) return NULL;
         copy_page(new_page,page);
@@ -217,6 +234,42 @@ static void nw_page(Object *this){
     if(!page) ret(this->admit,ERROR);
     put_item(table,page,TABLE_INDEX((Pointer)ptr),7);
     ret(this->admit,OK);
+}
+
+static void *__va(PageItem *dirs,void *va){
+    PageItem *table = (void*)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
+    return (void*)((((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff)) + (((Pointer) va) & 0xfff));
+}
+
+static void trace(Object *obj){
+    Task *t = TASK(obj);
+    Registers *reg = __va((void*)(t->core),t->registers);
+    mm_log("-----------------Object : %s--------------\n",obj->name);
+    mm_log("gs : %08x reg : %08x\n",reg->gs,reg);
+    mm_log("es : %08x esi : %08x\n",reg->es,reg->esi);
+    mm_log("ds : %08x edi : %08x\n",reg->ds,reg->edi);
+    mm_log("ss : %08x esp : %08x\n",reg->ss,reg->esp);
+    mm_log("cs : %08x eip : %08x\n",reg->cs,reg->eip);
+}
+
+static void execvp(Object *thiz){
+    Task * t = TASK(thiz->admit);
+    Registers *reg = __va((void*)(t->core),t->registers);
+    unused(__va);
+    struct {
+        char *argv[32];
+        char env[0];
+    } *buff = thiz->ptr;
+    delvm(&(t->vm));
+    try(-1==,mkvm(thiz,reg));
+    strcpy(thiz->admit->name,buff->argv[0]);
+    _delete((void*)t->core);
+    //trace(thiz->admit);
+    ret(thiz->admit,OK);
+}
+
+static void _wait(Object *this){
+    (void)this;
 }
 
 static PageItem *__clone_space__(PageItem *space,void *page){
@@ -276,45 +329,13 @@ static Task* make_task(String name,int (*entry)(void)){
 }
 #endif
 
-
-static void trace(Object *obj){
-    Task *t = TASK(obj);
-    Registers *reg = __va((void*)(t->core),t->registers);
-    mm_log("-----------------Object : %s--------------\n",obj->name);
-    mm_log("gs : %08x reg : %08x\n",reg->gs,reg);
-    mm_log("es : %08x esi : %08x\n",reg->es,reg->esi);
-    mm_log("ds : %08x edi : %08x\n",reg->ds,reg->edi);
-    mm_log("ss : %08x esp : %08x\n",reg->ss,reg->esp);
-    mm_log("cs : %08x eip : %08x\n",reg->cs,reg->eip);
-}
-
-static void execvp(Object *thiz){
-    Task * t = TASK(thiz->admit);
-    Registers *reg = __va((void*)(t->core),t->registers);
-    unused(__va);
-    struct {
-        char *argv[32];
-        char env[0];
-    } *buff = thiz->ptr;
-    trace(thiz->admit);
-    delvm(&(t->vm));
-    mkvm(thiz,reg);
-    strcpy(thiz->admit->name,buff->argv[0]);
-    _delete((void*)t->core);
-    ret(thiz->admit,OK);
-}
-
-static void _wait(Object *this){
-    (void)this;
-}
-
 static void _mm_init(void){
     Task *task;
     hook(CLONE,clone);
     hook(CLOSE,delete);
     hook(NO_PAGE,np_page);
     hook(WP_PAGE,nw_page);
-    hook(EXIT,free_child);
+    //hook(EXIT,free_child);
     hook(EXEC,execvp);
     hook(15,_wait);
     extern int system_main(void);
@@ -327,4 +348,5 @@ int mm_main(void){
     _mm_init();
     dorun();
     return 0;
+    unused(trace);
 }

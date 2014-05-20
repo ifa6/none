@@ -1,5 +1,4 @@
 #include    "fs.h"
-#define eprint(fmt,...) printk("%4d "fmt" %s\n",__LINE__,##__VA_ARGS__,__func__)
 #include    "../kernel/kernel.h"
 #include    <elf.h>
 
@@ -131,7 +130,7 @@ static void fs_write(Object *this){
 }
 
 static void fs_close(Object *thiz){
-    printk("\eRFIXME\ew : FS close\eO\n");
+    printk("\erTODO : FS close\ew\n");
     ret(thiz->admit,OK);
     run(MM_PID,CLOSE);
 }
