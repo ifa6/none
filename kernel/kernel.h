@@ -51,8 +51,16 @@ extern void disable_irq(int irq);
 extern void enable_irq(int irq);
 extern void put_irq_handler(int irq,IrqHandler handler);
 
+extern void* get_free_page(void);
+extern void* get_kfree_page(void);
+#define get_free_object get_kfree_page
+extern int free_page(Pointer);
+extern int printk(const char *fmt,...);
+extern void printx(const char *data,count_t count);
+extern void panic(const char *msg);
+
 extern void *kalloc(unsigned int);
-extern void kfree_s(void *,int);
+extern void kfree_s(void *,unsigned int);
 #define kfree(p)    kfree_s(p,0)
 
 

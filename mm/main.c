@@ -14,6 +14,8 @@
 #else
 #define mm_log(fmt,...)
 #endif
+static void trace(Object *);
+
 
 extern unsigned char *mmap; 
 
@@ -97,6 +99,7 @@ static void clone(Object *this){
 static int delete_table(PageItem *table){
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
+            table[i].present = 0;
             if(ERROR == free_page(table[i].pointer)){
                 mm_error("table[%d] = %08x",i,table[i].pointer);
                 return ERROR;
@@ -110,6 +113,7 @@ static int delete_table(PageItem *table){
 static void _delete(PageItem *dir){
     for(int i = CMEM >>22;i < 1024;i++){
         if(isPresent(dir + i)){
+            dir[i].present = 0;
             if((ERROR == delete_table((PageItem *)(toPointer(dir[i].pointer)))) || 
                     (ERROR == free_page(dir[i].pointer))){
                 mm_error("  dir[%d] = %08x",i,dir[i].pointer);
@@ -123,23 +127,14 @@ static void delete(Object *this){
     Task *t = TASK(this->admit);
     PageItem *nsp = (PageItem *)t->core;
     _delete(nsp);
-#if 0
-    for(int i = CMEM >>22;i < 1024;i++){
-        if(isPresent(nsp + i)){
-            if((ERROR == delete_table((PageItem *)(toPointer(nsp[i].pointer)))) || 
-                    (ERROR == free_page(nsp[i].pointer))){
-                mm_error("  dir[%d] = %08x",i,nsp[i].pointer);
-                panic("free page fail");
-            }
-        }
-    }
-#endif
     if(ERROR == free_page((Pointer)(nsp))){
         panic("free page fail");
     }
     delvm(&(t->vm));
     /*! object_table[this->admit->id] = NULL; !*/
+    trace(OBJECT(t->father));
     ret(OBJECT(t->father),this->admit->id);
+    mm_log("Level\n");
     /*! free_page((Pointer)t); !*/
 }
 
@@ -172,7 +167,7 @@ static void np_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     void *page = dovm(&(t->vm),ptr);
-    mm_log("%p\n",ptr);
+    //trace(this->admit);
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
@@ -230,7 +225,7 @@ static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
     if(or(!,nsp,ntp)) panic("memeory very full!-_-|||");
     copy_page(nsp,space);
-    for(int i = CMEM>>22;i < 1024;i++){
+    for(int i = CMEM >> 22;i < 1024;i++){
         clrPresent(nsp + i);
     }
     copy_page(ntp,tmp);
@@ -282,22 +277,30 @@ static Task* make_task(String name,int (*entry)(void)){
 #endif
 
 
-static void execvp(Object *thiz){
-    Task * t = TASK(thiz->admit);
+static void trace(Object *obj){
+    Task *t = TASK(obj);
     Registers *reg = __va((void*)(t->core),t->registers);
-    struct {
-        char *argv[32];
-        char env[0];
-    } *buff = thiz->ptr;
-    delvm(&(t->vm));
-    mkvm(thiz,reg);
-    _delete((void*)t->core);
-    strcpy(thiz->admit->name,buff->argv[0]);
+    mm_log("-----------------Object : %s--------------\n",obj->name);
     mm_log("gs : %08x reg : %08x\n",reg->gs,reg);
     mm_log("es : %08x esi : %08x\n",reg->es,reg->esi);
     mm_log("ds : %08x edi : %08x\n",reg->ds,reg->edi);
     mm_log("ss : %08x esp : %08x\n",reg->ss,reg->esp);
     mm_log("cs : %08x eip : %08x\n",reg->cs,reg->eip);
+}
+
+static void execvp(Object *thiz){
+    Task * t = TASK(thiz->admit);
+    Registers *reg = __va((void*)(t->core),t->registers);
+    unused(__va);
+    struct {
+        char *argv[32];
+        char env[0];
+    } *buff = thiz->ptr;
+    trace(thiz->admit);
+    delvm(&(t->vm));
+    mkvm(thiz,reg);
+    strcpy(thiz->admit->name,buff->argv[0]);
+    _delete((void*)t->core);
     ret(thiz->admit,OK);
 }
 

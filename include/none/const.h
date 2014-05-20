@@ -24,9 +24,10 @@
 #define BUFFER_END      0xa0000
 #define BUFFER_COUNT    ((BUFFER_END - BUFFER_START) >> 12)
 #define RAMDISK_ADDR    0x315000    /*! ramdisk 起始地址 !*/
-#define MMAP_BASE       0x100000    /* 内存空闲位图开始物理地址 */
-#define MMAP_END        0x200000    /* 空闲内存位图结束物理地址 */
-#define CONST_MEM       0x800000    /* 内核空间 */
+#define MMAP_BASE       0x100000    /*  内存空闲位图开始物理地址 !*/
+#define MMAP_END        0x200000    /*  空闲内存位图结束物理地址 !*/
+#define OBJECT_START    0x400000    /*! 对象内存页分配开始地址 !*/
+#define CONST_MEM       0x800000    /*! 对象页分配结束地址,通用内存页开始地址内 !*/
 #define PAGE_START      0x0
 #define KMEM            0x40000000  /* 内核对等映射顶端 */
 #define DIE_DIR         0x203000    /* die进程页目录,在内核启动之前,由boot设置,这里的boot是内核boot,*/

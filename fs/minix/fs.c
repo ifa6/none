@@ -3,7 +3,7 @@
 #include    "../kernel/kernel.h"
 #include    <elf.h>
 
-#define LOG
+//#define LOG
 
 #ifdef  LOG
 #define fs_log(fmt,...) printk("[FS  ] : "fmt,##__VA_ARGS__)

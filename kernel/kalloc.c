@@ -2,9 +2,10 @@
  *  Copy form linux 0.12 .
  *
  */
-#include    <stdio.h>
-#include    <sys/inter.h>
-#include    <none/const.h>
+#include <stdio.h>
+#include <sys/inter.h>
+#include <none/const.h>
+#include "kernel.h"
 
 #define isnull(p)   (!(p))
 /* get page pointer */
@@ -41,7 +42,7 @@ Bucket *free_bucket = NULL;
 static inline void bucket_init(void){
     Bucket *first,*bdesc;
     
-    first = bdesc = (Bucket *)(get_free_page());
+    first = bdesc = (Bucket *)(get_kfree_page());
     if(isnull(bdesc)) panic("Out of memory in init bucket_init!\n");
     for(int i = PAGE_SIZE / sizeof(Bucket);i > 1;i--){
         bdesc->next = bdesc + 1;
@@ -70,7 +71,7 @@ void *kalloc(unsigned int len){
         free_bucket = free_bucket->next;
         bdesc->refcnt = 0;
         bdesc->bucket_size = bdir->size;
-        bdesc->page = bdesc->freeptr = cp = (void *)(get_free_page());
+        bdesc->page = bdesc->freeptr = cp = (void *)(get_kfree_page());
         if(isnull(cp)) panic("Out of memory in kernel malloc()\n");
         for(int i = PAGE_SIZE / bdir->size;i > 1;i--){
             *((char **)cp) = cp + bdir->size;

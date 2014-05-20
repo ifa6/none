@@ -13,7 +13,7 @@ Pointer MEMORY_END  =   0;
 Pointer MEMORY_MAP_END  =   0;
 
 unsigned char *mmap = (unsigned char *)MMAP_BASE;
-/* get a free page in kernel space */
+/* get a free page by physical address */
 void *get_free_page(void){
     while(1){
         for(int i = CONST_MEM >> 12;i < KMEM >> 12;i++){
@@ -28,9 +28,21 @@ void *get_free_page(void){
     return NULL;
 }
 
+/*! get a free object page by kernel space !*/
+void *get_kfree_page(void){
+    foreach(i, OBJECT_START >> 12,CONST_MEM >> 12){
+        if(mmap[i] == 0){
+            mmap[i]++;
+            clear_page(i << 12);
+            return (void*)(i << 12);
+        }
+    }
+    return NULL;
+}
+
 /* free a page in space */
 int free_page(Pointer page){
-    if(page < CONST_MEM) {
+    if(page < OBJECT_START) {
         mm_error("address %08x is kernel memory",page);
         return ERROR;
     }
@@ -97,7 +109,7 @@ void mm_init(void){
         } else busy = 100;
         for(Pointer i = alow >> 12;i < (alow + llow) >> 12;i++) mmap[i] = busy;
     }
-    for(int i = 0;i < (CONST_MEM >> 12); i++) mmap[i] = 100;
+    for(int i = 0;i < (OBJECT_START >> 12); i++) mmap[i] = 100;
     if(MEMORY_END > KMEM ) MEMORY_MAP_END = KMEM;
     else MEMORY_MAP_END = MEMORY_END;
     buffer_init();

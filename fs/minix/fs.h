@@ -1,12 +1,11 @@
 #ifndef __FS_H__
 #define __FS_H__
 
-#include    <sys/inter.h>
-//#include    <types.h>
-#include    <stdio.h>
-//#include    <object.h>
-#include    <fs/minix.h>
-#include    "file.h"
+#include <sys/inter.h>
+#include <stdio.h>
+#include <fs/minix.h>
+#include "file.h"
+#include "../../kernel/kernel.h" 
 
 
 

@@ -42,7 +42,7 @@ all :
 	done
 
 debug:
-	@objdump -d $(OBJS)/kernel/none > t.src
+	@objdump -d objs/kernel/none > t.src
 
 host:
 	@cp $s $h /boot/

@@ -46,12 +46,6 @@ typedef enum {
 #define _NR_hook    3
 #define _NR_buffer  4
 
-extern void* get_free_page(void);
-extern int free_page(Pointer);
-extern int printk(const char *fmt,...);
-extern void printx(const char *data,count_t count);
-extern void panic(const char *msg);
-
 #define STDIN_FILENO    0
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2

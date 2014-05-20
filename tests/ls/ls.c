@@ -21,5 +21,9 @@ int main(void){
                 printf("%s\n",dir[i].name);
             }
         }
+        close(curr);
     }
+    exit(0);
+    printf("Level\n");
+    return 0;
 }

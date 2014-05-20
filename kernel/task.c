@@ -200,7 +200,7 @@ static inline void gam(Object *this){
 
 static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int (*entry)()){
     Task *task;
-    task = (Task *)get_free_page();
+    task = (Task *)get_free_object();
     OBJECT(task)->id = id;
     task->pri = pri;
     task->count = 20;
