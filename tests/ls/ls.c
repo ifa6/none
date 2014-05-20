@@ -12,16 +12,18 @@
 #include <sys/inter.h>
 #include <z.h>
 MinixDirentry   dir[10];
-int main(void){
-    int curr = open("/usr/bin",0);
-    size_t len;
-    if(curr != ERROR){
-        while(0 < (len = read(curr,dir,sizeof(dir)))){
-            for(var i = 0;i < (len / sizeof(dir[0]));i++){
-                printf("%s\n",dir[i].name);
+int main(int argc,char **argv){
+    foreach(i,1,argc){
+        int curr = open(argv[i],0);
+        size_t len;
+        if(curr != ERROR){
+            while(0 < (len = read(curr,dir,sizeof(dir)))){
+                foreach(i,0,(len / sizeof(dir[0]))){
+                    printf("%s\n",dir[i].name);
+                }
             }
+            close(curr);
         }
-        close(curr);
     }
     return 0;
 }

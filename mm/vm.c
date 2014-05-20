@@ -11,12 +11,23 @@ int mkvm(Object *thiz,Registers *reg){
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr = NULL; /*! only ycm !*/
     Task *t = TASK(thiz->admit);
+    struct {
+        char *argv[32];
+        char env[0];
+    } *buff = thiz->ptr;
     int rlen = 0;
+
+    strcpy(thiz->admit->name,buff->argv[0]);
+
     rlen = try(-1 == ,read(thiz->lng,&ehdr,sizeof(ehdr)),throw e_fail);
     reg->eip = ehdr.e_entry;
+    reg->ss = thiz->count;
+    reg[1].gs = (long)buff->argv;
+
     shdr = try(NULL == ,kalloc(ehdr.e_shentsize * ehdr.e_shnum),throw e_fail);
     lseek(thiz->lng,ehdr.e_shoff,SEEK_SET);
     rlen = try(-1 == ,read(thiz->lng,shdr,ehdr.e_shnum * ehdr.e_shentsize),throw e_fail); 
+
     INIT_LIST_HEAD(&(t->vm));
     foreach(i,0,ehdr.e_shnum){
         if((shdr->sh_type)){

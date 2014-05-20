@@ -10,10 +10,10 @@
 
 #ifdef  MM_LOG
 #define mm_log(fmt,...) printk("[  MM] : %-4d "fmt,__LINE__,##__VA_ARGS__)
-
 #else
 #define mm_log(fmt,...)
 #endif
+
 static void trace(Object *);
 
 typedef union _pageItem{
@@ -140,19 +140,6 @@ static void delete(Object *this){
     /*! free_page((Pointer)t); !*/
 }
 
-#if 0
-static void free_child(Object *this){
-    Task *t = TASK(this->admit);
-    Object *child = toObject(this->r1);
-    if(!child) ret(this->admit,ERROR);
-    if(TASK(child)->father == t){
-        object_table[child->id] = NULL;
-        ret(this->admit,OK);
-        try(ERROR == ,free_page((Pointer)child));
-    }
-}
-#endif
-
 
 static int put_page(PageItem *dirs,void *va,void *page){
     PageItem *table = NULL;
@@ -244,25 +231,21 @@ static void *__va(PageItem *dirs,void *va){
 static void trace(Object *obj){
     Task *t = TASK(obj);
     Registers *reg = __va((void*)(t->core),t->registers);
-    mm_log("-----------------Object : %s--------------\n",obj->name);
-    mm_log("gs : %08x reg : %08x\n",reg->gs,reg);
-    mm_log("es : %08x esi : %08x\n",reg->es,reg->esi);
-    mm_log("ds : %08x edi : %08x\n",reg->ds,reg->edi);
-    mm_log("ss : %08x esp : %08x\n",reg->ss,reg->esp);
-    mm_log("cs : %08x eip : %08x\n",reg->cs,reg->eip);
+    printk("-----------------Object : %s--------------\n",obj->name);
+    printk("gs : %08x reg : %08x\n",reg->gs,reg);
+    printk("es : %08x esi : %08x\n",reg->es,reg->esi);
+    printk("ds : %08x edi : %08x\n",reg->ds,reg->edi);
+    printk("cs : %08x eip : %08x\n",reg->cs,reg->eip);
+    printk("ss : %08x esp : %08x\n",reg->ss,reg->esp);
+    printk("fs : %08x flg : %08x\n",reg->fs,reg->eflags);
 }
 
 static void execvp(Object *thiz){
     Task * t = TASK(thiz->admit);
     Registers *reg = __va((void*)(t->core),t->registers);
     unused(__va);
-    struct {
-        char *argv[32];
-        char env[0];
-    } *buff = thiz->ptr;
     delvm(&(t->vm));
     try(-1==,mkvm(thiz,reg));
-    strcpy(thiz->admit->name,buff->argv[0]);
     _delete((void*)t->core);
     //trace(thiz->admit);
     ret(thiz->admit,OK);
