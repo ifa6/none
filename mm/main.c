@@ -102,11 +102,11 @@ static void clone(Object *this){
 static int delete_table(PageItem *table){
     for(int i = 0;i < 1024;i++){
         if(isPresent(table + i)){
-            //table[i].present = 0;     /*! share table !*/
             try(ERROR ==,free_page(table[i].pointer),{
                 mm_error("table[%d] = %08x",i,table[i].pointer);
                 return ERROR;
             });
+            //table[i].present = 0;     /*! share table !*/
         }
     }
     return OK;
@@ -114,14 +114,14 @@ static int delete_table(PageItem *table){
 #endif
 
 static void _delete(PageItem *dir){
-    for(int i = CMEM >>22;i < 1024;i++){
+    foreach(i,CMEM >> 22,1024){
         if(isPresent(dir + i)){
-            dir[i].present = 0; /*! non-share dir !*/
             if((ERROR == delete_table((PageItem *)(toPointer(dir[i].pointer)))) || 
                     (ERROR == free_page(dir[i].pointer))){
                 mm_error("  dir[%d] = %08x",i,dir[i].pointer);
                 panic("free page fail");
             }
+            dir[i].present = 0; /*! non-share dir !*/
         }
     }
 }
@@ -189,8 +189,8 @@ static PageItem *_un_table(PageItem *dir,void *va){
         }
     }
 
-    if(page_share_nr(DIR_INDEX((Pointer)va)) > 1){
-        try(ERROR == ,free_page(DIR_INDEX((Pointer)va)),{
+    if(page_share_nr(dir[DIR_INDEX((Pointer)va)].pointer) > 1){
+        try(ERROR == ,free_page(dir[DIR_INDEX((Pointer)va)].pointer),{
             mm_error("Not release the virtual memory address %08x",va);
             trace(self()->admit);
         });
@@ -212,8 +212,8 @@ static PageItem *_un_page(PageItem *table,void *va){
         return NULL;
     };
 
-    if(page_share_nr(TABLE_INDEX((Pointer)va)) > 1){
-        try(ERROR == ,free_page(TABLE_INDEX((Pointer)va)),{
+    if(page_share_nr(table[TABLE_INDEX((Pointer)va)].pointer) > 1){
+        try(ERROR == ,free_page(table[TABLE_INDEX((Pointer)va)].pointer),{
             mm_error("Not release the virtual memory address %08x",va);
         });
         new_page = (void*)get_free_page();
