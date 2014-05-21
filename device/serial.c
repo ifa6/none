@@ -67,23 +67,23 @@ static void _io(Object *this){
         status = inb_p(0x3fa);
         if(!(status & 1)){
             switch(status){
-                case 0: inb_p(0x3fe); break;
-                case 6: inb_p(0x3fd);break;
-                case 4: printk("%c",inb_p(0x3f8));break;
-                case 2: 
+            case 0: inb_p(0x3fe); break;
+            case 6: inb_p(0x3fd);break;
+            case 4: printk("%c",inb_p(0x3f8));break;
+            case 2: 
 again:
-                        if(inq){
-                            if(inq->offset < inq->count){
-                                outb_p(inq->buffer[inq->offset],0x3f8);
-                                inq->offset++;
-                            }else{
-                                ret(inq->admit,OK);
-                                rs_pop();
-                                goto again;
-                            }
+                    if(inq){
+                        if(inq->offset < inq->count){
+                            outb_p(inq->buffer[inq->offset],0x3f8);
+                            inq->offset++;
                         }else{
-                           outb_p(inb_p(0x3f9) & 0xd,0x3f9);
+                            ret(inq->admit,OK);
+                            rs_pop();
+                            goto again;
                         }
+                    }else{
+                        outb_p(inb_p(0x3f9) & 0xd,0x3f9);
+                    }
                     break;
             }
         }

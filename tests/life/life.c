@@ -75,6 +75,7 @@ static Life map[LIFE_Y][LIFE_X] = {[0][0] = {DEATH,0}};
 
 static unsigned short entry = 0;
 static unsigned short volatile page = 0;
+
 int main(void){
     PMInfoBlock *pm = NULL;
     installGDT(0xa000 >> 3,0xa0000,0xffff,0,0,1,0,1,2);
@@ -213,6 +214,7 @@ static unsigned long _int10(unsigned long ax,unsigned long bx,unsigned long cx,u
 
 
 static void drawPixel(int mode,int x,int y,unsigned short color){
+    unused(mode);
     unsigned int pos = y * 640 + x;
     unsigned short _page = pos >> 16;
     /*! FIXME : 暂时将就下吧, !*/

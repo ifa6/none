@@ -256,6 +256,13 @@ static void _wait(Object *this){
     (void)this;
 }
 
+static void dup(Object *thiz){
+    Object *obj = thiz->admit;
+    if(obj->r1 < NR_FRIEND)
+        obj->friend[thiz->r1] = thiz->r2;
+    ret(obj,OK);
+}
+
 static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *nsp = (void*)get_free_page();
     PageItem *ntp = (void*)get_free_page();
@@ -270,6 +277,7 @@ static PageItem *__clone_space__(PageItem *space,void *page){
     put_item(nsp,ntp,DIR_INDEX(KERNEL_STACK),7);
     return nsp;
 }
+
 
 #if 1
 static Task* make_task(String name,int (*entry)(void)){
@@ -319,7 +327,7 @@ static void _mm_init(void){
     hook(CLOSE,delete);
     hook(NO_PAGE,np_page);
     hook(WP_PAGE,nw_page);
-    //hook(EXIT,free_child);
+    hook(DUP,dup);
     hook(EXEC,execvp);
     hook(15,_wait);
     extern int system_main(void);

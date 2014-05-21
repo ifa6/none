@@ -196,9 +196,9 @@ repeat:
         else
             *str++ = *fmt;
     }
-    *str = 0;
+    *str++ = 0;
 
-    return (buf - str);
+    return (str - buf);
 }
 
 extern int sprintf(char *buf,const char * fmt,...){

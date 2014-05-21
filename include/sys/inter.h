@@ -20,7 +20,7 @@ typedef enum{
     HARDWARE    ,
     NO_PAGE     ,
     WP_PAGE     ,
-    EXIT        ,
+    DUP         ,
     RUN         ,
     EXEC        ,
     SEEK        ,
@@ -35,7 +35,7 @@ typedef enum {
     CLOCK_PID,
     AT_PID = 7,
     FS_PID,
-    RS_PID
+    RS_PID,
 }PID;
 /* System Call type */
 

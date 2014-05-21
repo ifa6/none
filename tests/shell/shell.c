@@ -6,23 +6,6 @@
 static int _exec(const char *path,int argc,char **argv);
 static char *getline(void);
 static int parse(char *buffer,char **argv,int len);
-int main(void){
-    char *buffer;
-    char *argv[10];
-    int  argc = 0;
-    for(;;){
-        printf("\ey$ \ew");
-        buffer = getline();
-        argc = parse(buffer,argv,10);
-        if(argc == 0) continue;
-        if(OK != _exec(argv[0],argc,argv))
-            printf("%s : No usch file or directory\n",argv[0]);
-        else
-            run(MM_PID,15);
-    }
-    run(MM_PID,CLOSE);
-    return 0;
-}
 
 static int parse(char *buffer,char **argv,int len){
     char *pos = buffer;
@@ -49,6 +32,10 @@ static int _exec(const char *path,int argc,char **argv){
     if(0 < (o = fork())){
         return 0;
     }else if(o == 0){
+        if(argc > 2 && argv[argc - 2][0] == '>'){
+            run(MM_PID,DUP,.r1 = 1,.r2 = argv[argc - 1][0] - '0');
+            argc -= 2;
+        }
         return exec(path,argc,argv);
     } else {
         return -1;
@@ -70,4 +57,22 @@ static char *getline(void){
     }
     buff[i] = 0;
     return buff;
+}
+
+int main(void){
+    char *buffer;
+    char *argv[10];
+    int  argc = 0;
+    for(;;){
+        printf("\ey$ \ew");
+        buffer = getline();
+        argc = parse(buffer,argv,10);
+        if(argc == 0) continue;
+        if(OK != _exec(argv[0],argc,argv))
+            printf("%s : No usch file or directory\n",argv[0]);
+        else
+            run(MM_PID,15);
+    }
+    run(MM_PID,CLOSE);
+    return 0;
 }

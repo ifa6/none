@@ -166,6 +166,6 @@ void keyboard_init(void){
     kb_in.head = kb_in.tail = 0;
     kb_in.full = false;
     self()->fns[HARDWARE] = _input;
-    self()->fns[EXIT] = _reset;
+    self()->fns[CLOSE] = _reset;
     put_irq_handler(1,keyboard_handler);
 }
