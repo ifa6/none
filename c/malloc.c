@@ -2,15 +2,15 @@
 #include    <stdlib.h>
 #include    <stdint.h>
 #include    <string.h>
-#define eprint  printf
+#define eprint(fmt,...)  printf(fmt"\n",##__VA_ARGS__)
 #include    <z.h>
 
 #define mm_error(fmt,...)   printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
 #define mm_warning(fmt,...) printf("[MALLOC] : "fmt"\n",##__VA_ARGS__)
 
 
-#define M_BUSY      (!0)
-#define M_UNBUSY    (0)
+#define M_BUSY      1
+#define M_UNBUSY    0
 
 #ifndef typeof
 #define typeof  __typeof__
@@ -52,7 +52,7 @@ struct _MHeap{
     MObject *objectList[NR_MOBJECT];
     size_t  length;
     int8_t  chunk[0];
-}*heap = NULL;
+}*heap = (void*)-1;
 
 /*******************************************************************************
  *  delMObject
@@ -151,8 +151,8 @@ static MObject *getMObject(int log2n){
 static int realizeMHeap(size_t length){
     int log2n;
     MObject *mobject;
-    if(heap){
-        mm_error("Heap already exists");
+    if(heap && heap != (void*)-1){
+        mm_error("Heap already exists,address is %p and &heap is %p",heap,&heap);
         return -1;
     }
     length += (sizeof(MHeap));
@@ -164,7 +164,7 @@ static int realizeMHeap(size_t length){
     extern char _end;
     heap = (void*)&_end; /*! malloc(sizeof(MHeap) + exp2(log2n)); !*/
     if(!(heap)){
-        mm_error("oops,the memory is full,tell your boss");
+        mm_error("Oops,the memory is full,tell your boss");
         return -1;
     }
     memset(heap,0,sizeof(MHeap) + exp2(log2n));
@@ -206,7 +206,7 @@ void free(void *ptr){
     }
     if((mobject->before)){
         MObject *head = mobject->before;
-        if((head->busy == M_UNBUSY)){
+        if(head->busy == M_UNBUSY){
             head = delMObject(head);
             mobject = mergerMObject(head,mobject);
         }

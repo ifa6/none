@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 /*!  import by none !*/
-#define  eprint(fmt,...)   printf(fmt,##__VA_ARGS__)
+#define  eprint(fmt,...)   printf(fmt"\n",##__VA_ARGS__)
 #include <string.h>
 #include "z.h"
 #include "rootfs.h"
@@ -10,15 +10,17 @@
 
 #define DIGIT_STRING    "0123456789abcdef"
 
-#define container_of(ptr,type,member) ({\
-        const __auto_type _mptr = (ptr); \
-        (type *)((char *)_mptr - offsetof(type,member));})
+static inline void *zalloc(size_t len){
+    void *buffer = try(NULL == ,malloc(len),return NULL);
+    memset(buffer,0,len);
+    return buffer;
+}
 
-static struct hlist_head  dir[256] = {{NULL}};
+static struct hlist_head  dir[256] = {{(void*)-1}};
 
 static void sha1ToString(char *str,const uint8_t *sha1){
     if(!str || !sha1) return;
-    for(var i = 0;i < 20;i++){
+    foreach(i,0,20){
         str[i * 2]  = DIGIT_STRING[(sha1[i] >> 4) & 0xf];
         str[i * 2 + 1]     = DIGIT_STRING[sha1[i] & 0xf];
     }
@@ -46,7 +48,7 @@ static void RFSName(char *name,RFS *rfs){
 RFS* newRFS(void *data,RFSType type ,size_t len){
     RFS *rfs;
     if(and(!,data,len)) return NULL;
-    rfs = try(NULL == ,malloc(sizeof(rfs[0]) + len),return NULL);
+    rfs = try(NULL == ,zalloc(sizeof(rfs[0]) + len),return NULL);
     rfs->size = len;
     rfs->type = type;
     INIT_HLIST_NODE(&(rfs->hlist));
@@ -66,10 +68,10 @@ RFS *newRFSTree(RFS *old,const RFS *new,const char *name){
     if(old){
         if(old->type != RFS_TREE) return NULL;
         size = old->size;
-        tree = malloc(size + sizeof(RFSTree));
+        tree = zalloc(size + sizeof(RFSTree));
         memcpy(tree,old->blob,size);
     }else{
-        tree = malloc(sizeof(RFSTree));
+        tree = zalloc(sizeof(RFSTree));
     }
     int index = size / sizeof(RFSTree);
     size_t nLen = strlen(name);
@@ -80,23 +82,28 @@ RFS *newRFSTree(RFS *old,const RFS *new,const char *name){
     return newRFS(tree,RFS_TREE,size + sizeof(RFSTree));
 }
 
-int main(/*int argc,char **argv*/void){
+int main(/*!int argc,char **argv!*/void){
+#if 1
     char *argv[] = {
         "rootfs","/gpl.txt", "/none.txt",
     };
     int argc = ARRAY_SIZE(argv);
+#endif
     int fd = -1;
     off_t len = 1024;
     void *buffer = NULL;
     if(argc < 2) return -1;
     RFS *rfs = NULL;
-    for(var i = 1;i < argc;i++){
+    foreach(i,0,ARRAY_SIZE(dir)){
+        dir[i].first = NULL;
+    }
+    foreach(i,1,argc){
         len = 1024;
         RFS *new;
         fd = try(-1 == ,open(argv[i],0),{
             throw e_fial;
         });
-        buffer = try(NULL == ,malloc(len),{
+        buffer = try(NULL == ,zalloc(len),{
             throw e_fial;
         });
         len = read(fd,buffer,len);
@@ -109,7 +116,7 @@ int main(/*int argc,char **argv*/void){
         }
     }
 
-    for(var i = 0;i < 256;i++){
+    foreach(i,0,ARRAY_SIZE(dir)){
         char sha1[41];
         struct hlist_node *r;
         hlist_for_each(r,&dir[i]){
@@ -117,16 +124,16 @@ int main(/*int argc,char **argv*/void){
             RFSName(sha1,rfs);
             printf("%s %s %2x\n",((char *[]){"BLOB","TREE"})[rfs->type],sha1,i);
             if(rfs->type == RFS_TREE){
-                for(var j = 0;rfs && j < rfs->size / sizeof(RFSTree);j++){
+                for(__typeof__(sizeof(RFSTree))j = 0;rfs && j < rfs->size / sizeof(RFSTree);j++){
                     char sha1[41];
                     sha1ToString(sha1,rfs->tree[j].sha1);
                     printf("  %s %s %s ","|-",((char *[]){"BLOB","TREE"})[rfs->tree[j].type],sha1);
-                    for(var k = 0;k < RFS_NAME_LENGTH;k++)
+                    foreach(k,0,RFS_NAME_LENGTH)
                         printf("%c",rfs->tree[j].name[k]);
                     printf("\n");
                 }
             }else{
-                for(var j = 0;j < rfs->size;j++){
+                foreach(j,0,rfs->size){
                     printf("%c",rfs->blob[j]);
                 }
             }

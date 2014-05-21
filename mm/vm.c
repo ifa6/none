@@ -72,19 +72,18 @@ void copyvm(struct list_head *vm){
 }
 
 void *dovm(struct list_head *vm,void *vaddr){
+    void *page = try(NULL ==, get_free_page(),throw e_fail);
     list_for_each(_pos,vm){
         VM *pos = vm_entry(_pos);
-        //printk("[  VM] : %p\n",pos);
         if((vaddr >= pos->addr) && vaddr < (pos->addr + pos->size)){
-            void *page = try(NULL ==, get_free_page(),throw e_fail);
-            if(pos->type != SHT_NOBITS){
+            if((pos->type != SHT_NOBITS)){
                 lseek(pos->object,pos->offset + ((vaddr - pos->addr) & (~0xfff)),SEEK_SET);
                 try(-1 ==,read(pos->object,page,PAGE_SIZE),throw e_fail);
             }
-            //printk("self()->%s virtual = %p\npos->addr : %p pos->size : %x\n",self()->name,vaddr,pos->addr,pos->size);
-            return page;
+            break;
         }
     }
+    return page;
     catch(e_fail){
         return NULL;
     }

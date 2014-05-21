@@ -159,6 +159,7 @@ static void np_page(Object *this){
     Task *t = TASK(this->admit);
     void *page = dovm(&(t->vm),ptr);
     //trace(this->admit);
+    //mm_log("page : %p virtual : %p\n",page,ptr);
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
