@@ -123,7 +123,7 @@ static char *_toString(char *t,char *f,int size,int style){
         q = t + sl;
 
     memcpy(p,f,sl);
-    for(int i = 0;i < size - sl;i++) *q++ = ' ';
+    while(0 < size - sl) *q++ = ' ';
     return t + (sl > size ? sl : size);
 }
 
@@ -140,30 +140,29 @@ extern int vsprintf(char *buf,const char *fmt,va_list args){
     for( str = buf; *fmt; fmt++){
         if(*fmt == '%'){
             style = 0;
-            sign = _false;
-            width = 0;
-            _type = _int;
 repeat:
             fmt++;
             switch(* fmt){
-            case '-':   style |= STYLE_LEFT;goto repeat;
-            case '+':   style |= STYLE_SIGN;goto repeat;
-            case ' ':   style |= STYLE_SIGN;goto repeat;
-            case '0':   style |= STYLE_ZEROPAD;goto repeat;
-            case '#':   style |= STYLE_SPECIAL;goto repeat;
+                case '-':   style |= STYLE_LEFT;goto repeat;
+                case '+':   style |= STYLE_SIGN;goto repeat;
+                case ' ':   style |= STYLE_SIGN;goto repeat;
+                case '0':   style |= STYLE_ZEROPAD;goto repeat;
+                case '#':   style |= STYLE_SPECIAL;goto repeat;
             }
+            width = 0;
             if(isDigit(*fmt))
                 width = _atoi(&fmt);
             else if(* fmt == '*'){
                 fmt++;
                 width = va_arg(args,int);
             }
-
+            _type = _int;
             if(*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'H'){
                 _type = (enum type)(*fmt);
                 fmt++;
             }
-
+            base = DECIMAL;
+            sign = _false;
 
             switch(*fmt){
             case 'c': *str++ = (unsigned char)va_arg(args,int);continue;
@@ -171,7 +170,7 @@ repeat:
             case 'p': style |= STYLE_SPECIAL;
             case 'X': style |= STYLE_LARGE;
             case 'x': base = HEX;break;
-            case 'd': base = DECIMAL;
+            case 'd':
             case 'i': sign = _true;
             case 'u': break;
             case 'o': base = OCTAL;break;
@@ -189,6 +188,27 @@ repeat:
                           str = _toString(str,s,width,style);
                           break;
             }
+#if 0
+            if ( _long == _type ){
+                num = va_arg( args, unsigned long long);
+            } else if ( _char == _type){
+                if ( _true == sign){
+                    num = va_arg( args, char);
+                } else {
+                    num = va_arg( args, unsigned char);
+                }
+            } else if ( _short == _type ){
+                if ( _true == sign ){
+                    num = va_arg( args, short );
+                } else {
+                    num = va_arg( args, unsigned short );
+                }
+            } else if ( _true == sign ) {
+                num = va_arg( args, int );
+            } else {
+                num = va_arg( args, unsigned int );
+            }
+#endif
         }
         else
             *str++ = *fmt;

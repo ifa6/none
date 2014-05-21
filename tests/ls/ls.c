@@ -19,11 +19,13 @@ int main(int argc,char **argv){
         if(curr != ERROR){
             while(0 < (len = read(curr,dir,sizeof(dir)))){
                 foreach(i,0,(len / sizeof(dir[0]))){
-                    printf("%s\n",dir[i].name);
+                    printf("%10s ",dir[i].name);
+                    if(i && !(i % 4)) printf("\n");
                 }
             }
             close(curr);
         }
+        printf("\n");
     }
     return 0;
 }

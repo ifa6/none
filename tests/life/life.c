@@ -76,22 +76,6 @@ static Life map[LIFE_Y][LIFE_X] = {[0][0] = {DEATH,0}};
 static unsigned short entry = 0;
 static unsigned short volatile page = 0;
 
-int main(void){
-    PMInfoBlock *pm = NULL;
-    installGDT(0xa000 >> 3,0xa0000,0xffff,0,0,1,0,1,2);
-    installGDT(0xb000 >> 3,0xb0000,0xffff,0,0,1,0,1,2);
-    memcpy(VGABASE,(void*)(0xc0000),VGALIMIT);
-    pm = getPMInfo();
-    pm->biosDataSel = 0x10;
-    entry = pm->entryPoint;
-
-    memcpy((void*)0x1000,(void*)_int10,0x100);
-    selectMode(M640x480x8);
-    lifeLoop();
-    while(1);
-    return 0;
-}
-/*! 当前程序还不能将函数设置在主函数之前 !*/
 static void lifeOnc(int x,int y){
     const int left = LEFT(x - 1),right = RIGHT(x + 1);
     const int up = UP(y - 1),down = DOWN(y + 1);
@@ -143,8 +127,8 @@ static inline void lifeLoop(void){
         //foreach_life(lifeOnc(x,y));
         //foreach_life(godLife(x,y));
     }
-        foreach_life(lifeOnc(x,y));
-        foreach_life(godLife(x,y));
+    foreach_life(lifeOnc(x,y));
+    foreach_life(godLife(x,y));
 }
 
 static PMInfoBlock * getPMInfo(void){
@@ -223,4 +207,20 @@ static void drawPixel(int mode,int x,int y,unsigned short color){
         selectPlane(page << 2);
     }
     ((unsigned char *)0xa0000)[pos & 0xffff] = color;
+}
+
+int main(void){
+    PMInfoBlock *pm = NULL;
+    installGDT(0xa000 >> 3,0xa0000,0xffff,0,0,1,0,1,2);
+    installGDT(0xb000 >> 3,0xb0000,0xffff,0,0,1,0,1,2);
+    memcpy(VGABASE,(void*)(0xc0000),VGALIMIT);
+    pm = getPMInfo();
+    pm->biosDataSel = 0x10;
+    entry = pm->entryPoint;
+
+    memcpy((void*)0x1000,(void*)_int10,0x100);
+    selectMode(M640x480x8);
+    lifeLoop();
+    while(1);
+    return 0;
 }
