@@ -4,12 +4,17 @@
 #ifndef     STDARG_H
 #define     STDARG_H
 typedef     void    *va_list;
+
 #define     __va_rounded_size(type) \
-    (((sizeof(type))+sizeof(int)-1)/sizeof(int)*sizeof(int))
+    (((sizeof(type)) + sizeof(int) -1 ) / sizeof(int) * sizeof(int))
+
 #define     va_arg(ap,type) \
     (ap+=__va_rounded_size(type),   \
      *((type *)(ap-__va_rounded_size(type))))
+
 #define     va_start(ap,lastarg)    \
     (ap=((va_list)&lastarg+__va_rounded_size(lastarg)))
+
 #define     va_end(ap)  (ap=(va_list)0)
+
 #endif

@@ -61,7 +61,7 @@ static inline int _hex(int *str,unsigned long value){
     return i;
 }
 
-static inline char *_toNumber(char *str,long long value,_bool sign,
+static inline char *_toNumber(char *str,unsigned long long value,_bool sign,
         HexBase base,int size,int style){
     char signString = '+';
     const char *dig = _lowerDigits;
@@ -178,16 +178,21 @@ repeat:
             default: if(*fmt) *str++ = *fmt; continue;
             }
             switch(_type){
-            case _char:   num = va_arg(args,unsigned char); num &= 0xff;
-            case _short:  num = va_arg(args,unsigned short); num &= 0xffff;
-            case _int:    num = va_arg(args,unsigned int); num &= 0xffffffff;
-            case _long:   num = va_arg(args,unsigned long long);
-                          str = _toNumber(str,num, sign,base,width,style); break;
+            case _char:
+            case _short:
+            case _int:
+                num = va_arg(args,unsigned int);
+                str = _toNumber(str,num, sign,base,width,style); 
+                break;
+            case _long:   
+                num = va_arg(args,unsigned long long);
+                str = _toNumber(str,num, sign,base,width,style); 
+                break;
             case _string: 
-                          s = va_arg(args,char *);
-                          if(!s) s = "<NULL>";
-                          str = _toString(str,s,width,style);
-                          break;
+                s = va_arg(args,char *);
+                if(!s) s = "<NULL>";
+                str = _toString(str,s,width,style);
+                break;
             }
         }
         else
