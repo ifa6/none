@@ -72,7 +72,7 @@ struct ethernetif {
 };
 
 /* Forward declarations. */
-static void  ethernetif_input(struct netif *netif);
+//static void  ethernetif_input(struct netif *netif);
 
 /**
  * In this function, the hardware should be initialized.
@@ -143,7 +143,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
     /* Send the data from the pbuf to the interface, one pbuf at a
        time. The size of the data in each pbuf is kept in the ->len
        variable. */
-      write(10,q->payload,q->len);
+      write(11,q->payload,q->len);
     /*! send data from(q->payload, q->len); !*/
   }
 
@@ -207,7 +207,7 @@ low_level_input(struct netif *netif)
 #if 0
       read data into(q->payload, q->len);
 #endif
-      read(10,q->payload,q->len);
+      read(11,q->payload,q->len);
     }
 #if 0
     acknowledge that packet has been read();
@@ -238,7 +238,7 @@ low_level_input(struct netif *netif)
  *
  * @param netif the lwip network interface structure for this ethernetif
  */
-static void
+void
 ethernetif_input(struct netif *netif)
 {
   struct ethernetif *ethernetif;

@@ -38,11 +38,12 @@ typedef s32_t   mem_ptr_t;
 #define PACK_STRUCT_END
 
 /* Plaform specific diagnostic output */
-#define LWIP_PLATFORM_DIAG2(...) fprintf(stderr, __VA_ARGS__)
+#define LWIP_PLATFORM_DIAG2(fmt,...) printf("%d %s "fmt,__LINE__,__FILE__,##__VA_ARGS__)
 #define LWIP_PLATFORM_DIAG(x) LWIP_PLATFORM_DIAG2 x
+
 #define LWIP_PLATFORM_ASSERT(x) do { \
-    printf("Assert \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); \
-    exit(-1); \
+    printf("Assert %s failed at line %d in %s\n", x, __LINE__, __FILE__); \
+    exit(-1);\
 } while(0)
 
 #endif

@@ -4,11 +4,11 @@
 .PHONY:all clean
 #当前目录
 INCLUDE_DIR := src/include src/include/ipv4
-MODULE_NAME := $(notdir $(shell pwd))
+MODULE_NAME := lwip
 MODULE		:= lib$(MODULE_NAME).a
 BUILD		:= LIBRARY
 SRC_FILES	:= $(shell find src/ -name "*.c")
-CFLAGS 		:= -Wno-char-subscripts #-Wno-error=char-subscripts 
+CFLAGS 		:= -Wno-char-subscripts -DLWIP_DEBUG #-Wno-error=char-subscripts 
 
 ifeq ($(ROOT_DIR),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)

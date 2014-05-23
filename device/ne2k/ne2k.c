@@ -159,7 +159,14 @@ static int ne2k_handler(object_t o,int irq){
 }
 
 static void _rw(Object *thiz){
-    unused(thiz);
+    printk("[NE2K  ] : Fn %d\n",thiz->fn);
+    if(thiz->fn == WRITE){
+        printx(thiz->ptr,thiz->count);
+        neSend(thiz->ptr,thiz->count);
+    }else{
+        neRecv(thiz->ptr,thiz->count);
+    }
+    ret(thiz->admit,OK);
 }
 
 static void _io(Object *thiz){
