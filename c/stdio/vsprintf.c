@@ -62,7 +62,7 @@ static inline int _hex(int *str,unsigned long value){
 }
 
 static inline char *_toNumber(char *str,unsigned long long value,_bool sign,
-        HexBase base,int size,int style){
+        HexBase base,int size,int style,int mask){
     char signString = '+';
     const char *dig = _lowerDigits;
     int tmp[64];       //缓存转换后的值.还不是ASCII 
@@ -86,18 +86,19 @@ static inline char *_toNumber(char *str,unsigned long long value,_bool sign,
 
     //如果是有符号数,却小于0,则取其补码,并设置符号标志,非16进制在前面已经去除
     //符号,所以不会受影响
-    if((_true == sign) && (value < 0)){
+    if((_true == sign) && ((long long)value) < 0){
             style |= STYLE_SIGN;
             value = ~value + 1;
             signString = '-';
     }
 
+    value &= mask;
     if(style & STYLE_SIGN) size --;
 
     switch(base){
-        case OCTAL:length = _octal(tmp,(unsigned long)value);break;
-        case DECIMAL:length = _decimal(tmp,(unsigned long)value);break;
-        case HEX:length = _hex(tmp,(unsigned long)value);break;
+        case OCTAL:length = _octal(tmp,value);break;
+        case DECIMAL:length = _decimal(tmp,value);break;
+        case HEX:length = _hex(tmp,value);break;
     } 
     size -= length;
 
@@ -177,16 +178,17 @@ repeat:
             case 'o': base = OCTAL;break;
             default: if(*fmt) *str++ = *fmt; continue;
             }
+            int mask = -1;
             switch(_type){
-            case _char:
-            case _short:
-            case _int:
+            case _char:  mask = 0xff;
+            case _short: mask &= 0xffff;
+            case _int:   mask &= 0xffffffff;
                 num = va_arg(args,unsigned int);
-                str = _toNumber(str,num, sign,base,width,style); 
+                str = _toNumber(str,num, sign,base,width,style,mask); 
                 break;
             case _long:   
                 num = va_arg(args,unsigned long long);
-                str = _toNumber(str,num, sign,base,width,style); 
+                str = _toNumber(str,num, sign,base,width,style,mask); 
                 break;
             case _string: 
                 s = va_arg(args,char *);
@@ -211,12 +213,3 @@ extern int sprintf(char *buf,const char * fmt,...){
     va_end(args);
     return n;
 }
-/*
-int main(void){
-#include    <string.h>
-    char buf[1200]={0};
-    sprintf(buf,"|Hello %c %-d %u %#08x %#o %s\n",'a',30,40,0xaa,010,"ni hao!");
-#include    <stdio.h>
-    puts(buf);
-}
-*/

@@ -20,21 +20,16 @@ endif
 #	目录定义
 ##########################################################################	
 LOCAL_PATH  := $(shell pwd)
-INCLUDE_DIR := $(ROOT_DIR)/include
-LIB_DIR 	:= $(ROOT_DIR)/lib
+INCLUDE_DIR += $(ROOT_DIR)/include
+LIB_DIR 	+= $(ROOT_DIR)/lib
 OBJS_DIR	:= $(subst $(ROOT_DIR),$(ROOT_DIR)/objs,$(LOCAL_PATH))
 BIN_DIR	    := $(ROOT_DIR)/bin
-
-vpath %.h $(INCLUDE_DIR)
-vpath %.a $(LIB_DIR)
-vpath %.o $(OBJS_DIR)
 
 ifndef	MODULE_NAME
 MODULE_NAME	:= $(notdir $(LOCAL_PATH))
 endif
-ifndef SRC_FILES
-SRC_FILES	:= $(wildcard *.[cSs])
-endif
+
+SRC_FILES	+= $(wildcard *.[cSs])
 
 $(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/ $(BIN_DIR)/)
 #sub-dir = $Q for dir in `find ./ -type d -maxdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
@@ -102,6 +97,7 @@ endif
 
 clean:
 	$Q -rm -f -- *.doa
+	$Q -rm -rf $(OBJS_DIR)/*
 ifdef CLEANS
 	$Q echo "  [CLEAN]	Clean	$(CLEANS)"
 	$Q -rm -f $(CLEANS)
@@ -110,15 +106,18 @@ endif
 #	编译规则
 ########################################################################
 $(OBJS_DIR)/%.o: %.c
+	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
 	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 # 调用了C预处理的汇编文件 
 $(OBJS_DIR)/%.o: %.S	
+	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
 	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
 
 $(OBJS_DIR)/%.o: %.s
+	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
 	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
 	$Q $(AS) $< -o $@ $(ASFLAGS) -c
 

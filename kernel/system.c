@@ -6,6 +6,7 @@ extern int cons_main();
 extern int clock_main();
 extern int rs_main();
 extern int ramdisk_main();
+extern int ne2k_main();
 
 struct {
     String name;
@@ -17,6 +18,7 @@ struct {
     {.name = "File System",   .entry = fs_main},
     {.name = "Serial",        .entry = rs_main},
     {.name = "Ram Disk",      .entry = ramdisk_main},
+    {.name = "NE2K",          .entry = ne2k_main},
 };
 
 
