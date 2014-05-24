@@ -38,7 +38,11 @@ typedef s32_t   mem_ptr_t;
 #define PACK_STRUCT_END
 
 /* Plaform specific diagnostic output */
+#if 0
 #define LWIP_PLATFORM_DIAG2(fmt,...) printf("%d %s "fmt,__LINE__,__FILE__,##__VA_ARGS__)
+#else
+#define LWIP_PLATFORM_DIAG2(...) printf(__VA_ARGS__)
+#endif
 #define LWIP_PLATFORM_DIAG(x) LWIP_PLATFORM_DIAG2 x
 
 #define LWIP_PLATFORM_ASSERT(x) do { \

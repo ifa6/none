@@ -1,6 +1,6 @@
 #include    "fs.h"
 #include    "../kernel/kernel.h"
-#include    <elf.h>
+//#include    <elf.h>
 
 //#define LOG
 
@@ -52,7 +52,7 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
 }
 
 /*! 测试加载ELF文件 !*/
-#if 1
+#if 0
 static void load_elf(Object *this) {
     File *file = _FILE(this);
     static Elf32_Ehdr ehdr;
@@ -158,7 +158,9 @@ static void fs_open(Object *this){
             file->offset = 0;
             hook(READ,fs_read);
             hook(WRITE,fs_write);
+#if 0
             hook(RUN,load_elf);
+#endif
             hook(CLOSE,fs_close);
             hook(SEEK,fs_seek);
             dorun();

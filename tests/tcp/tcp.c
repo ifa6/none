@@ -21,17 +21,21 @@ int main(void){
     struct ip_addr ip;
 
     lwip_init();
-    IP4_ADDR(&gw,192,168,1,1);
+    IP4_ADDR(&gw,192,168,0,1);
     IP4_ADDR(&netmask,255,255,255,0);
-    IP4_ADDR(&ipaddr,192,168,1,74);
+    IP4_ADDR(&ipaddr,192,168,0,4);
     netif_add(&ne2k_netif,&ipaddr,&netmask,&gw,NULL,ethernetif_init,ethernet_input);
     netif_set_default(&ne2k_netif);
     netif_set_up(&ne2k_netif);
 
     pcb = tcp_new();
-    IP4_ADDR(&ip,192,168,1,1);
+    IP4_ADDR(&ip,192,168,0,3);
     tcp_bind(pcb,IP_ADDR_ANY,5000);
     tcp_connect(pcb,&ip,5000,tcp_connected);
+    void  ethernetif_input(struct netif *netif);
+    while(1){
+        ethernetif_input(&ne2k_netif);
+    }
 
     return 0;
 }

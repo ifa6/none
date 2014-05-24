@@ -73,7 +73,7 @@ static void ne2kInit(unsigned char *mac){
     neSetDataConfig(NE_WTS|NE_LS|NE_ARM|NE_BOS);        //配置数据寄存器
     neSetRemoteByteCount(0);                            //字节计数归零
     //outb(rcr,RECEIVECONFIGURATION);               //配置接收寄存器
-    neSetRecvConfig(/*NE_AM|NE_AB|*/NE_SEP|NE_AR);
+    neSetRecvConfig(/*! NE_AM|NE_AB| !*/NE_SEP|NE_AR);
     neSetTransferPage(TRANS_PAGE);          //传送页
     neSetTransferConfig(NE_LB00);           //环状模式
     neSetRecvPage(RECV_PAGE,RECV_PAGE_END); //发送缓冲区
@@ -99,6 +99,7 @@ void neSend(void *data,size_t len){
     //正在发送,则将当前包加入发送队列
     if(data != NULL){
         if(0x26 == inb(COMMAND)){
+            printk("---\n");
             return;
         }else{
             PCtoNIC(data,(TRANS_PAGE<<8),len);
@@ -122,14 +123,14 @@ int neRecv(void *data,size_t len){
 
     //有数据在NIC DMA中 
     if(bound != currnet){
-        NICtoPC(&recv,bound<<8,sizeof(recvHeadT));
+        NICtoPC(&recv,bound << 8,sizeof(recvHeadT));
         //由于网络顺序是和本地相反的,所以要进行一次转换
         //printk("len:\e next:\e  \n",recv.len,recv.next);
         //recv.len = shortNetToHost(recv.len);
         //去除4字节的CRC
         recv.len -= 4;
         //接收状态错误,下一页指针错误,长度错误都丢弃所有的包
-        if(recv.next>RECV_PAGE_END||recv.next<RECV_PAGE||recv.len>0x600){
+        if(recv.next > RECV_PAGE_END || recv.next < RECV_PAGE || recv.len > 0x600){
             neSetCurrnet(RECV_PAGE);
             neSetBoundary(RECV_PAGE_END);
             return -1;
@@ -158,27 +159,76 @@ static int ne2k_handler(object_t o,int irq){
     return OK;
 }
 
-static void _rw(Object *thiz){
-    printk("[NE2K  ] : Fn %d\n",thiz->fn);
-    if(thiz->fn == WRITE){
-        printx(thiz->ptr,thiz->count);
-        neSend(thiz->ptr,thiz->count);
-    }else{
-        neRecv(thiz->ptr,thiz->count);
+typedef struct _ioInq{
+    Object *admit;
+    count_t count;
+    char   *buffer;
+    struct _ioInq *next;
+}IOInq;
+
+static IOInq *inq = NULL;
+static IOInq *tail = NULL;
+
+static void ne2k_push(IOInq *in){
+    if(!inq){
+        inq = in;
+        tail = inq;
     }
-    ret(thiz->admit,OK);
+    tail->next = in;
+    tail = in;
+    tail->next = NULL;
+}
+
+static void ne2k_pop(void){
+    IOInq *in;
+    if(inq){
+        in = inq;
+        inq = inq->next;
+        kfree(in);
+    }
+}
+
+static void _rw(Object *thiz){
+    if(thiz->fn == WRITE){
+        if(thiz->count < 60){
+            char buf[60];
+            memset(buf,0,60);
+            memcpy(buf,thiz->ptr,thiz->count);
+            thiz->count = 60;
+            neSend(buf,thiz->count);
+            printx(buf,thiz->count);
+        } else {
+            neSend(thiz->ptr,thiz->count);
+        }
+        //printx(thiz->ptr,thiz->count);
+        ret(thiz->admit,OK);
+    }else{
+        IOInq *in = kalloc(sizeof(IOInq));
+        if(in){
+            in->admit = thiz->admit;
+            in->admit = thiz->admit;
+            in->buffer = thiz->buffer;
+            in->next = NULL;
+            in->count = thiz->count;
+            ne2k_push(in);
+        }else{
+            ret(thiz->admit,ERROR);
+        }
+    }
 }
 
 static void _io(Object *thiz){
 #if 1
-    static unsigned char  page[256];
     size_t len;
     if(thiz->status & NE_ISR_PRX){
-        len = neRecv(page,sizeof(page));
-        printx((void*)page,len);
+        if(inq){
+            len = neRecv(inq->buffer,inq->count);
+            ret(inq->admit,len);
+            ne2k_pop();
+        }
     }
 #endif
-    unused(thiz);
+    unused(len);
 }
 
 static void ne2k_init(void){

@@ -27,7 +27,7 @@ typedef struct _ioInq{
     int     cmd;                    /*! 请求命令    !*/
     off_t   offset;                 /*! 请求的偏移字节 !*/
     count_t count;                  /*! 请求字节数 !*/
-    void    *buffer;                  /*! 数据buffer !*/
+    void    *buffer;                /*! 数据buffer !*/
     struct _ioInq   *next,*prev;    /*! 请求链  !*/
 }IOInq;
 
