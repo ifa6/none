@@ -23,8 +23,9 @@ struct {
 
 
 static void shell(void){
-    object_t o = run(FS_PID,OPEN,.ptr = "tcp");
-    run(o,RUN);
+    exec("/shell",0,NULL);
+    //object_t o = run(FS_PID,OPEN,.ptr = "shell");
+    //run(o,RUN);
 }
 
 int system_main(void){

@@ -52,7 +52,7 @@ struct _MHeap{
     MObject *objectList[NR_MOBJECT];
     size_t  length;
     int8_t  chunk[0];
-}*heap = (void*)-1;
+}*heap = NULL;
 
 /*******************************************************************************
  *  delMObject
@@ -151,7 +151,7 @@ static MObject *getMObject(int log2n){
 static int realizeMHeap(size_t length){
     int log2n;
     MObject *mobject;
-    if(heap && heap != (void*)-1){
+    if(heap){
         mm_error("Heap already exists,address is %p and &heap is %p",heap,&heap);
         return -1;
     }

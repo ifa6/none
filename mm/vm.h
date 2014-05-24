@@ -7,14 +7,14 @@
 #include <stddef.h>
 
 typedef struct{
-    unsigned long   flags;
-    unsigned long   type;
-    unsigned long   count;
-    void            *addr;
-    size_t          size;
+    unsigned long   flags;  /*! 段标志 !*/
+    unsigned long   count;  /*! 段共享计数 !*/
+    void            *vaddr;  /*! 段虚拟内存开始地址 !*/
+    size_t          memsz;   /*! 段虚拟内存大小 !*/
     struct{
-        object_t    object;
-        off_t       offset;
+        object_t    object; /*! 段关联对象 !*/
+        size_t      filesz;  /*! 关联对象大小 !*/
+        off_t       offset; /*! 关联对象中的偏移 !*/
     };
     struct list_head list;
 }VM;

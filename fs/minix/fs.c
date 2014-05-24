@@ -130,7 +130,7 @@ static void fs_write(Object *this){
 }
 
 static void fs_close(Object *thiz){
-    printk("\erTODO : FS close\ew\n");
+    /*! printk("\erTODO : FS close\ew\n"); !*/
     ret(thiz->admit,OK);
     run(MM_PID,CLOSE);
 }

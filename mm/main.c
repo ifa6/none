@@ -293,10 +293,10 @@ static Task* make_task(String name,int (*entry)(void)){
     vm = kalloc(sizeof(vm));
     vm->object = 0;
     vm->offset = 0;
-    vm->type   = SHT_NOBITS;
     vm->count  = 2; /*! never eq 0 ,it's right !*/
-    vm->addr   = NULL;
-    vm->size   = -1; /*! MAX size !*/
+    vm->vaddr  = NULL;
+    vm->memsz  = -1; /*! MAX size !*/
+    vm->filesz = 0;
     list_add(&(vm->list),&(task->vm));
 
     strcpy(OBJECT(task)->name,name);
