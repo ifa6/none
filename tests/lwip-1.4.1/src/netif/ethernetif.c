@@ -178,7 +178,7 @@ low_level_input(struct netif *netif)
 
     /* Obtain the size of the packet and put it into the "len"
        variable. */
-    len = 256;
+    len = 512;
 
 #if ETH_PAD_SIZE
     len += ETH_PAD_SIZE; /* allow room for Ethernet padding */

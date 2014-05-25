@@ -73,7 +73,7 @@ static void ne2kInit(unsigned char *mac){
     neSetDataConfig(NE_WTS|NE_LS|NE_ARM|NE_BOS);        //配置数据寄存器
     neSetRemoteByteCount(0);                            //字节计数归零
     //outb(rcr,RECEIVECONFIGURATION);               //配置接收寄存器
-    neSetRecvConfig(/*! NE_AM|NE_AB| !*/NE_SEP|NE_AR);
+    neSetRecvConfig(/*! NE_AM|NE_AB|!*/NE_SEP|NE_AR);
     neSetTransferPage(TRANS_PAGE);          //传送页
     neSetTransferConfig(NE_LB00);           //环状模式
     neSetRecvPage(RECV_PAGE,RECV_PAGE_END); //发送缓冲区
@@ -190,6 +190,7 @@ static void ne2k_pop(void){
 
 static void _rw(Object *thiz){
     if(thiz->fn == WRITE){
+        /*
         if(thiz->count < 60){
             char buf[60];
             memset(buf,0,60);
@@ -197,7 +198,7 @@ static void _rw(Object *thiz){
             thiz->count = 60;
             neSend(buf,thiz->count);
             printx(buf,thiz->count);
-        } else {
+        } else */{
             neSend(thiz->ptr,thiz->count);
         }
         //printx(thiz->ptr,thiz->count);
@@ -223,6 +224,7 @@ static void _io(Object *thiz){
     if(thiz->status & NE_ISR_PRX){
         if(inq){
             len = neRecv(inq->buffer,inq->count);
+            //printx(inq->buffer,inq->count);
             ret(inq->admit,len);
             ne2k_pop();
         }

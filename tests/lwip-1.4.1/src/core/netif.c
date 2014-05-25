@@ -465,7 +465,7 @@ void netif_set_up(struct netif *netif)
 #if LWIP_ARP
       /* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */ 
       if (netif->flags & (NETIF_FLAG_ETHARP)) {
-        etharp_gratuitous(netif);
+        //etharp_gratuitous(netif);
       }
 #endif /* LWIP_ARP */
 
