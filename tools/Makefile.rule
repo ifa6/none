@@ -33,11 +33,22 @@ SRC_FILES	+= $(wildcard *.[cSs])
 
 $(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/ $(BIN_DIR)/)
 #sub-dir = $Q for dir in `find ./ -type d -maxdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
+
 define sub-dir
-	$Q for f in `find ./ -mindepth 2 -maxdepth 2 -name "Makefile" `;do\
-		dir=`dirname $$f`;\
-		$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
-	done;
+	$Q \
+		files=`find ./ -mindepth 2 -maxdepth 2 -name 'Makefile'`;\
+		for f in $$files;do\
+			cat $$f|egrep '^BUILD\s*:=\s*LIBRARY\s*$$' > /dev/null;\
+			if [ $$? -eq 0 ] ;then\
+				dir=`dirname $$f`;\
+				$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+				files=$${files//$$f/};\
+			fi;\
+		done;\
+		for f in $$files;do \
+			dir=`dirname $$f`;\
+			$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+		done;
 endef
 
 ##########################################################################

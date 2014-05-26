@@ -38,14 +38,12 @@ $(shell mkdir -p $(boot) $(hw))
 
 all :
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE)  -s -C $$dir $$* || exit 1;\
+		$(MAKE)  -s -C $$dir $$@ || exit 1;\
 	done
-
-debug:
-	@objdump -d objs/kernel/none > t.src
 
 host:
 	@cp $s $h /boot/
+
 install: $s
 	@-mount -o loop -t ext2 $d $(boot)
 	@-mount $h $(hw)

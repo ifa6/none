@@ -6,6 +6,8 @@
 #define IP_MASK {255,255,255,0}
 #define IP {192,168,0,64}
 #define GATEWAY {192,168,0,1}
+#define MK_MSG(msg) msg,sizeof(msg)
+#define IPS(ip) (ip >> 0) & 0xff, (ip >> 8) & 0xff , (ip >> 16) & 0xff , (ip >> 24) & 0xff
 
 extern err_t ethernetif_init(struct netif *netif);
 struct netif ne2k_netif;
@@ -15,14 +17,12 @@ static err_t recv(void *arg,struct tcp_pcb *pcb,struct pbuf *p,err_t err){
     unused(arg,err);
     if(p){
         tcp_recved(pcb,p->len);
-        printf("Remote> %s\n",p->payload);
+        printf("%d.%d.%d.%d:%d> %s\n",IPS(pcb->remote_ip.addr),pcb->remote_port,p->payload);
         pbuf_free(p);
     }
     return ERR_OK;
 }
 
-#define MK_MSG(msg) msg,sizeof(msg)
-#define IPS(ip) (ip >> 0) & 0xff, (ip >> 8) & 0xff , (ip >> 16) & 0xff , (ip >> 24) & 0xff
 static err_t connected(void *arg,struct tcp_pcb *pcb,err_t err){
     unused(arg,err);
     if(err == ERR_OK){
@@ -31,7 +31,6 @@ static err_t connected(void *arg,struct tcp_pcb *pcb,err_t err){
         if(err != ERR_OK){
             printf("Local> Can't send 'Welcome message' to remote\n");
         }
-        printf("Local> final\n");
     } else {
         printf("Local> Connect remote failed,error %d\n",err);
     }
@@ -41,7 +40,7 @@ static err_t connected(void *arg,struct tcp_pcb *pcb,err_t err){
 
 static err_t sent(void *arg,struct tcp_pcb *pcb,u16_t len){
     unused(arg,pcb);
-    printf("Local> Sent %d byte data\n",len);
+    printf("Local> Sent %d byte data to %d.%d.%d.%d:%d\n",len,IPS(pcb->remote_ip.addr),pcb->remote_port);
     return ERR_OK;
 }
 
@@ -56,9 +55,9 @@ int main(void){
     struct ip_addr ip;
 
     lwip_init();
-    IP4_ADDR(&gw,192,168,1,1);
+    IP4_ADDR(&gw,192,168,0,1);
     IP4_ADDR(&netmask,255,255,255,0);
-    IP4_ADDR(&ipaddr,192,168,1,4);
+    IP4_ADDR(&ipaddr,192,168,0,4);
     netif_add(&ne2k_netif,&ipaddr,&netmask,&gw,NULL,ethernetif_init,ethernet_input);
     netif_set_default(&ne2k_netif);
     netif_set_up(&ne2k_netif);
@@ -69,7 +68,7 @@ int main(void){
     tcp_sent(pcb,sent);
     tcp_bind(pcb,IP_ADDR_ANY,80);
 
-    IP4_ADDR(&ip,192,168,1,103);
+    IP4_ADDR(&ip,192,168,0,5);
     tcp_connect(pcb,&ip,5000,connected);
     void  ethernetif_input(struct netif *netif);
     while(1){

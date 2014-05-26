@@ -19,12 +19,12 @@
 //#define SYS_DEBUG                       LWIP_DBG_ON
 //#define TIMERS_DEBUG                    LWIP_DBG_ON
 //#define TCP_DEBUG                       LWIP_DBG_ON
-#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+//#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
 //#define TCP_FR_DEBUG                    LWIP_DBG_ON
 //#define TCP_RTO_DEBUG                   LWIP_DBG_ON
 //#define TCP_CWND_DEBUG                  LWIP_DBG_ON
 //#define TCP_WND_DEBUG                   LWIP_DBG_ON
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
+//#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
 //#define TCP_RST_DEBUG                   LWIP_DBG_ON
 //#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
 //#define TCPIP_DEBUG                     LWIP_DBG_ON
