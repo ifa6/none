@@ -38,7 +38,7 @@ define sub-dir
 	$Q \
 		files=`find ./ -mindepth 2 -maxdepth 2 -name 'Makefile'`;\
 		for f in $$files;do\
-			cat $$f|egrep '^BUILD\s*:=\s*LIBRARY\s*$$' > /dev/null;\
+			grep '^BUILD\s*:=\s*LIBRARY\s*$$' $$f > /dev/null;\
 			if [ $$? -eq 0 ] ;then\
 				dir=`dirname $$f`;\
 				$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
