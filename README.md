@@ -28,29 +28,49 @@
     *   [使用GCC.4.9](#gcc) 
     *   [none针对GCC4.9的更改](#for-gcc4.9)
     *   [常规更新](#normal-update)
-*   [近期计划](#target)
+*   [TODO](#todo)
 
 <h2 id="overview">概述</h2>
 ![None新特性预览](http://r.photo.store.qq.com/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/8f5clD6S9VIPUSTIu8Oa52PZh58NjPIIgMlTow0Hi6A!/o/dMaLGsdKEAAA&bo=oAWEA6AFhAMCACQ!&t=5&rf=viewer_311)
+
 <h3 id="what-is-fuck">什么是none</h3>
 [none][]是[lzy][]编写的,一个微内核,不兼容POSIX,不可工作的实验性质的操作系统,项目开源,并且[lzy][]希望它是自由的.编写目的是**just for fun**.编写的最初目的是因为[lzy][]初次接触**GNU/Linux**的时候,觉得**GNU/Linux**太复杂了,我的参考目标是**MS-DOS**.**MS-DOS**只需要`io.sys`,`command.com`两个文件即可跑起来,然后根据需要自己添加需要的程序.整个系统都在掌控之中.而**GNU/Linux**,一装上就几百个目录,几千个文件,看起来十分复杂.于是萌生了写一个**MS-DOS**一样简洁(看起来简洁),**GNU/Linux**一样强大的操作系统.项目几经波折,数次重写,数次更名,两次更换托管方式,却都因本人水平太菜,进展缓慢,[none][]的编写过程就是本人学习的过程.如今,[none][]看起来像是一个内核了,可以执行程序,读写文件,打印图像.[none][]当前托管在[GITHUB][].
+
 <h3 id="schedule">当前none是什么样子</h3>
 *  使用grub引导
     * [none][]使用grub作为引导,这样省去了引导,进入保护模式,获取内存map等繁琐的工作(之前版本这部分都是自己做的)
+
 *  多进程(多对象)
     * [none][]支持`fork`方式创建进程.进程是以对象的方式实现的(当时我是单身).
+
 *  进程间通信(对象调用其他对象的方法)
     * 进程间的IPC是直接调其他对象的方法,每个对象都有一个固定数目的外部方法,该方法集首先重父进程(父对象)那里继承过来,对象可以修改默认的方法.
+
 *  虚拟内存管理
-    * 实现了简单的虚拟内存管理,这部分问题比较多,而且对实现放松也不满意,但其他模块严重依赖这个模块,导致其他模块停止不前.
+    * ELF格式文件加载
+    * 需时加载,内存首次使用时才分配内存
+    * 写时复制
+
 *  文件系统
     * 当前的文件系统是Minix 2,因为这个文件系统简单,同时又强大.文件系统的活动部分,现在很简单,只是刚好能运行.这部分也是需要重点修改的
+
 *  C库
-    * 非常非常非常非常简单,以致于都不能称为库.
-*  最小的bash
-    * bash的实现被提前,我同事**YangYongHai-x**认为一个系统有了一个bash之后,编写才会更有动力,于是他动手写了一个.
-*  几个演示程序
-    * test,ascii等几个演示程序,这几个演示程序源码在`tests/`目录下
+    * `stdlib.h` 支持 `fork`,`execvp`,`malloc`,`free`,`exit`,`open`,`close`,`write`,`read`,`seek`
+    * `string.h` 支持 `strlen`,`strcmp`,`strncmp`,`memcmp`,`strcpy`,`memset`
+    * `stdio.h`  支持 `printf`,`vsprintf`
+    * `z.h` C语言一个小型不可移植扩展
+
+*  shell
+    * 使用v6sh做为默认shell,替代之前不完成的shell,因为none 还没有完全实现posix接口,所以这个v6sh是精简版,管道,重定向未实现
+
+*  几个演示程序,在tests/目录下
+    * ascii 打印ascii码,包括扩展码
+    * tcp 测试lwip的程序,发送Weclome信息到服务器,并打印服务器发送过来的数据
+    * test 使用VESA3.0保护模式接口绘制了一幅画
+    * rootfs 准备实现的none标准文件系统,使用git存储方式
+
+* TCP/IP
+    * lwip1.4.0 RAW API接口已经移植成功,还不稳定,性能差
 
 <h3 id="befora">之前none家族是什么样子</h3>
 
@@ -174,7 +194,14 @@ GCC4.9的发布无疑是今年最大的惊喜,我希望我的操作系统成为�
 *   Object添加firend数组,用来支持重定向,调用0 ~ NR\_FIREND之间的对象将通过firend转换后发送,中断除外,中断不支持重定向,否则系统错误,并且缺乏安全
 *   ELF文件的加载已经完善,修复minix2文件系统的一个BUG
 
-<h2 id="target">近期计划</h2>
+<h2 id="todo">TODO</h2>
 
-*   实现管道,bash参数传递
-*   通过串口调试生命游戏`tests/life.c`
+* 实现同步机制,互斥量,信号量,条件变量
+> none一直在逃避这个,是时候面对了.
+
+* 方法的调用由内核实现,不需要用户空间干预.
+> 用户空间不需要调用dorun来阻塞自己,方法使用类POSIX signal.但不是线程安全的,需用户空间维护同步
+
+* 方法的调用占用调用者CPU时间,而不是拥有者时间
+
+

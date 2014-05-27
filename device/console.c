@@ -143,10 +143,11 @@ static inline void insert(int cons,unsigned char ch){
     set_cur(cons);
 }
 
-extern void cons_print(int cons,const char * buf){
+extern void cons_print(int cons,const char * buf,count_t count){
     unsigned char ch;
 
-    while((ch = (*buf++))){
+    foreach(i,0,count){
+        ch = buf[i];
         if(state == 1){
             switch(ch){
                 case    'o':attr = (attr & 0xf0) | 0x00;break;  /*! normal !*/
@@ -208,7 +209,7 @@ extern void cons_init(void){
 }
 
 static void cons_write(Object *this){
-    cons_print(0,this->buffer);
+    cons_print(0,this->buffer,this->count);
     ret(this->admit,OK);
 }
 

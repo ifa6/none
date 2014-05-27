@@ -2,7 +2,7 @@
 #include    <stddef.h>
 #include    "kernel.h"
 
-extern void cons_print(int cons,const char *buf);
+extern void cons_print(int cons,const char *buf,count_t count);
 
 static  char buf[1024];
 
@@ -12,7 +12,7 @@ extern int printk(const char *fmt,...){
 
     va_start(args,fmt);
     i=vsprintf(buf,fmt,args);
-    cons_print(0,buf);
+    cons_print(0,buf,i);
     return i;
 
 }

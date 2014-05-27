@@ -241,7 +241,7 @@ static void trace(Object *obj){
     printk("fs : %08x flg : %08x\n",reg->fs,reg->eflags);
 }
 
-static void execvp(Object *thiz){
+static void mm_execvp(Object *thiz){
     Task * t = TASK(thiz->admit);
     Registers *reg = __va((void*)(t->core),t->registers);
     unused(__va);
@@ -328,7 +328,7 @@ static void _mm_init(void){
     hook(NO_PAGE,np_page);
     hook(WP_PAGE,nw_page);
     hook(DUP,dup);
-    hook(EXEC,execvp);
+    hook(EXEC,mm_execvp);
     hook(15,_wait);
     extern int system_main(void);
     task = make_task("System",system_main);

@@ -200,7 +200,7 @@ repeat:
         else
             *str++ = *fmt;
     }
-    *str++ = 0;
+    *str = 0;
 
     return (str - buf);
 }

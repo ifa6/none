@@ -9,7 +9,7 @@
 int exec(const char *path,int argc,char **argv){
     int _v = -1;
     object_t o = try(-1 == ,open(path,0),throw e_fail);
-    count_t count = argc > 32 ? 32 : argc;
+    count_t count = argc > 31 ? 31 : argc;
     char *ptr;
     struct {
         char *argv[32];
@@ -26,4 +26,13 @@ int exec(const char *path,int argc,char **argv){
     catch(e_fail){
         return _v;
     }
+}
+
+int execvp(const char *path,char **argv){
+    foreach(i,0,32){
+        if(argv[i] == NULL){
+           return  exec(path,i,argv);
+        }
+    }
+    return -1;
 }
