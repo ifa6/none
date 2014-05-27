@@ -7,29 +7,6 @@
 [GITHUB]: https://github.com/TaiChiForLuoZhongYao/none
 [lzy]: mail:LuoZhongYao@gmail.com
 
-*   [概述](#overview)
-    *   [什么是none](#what-is-fuck)
-    *   [当前none是什么样子](#schedule)
-    *   [之前none家族是什么样子](#beforo)
-    *   [了解更多](#learn-more)
-    *   [关于这份文档](#about-this)
-*   [马上开始](#now-start)
-    *   [准备](#prepare)
-    *   [运行](#run)
-*   [编译none](#compile)
-    *   [下载源码](#download)
-    *   [源码结构](#source-structure)
-    *   [编译环境](#env)
-    *   [编译选项](#compile-option)
-*   [运行none](#run)
-    *   [虚拟机](#bochs)
-    *   [物理机](#pc)
-*   [更新记录](#wiki)
-    *   [使用GCC.4.9](#gcc) 
-    *   [none针对GCC4.9的更改](#for-gcc4.9)
-    *   [常规更新](#normal-update)
-*   [TODO](#todo)
-
 <h2 id="overview">概述</h2>
 ![None新特性预览](http://r.photo.store.qq.com/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/8f5clD6S9VIPUSTIu8Oa52PZh58NjPIIgMlTow0Hi6A!/o/dMaLGsdKEAAA&bo=oAWEA6AFhAMCACQ!&t=5&rf=viewer_311)
 
@@ -112,35 +89,6 @@ bochs
 ```bash
 $ git clone https://github.com/TaiChiForLuoZhongYao/none.git
 ```
-<h3 id="source-structure">源码结构</h3>
-
-```bash
-c/
-fs/
-include/
-kernel/
-lib/
-mm/
-mnt/
-tests/
-tools/
-objs/
-Makefile
-n.hd
-a.img
-bochsrc
-bochsrc.bxrc
-none.bmp
-README.md
-```
-*   `bochsrc.bxrc` `bochsrc` 是bochs的配置文件,`bochsrc.bxrc`是为了照顾使用*windows*的朋友.
-*   `n.hd` 是虚拟的AT硬盘,*minix 2文件系统*,里面的内容可参考`Makefile`文件挂载后查看,`tests/`下编译生成的文件都放在该文件里面.
-*   `a.img` 是虚拟软盘镜像,里面已经安装了`grub`,`kernel`目录下生成的内核`none`文件就放在该文件里面.
-*   `Makefile`编译管理文件.
-*   `include/`目录,全局头文件目录.
-*   `c/`目录,C库源码目录
-*   `fs/`,`mm/`,`kernel/`,分别是,文件系统,内存管理,内核模块的源文件目录
-*   `objs/`,编译输出文件
 
 <h3 id="env">编译环境</h3>
 
