@@ -3,7 +3,7 @@
 #	Author : lzy
 .PHONY:all clean
 # LIBS 
-STATIC_LIBARY := c
+STATIC_LIBARY :=  posix c
 BUILD		  := BINARY
 SUBDIR		  := true
 ENTRY 		  := 0xc00000

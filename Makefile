@@ -5,26 +5,25 @@
 
 # Directories.
 # root directories
-ROOT_DIR := $(PWD)
+OUT_DIR  := objs
 d 		:= a.img
 ifeq ("$(RAMDISK)",1)
 h 		:= ramdisk.img
 else
 h		:= n.hd
 endif
-s 		:= bin/none
-
-boot    := mnt/boot
-hw		:= mnt/hw
+s 		:= $(OUT_DIR)/bin/none 
+boot    := $(OUT_DIR)/mnt/boot
+hw		:= $(OUT_DIR)/mnt/hw
 
 FSDIR 		:= fs
-COMMONDIR 	:= c
+LIBDIR 		:= libs
 KERNELDIR 	:= kernel
 TESTSDIR 	:= tests
 MMDIR 		:= mm
 DEVICEDIR	:= device
 SUBDIRS 	:= \
-	$(COMMONDIR)\
+	$(LIBDIR)\
 	$(FSDIR)\
 	$(MMDIR)\
 	$(DEVICEDIR)\
@@ -48,7 +47,7 @@ install: $s
 	@-mount -o loop -t ext2 $d $(boot)
 	@-mount $h $(hw)
 	@chmod a+w $(hw) $(boot)
-	@-cp bin/* $(hw)
+	@-cp $(OUT_DIR)/bin/* $(hw)
 	@sleep 1
 
 uninstall:
@@ -63,8 +62,6 @@ go: install uninstall
 	@bochs
 
 clean:
-	@-rm -rf -- bin/
-	@-rm -rf -- lib/
 	@-rm -rf -- objs/
 	@-rm -f -- *.out *.src tags *.swap
 	@for dir in $(SUBDIRS);do\

@@ -1,4 +1,5 @@
 #include    "kernel.h"
+#include <sys/inter.h>
 
 extern int at_main();
 extern int fs_main();
@@ -23,14 +24,26 @@ struct {
 
 
 static void shell(void){
-    exec("/shell",0,NULL);
-    //object_t o = run(FS_PID,OPEN,.ptr = "shell");
-    //run(o,RUN);
+    exec("/v6sh",0,NULL);
+}
+
+static void system_dup2(Object *thiz){
+    Object *obj = thiz->admit;
+    if(obj->r1 < NR_FRIEND) {
+        obj->friend[thiz->r1] = thiz->r2;
+        ret(thiz->admit,OK);
+    }
+    ret(thiz->admit,ERROR);
+}
+
+static void system_init(void){
+    hook(DUP2,system_dup2);
 }
 
 int system_main(void){
     count_t i = 0;
     id_t id = 0;
+    system_init();
 hel:
     id = fork();
     if(ERROR == id){

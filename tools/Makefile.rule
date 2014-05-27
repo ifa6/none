@@ -21,9 +21,10 @@ endif
 ##########################################################################	
 LOCAL_PATH  := $(shell pwd)
 INCLUDE_DIR += $(ROOT_DIR)/include
-LIB_DIR 	+= $(ROOT_DIR)/lib
-OBJS_DIR	:= $(subst $(ROOT_DIR),$(ROOT_DIR)/objs,$(LOCAL_PATH))
-BIN_DIR	    := $(ROOT_DIR)/bin
+OUT_DIR 	:= $(ROOT_DIR)/objs
+LIB_DIR 	+= $(OUT_DIR)/lib
+BIN_DIR	    := $(OUT_DIR)/bin
+OBJS_DIR	:= $(subst $(ROOT_DIR),$(OUT_DIR),$(LOCAL_PATH))
 
 ifndef	MODULE_NAME
 MODULE_NAME	:= $(notdir $(LOCAL_PATH))

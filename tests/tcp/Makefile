@@ -3,11 +3,11 @@
 #	Author : lzy
 .PHONY:all clean
 # LIBS 
-STATIC_LIBARY := lwip c
+STATIC_LIBARY :=  lwip posix c
 BUILD		  := BINARY
 SUBDIR		  := true
 ENTRY 		  := 0xc00000
-INCLUDE_DIR	  := $(ROOT_DIR)/tests/lwip-1.4.1/src/include
+INCLUDE_DIR	  := $(ROOT_DIR)/libs/lwip-1.4.1/src/include
 CLEANS		  := $(basename $(wildcard *.c))
 
 ifeq ($(ROOT_DIR),"")

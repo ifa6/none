@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inter.h>
+#include <posix.h>
 #include <z.h>
 
 static int _exec(const char *path,int argc,char **argv);
@@ -33,7 +34,7 @@ static int _exec(const char *path,int argc,char **argv){
         return 0;
     }else if(o == 0){
         if(argc > 2 && argv[argc - 2][0] == '>'){
-            run(MM_PID,DUP,.r1 = 1,.r2 = argv[argc - 1][0] - '0');
+            dup2(argv[argc - 1][0] - '0',1);
             argc -= 2;
         }
         return exec(path,argc,argv);

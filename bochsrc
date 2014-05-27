@@ -29,7 +29,7 @@ boot: floppy
 #boot:disk 
 #
 # com1
-com1: enabled=1,mode=file,dev=serial.txt
+com1: enabled=1,mode=file,dev=objs/serial.txt
 
 #网卡
 #使用主机的虚拟网卡

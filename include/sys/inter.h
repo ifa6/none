@@ -20,7 +20,7 @@ typedef enum{
     HARDWARE    ,
     NO_PAGE     ,
     WP_PAGE     ,
-    DUP         ,
+    DUP2        ,
     RUN         ,
     EXEC        ,
     SEEK        ,

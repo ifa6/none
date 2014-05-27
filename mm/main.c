@@ -256,13 +256,6 @@ static void _wait(Object *this){
     (void)this;
 }
 
-static void dup(Object *thiz){
-    Object *obj = thiz->admit;
-    if(obj->r1 < NR_FRIEND)
-        obj->friend[thiz->r1] = thiz->r2;
-    ret(obj,OK);
-}
-
 static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *nsp = (void*)get_free_page();
     PageItem *ntp = (void*)get_free_page();
@@ -327,7 +320,6 @@ static void _mm_init(void){
     hook(CLOSE,delete);
     hook(NO_PAGE,np_page);
     hook(WP_PAGE,nw_page);
-    hook(DUP,dup);
     hook(EXEC,mm_execvp);
     hook(15,_wait);
     extern int system_main(void);

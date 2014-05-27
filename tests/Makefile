@@ -3,7 +3,7 @@
 #	Author : lzy
 .PHONY:all clean
 # LIBS 
-STATIC_LIBARY := c
+STATIC_LIBARY :=  posix c
 SUBDIR		  := true
 
 ifeq ($(ROOT_DIR),"")
