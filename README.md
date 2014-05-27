@@ -77,7 +77,7 @@ git clone https://github.com/TaiChiForLuoZhongYao/none.git
 <h3 id='run'>运行</h3>
 `a.img` `n.hd`是已经编译好的的启动镜像和AT硬盘镜像,直接可以在bochs下运行.安装好bochs后使用如下命令即可运行
 ```bash
-bochs
+sudo bochs
 ```
 
 <h2 id="compile">编译none</h2>
