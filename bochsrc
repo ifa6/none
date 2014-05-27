@@ -7,7 +7,7 @@ megs:32
 
 # filename of ROM images
 romimage: file=$BXSHARE/BIOS-bochs-latest
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.cirrus.bin
+vgaromimage: file=tests/bochs/VGABIOS-lgpl-latest.cirrus.bin
 vga: extension=cirrus
 
 #VGABIOS-lgpl-latest

@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/inter.h>
+#include <posix.h>
 #if 0
 #include <limits.h>
 #include <signal.h>
@@ -174,8 +175,8 @@ int main(int argc, char **argv)
 {
 	int *t; /* 语法树 */
 
+	object_t f;	/* 文件描述符 */
 #ifdef  NONE_DUP
-	int f;	/* 文件描述符 */
 	/* 关闭打开的文件 */
 	for(f=STDERR_FILENO; f<sysconf(_SC_OPEN_MAX); f++)
 		close(f);
@@ -209,14 +210,12 @@ int main(int argc, char **argv)
 				onelflg = 2;
 		} else { /* 有命令文件 */
 			/* 在标准输入上打开包含要执行的命令的文件 */
-#ifdef NONE_CLOSE
-			close(STDIN_FILENO);
 			f = open(argv[1], O_RDONLY);
 			if(f < 0) { /* 打不开指定文件 */
 				prs(argv[1]);
 				err(": cannot open");
 			}
-#endif
+            dup2(f,STDIN_FILENO);
 		}
 	}
 	if(**argv == '-') { /* 有选项 */

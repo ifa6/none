@@ -75,7 +75,9 @@ void copyvm(struct list_head *vm){
 
 static size_t clr(VM *pos,void *vaddr){
     off_t offset = (vaddr - pos->vaddr) & (~0xfff);
-    if(offset + PAGE_SIZE > pos->filesz){
+    if(offset > pos->filesz) {
+        return 0;
+    } else if(offset + PAGE_SIZE > pos->filesz){
         return pos->filesz & 0xfff;
     };
     return PAGE_SIZE;

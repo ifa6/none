@@ -28,7 +28,15 @@
 
 #define var __auto_type
 /*! ~~~~~~~~~~~~~~~~~~~~~~~ excoption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !*/
-#ifdef  __clang__   /*! only ycm !*/
+#if  __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 9  /*! only ycm !*/
+#define foreach(index,start,end) for(var index = start;index < end;index++)
+#define try(expr,code,...) ({\
+        var _v = code;\
+        if(test(expr _v)){\
+            eprint("Exception : " #code);\
+            __VA_ARGS__;\
+        }_v;})
+#else
 #define foreach(index,start,end) for(__typeof__(end) index = start;index < end;index++)
 #define try(expr,code,...) ({\
         __typeof__(code) _v = code;\
@@ -36,14 +44,6 @@
             eprint("Exception : " #code);\
             __VA_ARGS__;\
         }_v;})
-#else
-#define try(expr,code,...) ({\
-        var _v = code;\
-        if(test(expr _v)){\
-            eprint("Exception : " #code);\
-            __VA_ARGS__;\
-        }_v;})
-#define foreach(index,start,end) for(var index = start;index < end;index++)
 #endif
 
 #define throw    goto

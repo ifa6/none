@@ -37,7 +37,7 @@ $(shell mkdir -p $(boot) $(hw))
 
 all :
 	@for dir in  $(SUBDIRS);do\
-		$(MAKE)  -s -C $$dir $$@ || exit 1;\
+		$(MAKE) -s -C $$dir $$@ || exit 1;\
 	done
 
 host:
