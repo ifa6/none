@@ -19,7 +19,7 @@ hw		:= $(OUT_DIR)/mnt/hw
 FSDIR 		:= fs
 LIBDIR 		:= libs
 KERNELDIR 	:= kernel
-TESTSDIR 	:= tests
+DEMODIR 	:= demo
 MMDIR 		:= mm
 DEVICEDIR	:= device
 SUBDIRS 	:= \
@@ -28,7 +28,7 @@ SUBDIRS 	:= \
 	$(MMDIR)\
 	$(DEVICEDIR)\
 	$(KERNELDIR)\
-	$(TESTSDIR) \
+	$(DEMODIR) \
 
 MAKE = make
 RM = rm

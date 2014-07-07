@@ -7,7 +7,7 @@ megs:32
 
 # filename of ROM images
 romimage: file=$BXSHARE/BIOS-bochs-latest
-vgaromimage: file=tests/bochs/VGABIOS-lgpl-latest.cirrus.bin
+vgaromimage: file=demo/bochs/VGABIOS-lgpl-latest.cirrus.bin
 vga: extension=cirrus
 
 #VGABIOS-lgpl-latest
@@ -34,11 +34,11 @@ com1: enabled=1,mode=file,dev=objs/serial.txt
 #网卡
 #使用主机的虚拟网卡
 #ne2k:ioaddr=0x300,irq=3,mac=b0:c4:20:00:00:00,ethmod=tuntap,ethdev=/dev/net/tun,script=/home/belive/vm/tunconfig
-ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=p5p1
+#ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=p5p1
 #ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=null, ethdev=eth0 
 #i440fxsupport: enabled=1, slot1=ne2k
 # where do we send log messages?
-#log: out.log
+log: objs/bochs.log
 
 # disable the mouse
 mouse: enabled=0
