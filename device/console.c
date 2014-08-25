@@ -163,7 +163,7 @@ extern void cons_print(int cons,const char * buf,count_t count){
                 case    'v':attr = (attr & 0xf0) | 0x05;break;  /*! !*/
                 case    'V':attr = (attr & 0x0f) | 0x50;break;
                 case    'h':attr = (attr & 0xf0) | 0x06;break;  
-                case    'H':attr = (attr & 0x0f) | 0x60;break;  /*! wirte !*/
+                case    'H':attr = (attr & 0x0f) | 0x60;break;  /*! white !*/
                 case    'w':attr = (attr & 0xf0) | 0x07;break;
                 case    'W':attr = (attr & 0x0f) | 0x70;break;
                 case    'l':attr |= 0x08;break;     /*! hight light !*/

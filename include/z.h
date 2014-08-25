@@ -1,4 +1,4 @@
-#ifndef  __Z_H__
+#ifndef __Z_H__
 #define __Z_H__
 
 /*! Now, we open a new programming !*/
@@ -41,7 +41,7 @@
 #define try(expr,code,...) ({\
         __typeof__(code) _v = code;\
         if(test(expr _v)){\
-            eprint("Exception : " #code);\
+            eprint("Exception : " #code"\n");\
             __VA_ARGS__;\
         }_v;})
 #endif

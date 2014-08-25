@@ -45,20 +45,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/inter.h>
 #include <posix.h>
-#if 0
-#include <limits.h>
-#include <signal.h>
-#include <errno.h>
-#include <setjmp.h>
-
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#endif
 
 #define	QUOTE 0x80 /* 引用标志位，限制了字符集为 7 位 ASCII */
 
@@ -997,6 +986,7 @@ int texec(char* f, char **t)
 
 	/* 由于不设置进程的环境，可方便的使用 execvp() 而不用 execve() */
 	execvp(f, t);
+    printf("v6sh : %s command not found.\nTry '/bin/%s'\n",f,f);
 #if 0
 	extern int errno;
 	if (errno==EACCES) { /* 没有访问权限 */

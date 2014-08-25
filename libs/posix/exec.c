@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define eprint printf
 #include <z.h>
 
 int exec(const char *path,int argc,char **argv){
@@ -28,11 +27,13 @@ int exec(const char *path,int argc,char **argv){
     }
 }
 
-int execvp(const char *path,char **argv){
+int execvp(const char *cmd,char **argv){
+    int v = -1;
     foreach(i,0,32){
         if(argv[i] == NULL){
-           return  exec(path,i,argv);
+           v =  exec(cmd,i,argv);
+           break;
         }
     }
-    return -1;
+    return v;
 }

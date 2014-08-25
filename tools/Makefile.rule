@@ -3,7 +3,7 @@
 #	项目编译规则文件，其他目录引用该文件的规则来编译。这种用法来自BlueLab。
 #	一个把消息机制用得非常烂的蓝牙开发平台。
 #
-# 根目录项检测,如果不定又该项,很可能误伤系统
+# 根目录项检测,如果不定义又该项,很可能误伤系统
 ifeq ("$(ROOT_DIR)","")
 	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 endif
@@ -64,8 +64,6 @@ LD	:= ld
 #########################################################################
 #	选项
 #########################################################################
-
-
 ASFLAGS  += --32
 CFLAGS   += $(addprefix -I,$(INCLUDE_DIR)) -m32 -std=c11 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
 
@@ -73,9 +71,11 @@ CFLAGS   += $(addprefix -I,$(INCLUDE_DIR)) -m32 -std=c11 -nostdinc -fno-stack-pr
 #	中间文件生成
 ########################################################################
 #OBJS	:= $(addprefix objs/$(LOCAL_PATH)/,$(sort $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.c,%.o,$(SRC_FILES))))))
+OBJS    := $(addprefix $(OBJS_DIR)/,$(OBJS))
 OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.S,%.o,$(filter %.S,$(SRC_FILES))))
 OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.s,%.o,$(filter %.s,$(SRC_FILES))))
 OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.c,%.o,$(filter %.c,$(SRC_FILES))))
+#OBJS 	:= $(sort $(OBJS))
 #$(warning  $(OBJS))
 ########################################################################
 
@@ -83,11 +83,12 @@ ifeq ($(BUILD),BINARY)
 MODULE 	:= $(addprefix $(OBJS_DIR)/,$(MODULE_NAME))
 LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
 LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
-$(MODULE) : $(OBJS) $(LIBS)
+$(MODULE) : $(LIBS)
+$(MODULE) : $(OBJS)
 ifeq ($(SUBDIR),true)
 	$(call sub-dir,$$*)
 endif
-	$Q $(LD) $(OBJS) $(LDFLAGS) -Ttext $(ENTRY) -o $@
+	$Q $(LD) $^ $(LDFLAGS) -Ttext $(ENTRY) -o $@
 	$Q echo "  [$(BUILD)]	Install    bin/   <=== "`basename $@`
 	$Q cp $@ $(BIN_DIR)/
 endif

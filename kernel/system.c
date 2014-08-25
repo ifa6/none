@@ -24,7 +24,7 @@ struct {
 
 
 static void shell(void){
-    exec("/v6sh",0,NULL);
+    exec("/bin/v6sh",0,NULL);
 }
 
 static void system_dup2(Object *thiz){

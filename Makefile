@@ -6,14 +6,12 @@
 # Directories.
 # root directories
 OUT_DIR  := objs
-d 		:= a.img
 ifeq ("$(RAMDISK)",1)
 h 		:= ramdisk.img
 else
-h		:= n.hd
+h		:= c.img
 endif
 s 		:= $(OUT_DIR)/bin/none 
-boot    := $(OUT_DIR)/mnt/boot
 hw		:= $(OUT_DIR)/mnt/hw
 
 FSDIR 		:= fs
@@ -32,7 +30,7 @@ SUBDIRS 	:= \
 
 MAKE = make
 RM = rm
-$(shell mkdir -p $(boot) $(hw))
+$(shell mkdir -p  $(hw))
 
 
 all :
@@ -44,21 +42,19 @@ host:
 	@cp $s $h /boot/
 
 install: $s
-	@-mount -o loop -t ext2 $d $(boot)
 	@-mount $h $(hw)
-	@chmod a+w $(hw) $(boot)
-	@-cp $(OUT_DIR)/bin/* $(hw)
+	@chmod a+w $(hw)
+	@-cp $(OUT_DIR)/bin/ $(hw)/ -r
 	@sleep 1
 
 uninstall:
-	@-umount $(boot)
 	@-umount $(hw)
 
 go: install uninstall
-	@mount -o loop -t ext2 $d $(boot)
-	@-cp $s $(boot)
+	@mount  $h $(hw)
+	@-cp $s $(hw)
 	@sleep 1
-	@-umount $(boot)
+	@-umount $(hw)
 	@bochs
 
 clean:
