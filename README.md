@@ -35,11 +35,9 @@
     * 使用v6sh做为默认shell,替代之前不完成的shell,因为none 还没有完全实现posix接口,所以这个v6sh是精简版,管道,重定向未实现
 *  几个演示程序,在tests/目录下
     * ascii 打印ascii码,包括扩展码
-    * tcp 测试lwip的程序,发送Weclome信息到服务器,并打印服务器发送过来的数据
     * test 使用VESA3.0保护模式接口绘制了一幅画
     * rootfs 准备实现的none标准文件系统,使用git存储方式
 * TCP/IP
-    * lwip1.4.0 RAW API接口已经移植成功,还不稳定,性能差
 
 <h3 id="befora">之前none家族是什么样子</h3>
 
