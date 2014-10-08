@@ -7,7 +7,7 @@
 #include    <z.h>
 
 #define VGABASE ((void *)0x0)
-#define VGALIMIT    0x10000
+#define VGALIMIT    0xffff
 
 #pragma pack(1) 
 typedef struct{
@@ -219,8 +219,8 @@ int main(void){
     entry = pm->entryPoint;
 
     memcpy((void*)0x1000,(void*)_int10,0x100);
-    selectMode(M640x480x8);
-    lifeLoop();
-    while(1);
+    selectMode(0x109);
+    //lifeLoop();
+    //while(1);
     return 0;
 }

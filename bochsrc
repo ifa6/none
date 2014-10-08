@@ -7,10 +7,10 @@ megs:32
 
 # filename of ROM images
 romimage: file=$BXSHARE/BIOS-bochs-latest
-vgaromimage: file=demo/bochs/VGABIOS-lgpl-latest.cirrus.bin
-vga: extension=cirrus
 
-#VGABIOS-lgpl-latest
+# filename of VGAROM image
+vgaromimage: file=tools/VGABIOS-lgpl-latest.bin
+vga: extension=vbe
 
 # enable key mapping, using US layout as default.
 keyboard: keymap=$BXSHARE/keymaps/x11-pc-us.map
@@ -37,7 +37,7 @@ com1: enabled=1,mode=file,dev=objs/serial.txt
 #i440fxsupport: enabled=1, slot1=ne2k
 
 # where do we send log messages?
-log: objs/bochs.log
+# log: objs/bochs.log
 
 # disable the mouse
 mouse: enabled=0
