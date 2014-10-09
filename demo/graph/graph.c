@@ -1,9 +1,9 @@
-#include    <stdio.h>
-#include    <string.h>
-#include    <x86/io.h>
-#include    <sys/inter.h>
+#include <stdio.h>
+#include <string.h>
+#include <x86/io.h>
+#include <sys/inter.h>
 #include <none/const.h>
-#include    "bmp.h"
+#include "bmp.h"
 #include <z.h>
 
 #define VGABASE ((void *)0x0)
