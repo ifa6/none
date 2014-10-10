@@ -8,28 +8,43 @@ int block_rw(const dev_t dev,const int cmd,void *buff,off_t offset,size_t count)
     return run(dev,cmd,.offset = BLOCK(offset),.count =  BLOCK(count),.buffer = buff);
 }
 
-/*!
- *  参数里面的zone是inode内部逻辑区号,从0到 (i_size + (BLOCK_SIZE - 1)) / (BLOCK_SIZE) 
- *  返回的是实际的物理区号
- */
+static zone_t get_indir(MinixInode *inode,zone_t zone,int num) {
+    static char blk[BLOCK_SIZE];
+    if(OK != block_rw(inode->i_dev,READ,blk,zone,1)){
+        return 0;
+    }
+    return ((zone_t*)blk)[num];
+}
+
+/*! 之前对minix 2文件系统了解不多,没有二次,三次间接块,这次参考grub2写这个函数 !*/
 #define _MAX_ZONE(inode)   FULL_BLOCK((inode)->i_size)
 static zone_t  _get_zone(MinixInode *inode,zone_t zone){
-    if(zone > _MAX_ZONE(inode)) return 0;
-    dev_t     dev = inode->i_dev; 
-    if((0 <= zone) && (zone < V2_NR_DZONES)){ /*! 直接块 !*/
+    zone_t indir;
+    if(zone > _MAX_ZONE(inode))
+        return 0;
+    /*! 直接块 !*/
+    if(zone < V2_NR_DZONES){
         return inode->i_zone[zone];
-    }else{
-        int n;
-        static char block[BLOCK_SIZE];
-        zone_t  *nz = inode->i_zone + V2_NR_DZONES;
-        zone -= V2_NR_DZONES;
-        n = nz[zone / ZONE_IN_BLOCK];
-        if(ERROR == block_rw(dev,READ,block,n,1)){
-            zerror("get_zone: read %b block fail for device %d",n,inode->i_dev);
-            return 0;
-        }
-        nz = (zone_t *)block;
-        return nz[zone % ZONE_IN_BLOCK];
+    }
+
+    zone -= V2_NR_DZONES;
+    /* Indirect block */
+    if(zone < ZONE_IN_BLOCK){
+        return get_indir(inode,inode->indir_zone,zone);
+    }
+    zone -= ZONE_IN_BLOCK;
+    if(zone < ZONE_IN_BLOCK * ZONE_IN_BLOCK){
+        indir = get_indir(inode,inode->double_indir_zone,zone / ZONE_IN_BLOCK);
+        indir = get_indir(inode,indir,zone % ZONE_IN_BLOCK);
+        return indir;
+    }
+
+    zone -= ZONE_IN_BLOCK * ZONE_IN_BLOCK;
+    if(zone < ZONE_IN_BLOCK * ZONE_IN_BLOCK * ZONE_IN_BLOCK) {
+        indir = get_indir(inode,inode->triple_indir_zone,(zone / ZONE_IN_BLOCK ) / ZONE_IN_BLOCK);
+        indir = get_indir(inode,zone,(zone / ZONE_IN_BLOCK) % ZONE_IN_BLOCK);
+        indir = get_indir(inode,zone,zone % ZONE_IN_BLOCK);
+        return indir;
     }
     zerror("get_zone failure,%d",__LINE__);
     return 0;
@@ -38,11 +53,10 @@ static zone_t  _get_zone(MinixInode *inode,zone_t zone){
 int zone_rw(MinixInode *inode,int cmd,zone_t zone,void *buff){
     off_t   offset;
     dev_t   dev = inode->i_dev; 
-    /*! 这不知道是怎么回事 !*/
+
     offset = _get_zone(inode,zone);
-    /*! 计算zone所在的块 !*/
     if(offset == 0){
-        zerror("zone_rw : offset is bad");
+        zerror("zone_rw : offset is bad,at zone %x",zone);
         return ERROR;
     }
     return block_rw(dev,cmd,buff,offset,1);
