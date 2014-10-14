@@ -1,6 +1,6 @@
 #include    "kernel.h"
 #include    "i8259.h"
-#include    <sys/sys.h>
+#include    "sys.h"
 
 #define     INT_GATE    0x8e00
 #define     TRA_GATE    0x8f00

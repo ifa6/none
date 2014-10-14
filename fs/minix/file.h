@@ -1,8 +1,8 @@
 #ifndef __FILE_H__
 #define __FILE_H__
 
-#include    <none/task.h>
-#include    "fs.h"
+#include "fs.h"
+#include "../../kernel/task.h"
 
 typedef struct _file File;
 

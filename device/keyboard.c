@@ -103,6 +103,9 @@ static Object *admit = NULL;
 static count_t count = 0;
 static void *_buf = NULL;
 
+static void _ispress(Object *thiz){
+    ret(thiz->admit,index);
+}
 static void _input(Object *this){
     (void)this;
     static bool shift = false;
@@ -165,7 +168,8 @@ static void _reset(Object *thiz){
 void keyboard_init(void){
     kb_in.head = kb_in.tail = 0;
     kb_in.full = false;
-    self()->fns[HARDWARE] = _input;
-    self()->fns[CLOSE] = _reset;
+    hook(HARDWARE,_input);
+    hook(CLOSE,_reset);
+    hook(RUN,_ispress);
     put_irq_handler(1,keyboard_handler);
 }

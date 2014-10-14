@@ -2,9 +2,7 @@
  *  Copy form linux 0.12 .
  *
  */
-#include <stdio.h>
 #include <sys/inter.h>
-#include <none/const.h>
 #include "kernel.h"
 
 #define isnull(p)   (!(p))

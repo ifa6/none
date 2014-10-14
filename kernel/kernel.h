@@ -1,9 +1,9 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
-#include <none/const.h>
+#include "const.h"
+#include "task.h"
 #include <none/types.h>
-#include <none/task.h>
 #include <sys/inter.h>
 #include <x86/io.h>
 #include <stdio.h>

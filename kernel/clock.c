@@ -1,15 +1,17 @@
-#include    "kernel.h"
-#include    <time.h>
+#include <none/time.h>
+#include <none/object.h>
+#include "kernel.h"
 
 volatile unsigned long jiffies = 0;
 static  time_t startup_time;
+
 
 /*! 时钟中断,可能不太合群,不太协调,毕竟他是整个系统的脉搏,任务繁重 ~*/
 
 int clock_handler(object_t o,int irq){
     (void)irq;
     if(TASK(leading)->ucount) TASK(leading)->ucount--;
-    if(!(jiffies % 1000)) doint(o,HARDWARE,0,0,0);   /*!-------!*/
+    if(!(jiffies % 1000)) doint(o,HANDLER,0,0,0);   /*!-------!*/
     return OK;
 }
 
@@ -53,7 +55,7 @@ static time_t mktime(Time *tm){
     return res;
 }
 
-static Time *cmos_time(void){
+static void cmos_time(void){
     static Time time;
     do{
         time.second = CMOS_READ(0);
@@ -71,42 +73,25 @@ static Time *cmos_time(void){
     BCD_TO_BIN(time.year);
     time.month--;
     startup_time = mktime(&time);
-    return &time;
 }
 
-static Time *time = NULL;
 
-
-static void put_time(Object *this){
-    printk("\ew%d/%02d/%02d %02d:%02d:%02d\n",time->year + 2000,time->month + 1,time->day,
-            time->hour,time->minute,time->second);
-    ret(this->admit,OK);
-}
-
-/*! 暂时为没有编译进内核的任务提供打印任务 !*/
-static void _print(Object *this){
-    printk(this->buffer);
-    ret(this->admit,OK);
+static void get_time(Object *thiz){
+    ret(thiz->admit,startup_time);
 }
 
 static void _clk(Object *this){
-    time->second++;
-    time->minute += time->second / 60;  time->second %= 60;
-    time->hour   += time->minute / 60;  time->minute %= 60;
-    time->day    += time->hour / 24;    time->hour   %= 24;
-    time->month  += time->day / 30;     time->day    %= 30;
-    time->year   += time->month / 12;   time->month  %= 12;
+    startup_time++;
     (void)this;
 }
 
 static void clock_init(void){
-    self()->fns[READ] = put_time;
-    self()->fns[WRITE] = _print;
-    self()->fns[HARDWARE] = _clk;
-    time = cmos_time();
+    hook(GETTIME,get_time);
+    hook(HANDLER,_clk);
+    cmos_time();
     outb_p(0x36,0x43);
     outb_p(LATCH & 0xff,0x40);
-    outb_p(LATCH >>8,0x40);
+    outb_p(LATCH >> 8,0x40);
     put_irq_handler(0,(IrqHandler)clock_handler);
 }
 int clock_main(void){

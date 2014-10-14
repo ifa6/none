@@ -1,6 +1,5 @@
 #include    "fs.h"
 #include    "../kernel/kernel.h"
-//#include    <elf.h>
 
 //#define LOG
 
@@ -50,30 +49,6 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
         return read_count;
     }
 }
-
-/*! 测试加载ELF文件 !*/
-#if 0
-static void load_elf(Object *this) {
-    File *file = _FILE(this);
-    static Elf32_Ehdr ehdr;
-    static Elf32_Shdr *shdr;
-    MinixInode *inode = &(file->inode);
-    int (*fn)(void);
-    do_read(inode,&ehdr,0,sizeof(ehdr));
-    fn = (void*)ehdr.e_entry;
-    do_read(inode,buff,ehdr.e_shoff,ehdr.e_shentsize * ehdr.e_shnum);
-    shdr = (void*)buff; 
-    foreach(i,0,ehdr.e_shnum){
-        if((shdr->sh_type == SHT_PROGBITS) && (shdr->sh_flags & SHF_ALLOC)){
-            do_read(inode,(void*)shdr->sh_addr,shdr->sh_offset,shdr->sh_size);
-        }
-        shdr++;
-    }
-    ret(this->admit,OK);
-    fn();
-    run(MM_PID,CLOSE);
-}
-#endif
 
 static void fs_read(Object *this){
     File    *file = _FILE(this);
@@ -130,7 +105,6 @@ static void fs_write(Object *this){
 }
 
 static void fs_close(Object *thiz){
-    /*! printk("\erTODO : FS close\ew\n"); !*/
     ret(thiz->admit,OK);
     run(MM_PID,CLOSE);
 }
@@ -158,9 +132,6 @@ static void fs_open(Object *this){
             file->offset = 0;
             hook(READ,fs_read);
             hook(WRITE,fs_write);
-#if 0
-            hook(RUN,load_elf);
-#endif
             hook(CLOSE,fs_close);
             hook(SEEK,fs_seek);
             dorun();

@@ -14,7 +14,7 @@
 #define ASM
 /*  multiboot规范头文件,该文件直接拷贝于grub_0.98/docs/multiboot.h */
 #include    <boot/multiboot.h>
-#include    <none/const.h>
+#include    "const.h"
 
 #define CreateSection(base,limit,attr) \
     .short  limit&0xffff;\
@@ -90,6 +90,11 @@ start:
     */
     /* 保存由Boot loader提供的信息地址 */
     mov     %ebx,envp
+
+    mov     %cr0,%eax
+    or      $0x20,%eax
+    mov     %eax,%cr0
+
     /* 8259,写过很多次了,懒得在写,不懂的可以google,或者Email我 */
     /* 唯一说一点的就是外部中断0x20~0x30 */
     /*

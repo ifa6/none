@@ -1,7 +1,7 @@
 #ifndef __NONE_VM_H__
 #define __NONE_VM_H__
 #include <none/types.h>
-#include <none/task.h>
+#include "../kernel/task.h"
 #include <elf.h>
 #include <none/list.h>
 #include <stddef.h>
