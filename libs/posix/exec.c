@@ -7,7 +7,12 @@
 
 int exec(const char *path,int argc,char **argv){
     int _v = -1;
-    object_t o = try(-1 == ,open(path,0),throw e_fail);
+    char cmd[125] = "/bin/";
+    if(path[0] == '.' || path[0] == '/')
+        strcpy(cmd,path);
+    else
+        strcat(cmd,path);
+    object_t o = try(-1 == ,open(cmd,0),throw e_fail);
     count_t count = argc > 31 ? 31 : argc;
     char *ptr;
     struct {

@@ -215,8 +215,8 @@ int main(int argc, char **argv)
 		signal(SIGINT, SIG_IGN);
 #endif
 	}
-	dolv = argv+1; /* 参数列表指针右移 */
-	dolc = argc-1; /* 参数数目减少 */
+	dolv = argv + 1; /* 参数列表指针右移 */
+	dolc = argc - 1; /* 参数数目减少 */
 
 	/* 主循环: 扫描命令行，分析和执行语法树 */
 	for(;;) {
@@ -658,8 +658,9 @@ int * tree(int n)
  * execute(TCOM2, pv1, pv2);	TCOM2.TFLG: FPIN, FPOU;	父进程关闭了 pv1, 打开着 pv2
  * execute(TCOM3, pv2, NULL);	TCOM3.TFLG: FPIN;	父进程关闭了 pv2
  */
-void execute(int *t, int *pf1, int *pf2)
-{
+void execute(int *t, int *pf1, int *pf2) {
+    (void)pf1;
+    (void)pf2;
 	int i, f; 
 #ifdef NONE_PIPE
     int pv[2];
@@ -986,7 +987,7 @@ int texec(char* f, char **t)
 
 	/* 由于不设置进程的环境，可方便的使用 execvp() 而不用 execve() */
 	execvp(f, t);
-    printf("v6sh : %s command not found.\nTry '/bin/%s'\n",f,f);
+    printf("v6sh : %s command not found.\n",f);
 #if 0
 	extern int errno;
 	if (errno==EACCES) { /* 没有访问权限 */
