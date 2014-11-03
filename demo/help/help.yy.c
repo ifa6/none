@@ -6,13 +6,6 @@
 FILE *stdin;
 FILE *stdout;
 static inline object_t fileno(FILE *file){return *file;}
-static inline char *strdup(const char *s) {
-    size_t  len = strlen(s) + 1;
-    void *new = malloc(len);
-    if (new == NULL)
-        return NULL;
-    return (char *)memcpy(new,s,len);
-}
 static inline int fwrite(void *buffer,size_t cnt,size_t size,FILE *file) {return write(*file,buffer,cnt * size);}
 #define isatty(x) x
 #define EOF -1
@@ -22,7 +15,7 @@ int  errno;
 
 
 
-#line 26 "help.yy.c"
+#line 19 "help.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -633,7 +626,7 @@ goto find_rule; \
 char *yytext;
 #line 1 "help.l"
 
-#line 23 "help.l"
+#line 16 "help.l"
 typedef struct _Node Node;
 #include "help.tab.h"
 #include "ast.h"
@@ -644,7 +637,7 @@ typedef struct _Node Node;
 #endif
 
 
-#line 648 "help.yy.c"
+#line 641 "help.yy.c"
 
 #define INITIAL 0
 #define filter_1 1
@@ -831,9 +824,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 35 "help.l"
+#line 28 "help.l"
 
-#line 837 "help.yy.c"
+#line 830 "help.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -949,13 +942,13 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 36 "help.l"
+#line 29 "help.l"
 {c("<h1>\n");    BEGIN(filter_1);yylval.string = strdup(yytext);return H1;}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 37 "help.l"
+#line 30 "help.l"
 {c("<h2>\n");    BEGIN(filter_1);yylval.string = strdup(yytext);return H2;}
 	YY_BREAK
 case 3:
@@ -963,7 +956,7 @@ case 3:
 (yy_c_buf_p) = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 38 "help.l"
+#line 31 "help.l"
 {c("<h1>\n");    BEGIN(h1);}
 	YY_BREAK
 case 4:
@@ -971,7 +964,7 @@ case 4:
 (yy_c_buf_p) = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 39 "help.l"
+#line 32 "help.l"
 {c("<h2>\n");    BEGIN(h2);}
 	YY_BREAK
 case 5:
@@ -979,7 +972,7 @@ case 5:
 (yy_c_buf_p) = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 40 "help.l"
+#line 33 "help.l"
 {c("<h3>\n");    BEGIN(h3);}
 	YY_BREAK
 case 6:
@@ -987,7 +980,7 @@ case 6:
 (yy_c_buf_p) = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 41 "help.l"
+#line 34 "help.l"
 {c("<h4>\n");    BEGIN(h4);}
 	YY_BREAK
 case 7:
@@ -995,7 +988,7 @@ case 7:
 (yy_c_buf_p) = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 42 "help.l"
+#line 35 "help.l"
 {c("<h5>\n");    BEGIN(h5);}
 	YY_BREAK
 case 8:
@@ -1003,7 +996,7 @@ case 8:
 (yy_c_buf_p) = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 43 "help.l"
+#line 36 "help.l"
 {c("<h6>\n");    BEGIN(h6);}
 	YY_BREAK
 case 9:
@@ -1012,43 +1005,43 @@ case 9:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 44 "help.l"
+#line 37 "help.l"
 {c("<code>\n");  BEGIN(code);}
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 45 "help.l"
+#line 38 "help.l"
 {c("<h1>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H1;}
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 46 "help.l"
+#line 39 "help.l"
 {c("<h2>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H2;}
 	YY_BREAK
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 47 "help.l"
+#line 40 "help.l"
 {c("<h3>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H3;}
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 48 "help.l"
+#line 41 "help.l"
 {c("<h4>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H4;}
 	YY_BREAK
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 49 "help.l"
+#line 42 "help.l"
 {c("<h5>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H5;}
 	YY_BREAK
 case 15:
 /* rule 15 can match eol */
 YY_RULE_SETUP
-#line 50 "help.l"
+#line 43 "help.l"
 {c("<h6>\n");    BEGIN(filter_2);yylval.string = strdup(yytext);return H6;}
 	YY_BREAK
 case 16:
@@ -1057,75 +1050,75 @@ case 16:
 (yy_c_buf_p) = yy_cp -= 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 51 "help.l"
+#line 44 "help.l"
 {c("<code>\n");  BEGIN(filter_3);yylval.string = strdup(yytext);return CODE;}
 	YY_BREAK
 case 17:
 /* rule 17 can match eol */
 YY_RULE_SETUP
-#line 52 "help.l"
+#line 45 "help.l"
 {BEGIN(INITIAL);}
 	YY_BREAK
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 53 "help.l"
+#line 46 "help.l"
 {BEGIN(INITIAL);}
 	YY_BREAK
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 54 "help.l"
+#line 47 "help.l"
 {BEGIN(INITIAL);};
 	YY_BREAK
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 55 "help.l"
+#line 48 "help.l"
 {c("<sline>\n");}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 56 "help.l"
+#line 49 "help.l"
 {c("<list>");    return LIST;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 57 "help.l"
+#line 50 "help.l"
 {c("<>>");       return '>';}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 58 "help.l"
+#line 51 "help.l"
 {c("<%c>",yytext[0]);return yytext[0];}
 	YY_BREAK
 case 24:
 /* rule 24 can match eol */
 YY_RULE_SETUP
-#line 59 "help.l"
+#line 52 "help.l"
 {c("\n");return '\n';}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 60 "help.l"
+#line 53 "help.l"
 {c("<string>");yylval.string = strdup(yytext);return STRING;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 61 "help.l"
+#line 54 "help.l"
 {c("< >");}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 62 "help.l"
+#line 55 "help.l"
 {c("%c",yytext[0]);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 63 "help.l"
+#line 56 "help.l"
 ECHO;
 	YY_BREAK
-#line 1129 "help.yy.c"
+#line 1122 "help.yy.c"
 			case YY_STATE_EOF(INITIAL):
 			case YY_STATE_EOF(filter_1):
 			case YY_STATE_EOF(filter_2):
@@ -2106,7 +2099,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 63 "help.l"
+#line 56 "help.l"
 
 
 int yywrap(void){ 

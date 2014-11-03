@@ -216,10 +216,13 @@ static void nw_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
     PageItem *table = _un_table((PageItem *)t->core,ptr);
-    if(!table) ret(this->admit,ERROR);
+    //mm_log("virtual : %p\n",ptr);
+    if(!table) 
+        ret(this->admit,ERROR);
     put_item((PageItem*)t->core,table,DIR_INDEX((Pointer)ptr),7);
     void *page = _un_page(table,ptr);
-    if(!page) ret(this->admit,ERROR);
+    if(!page) 
+        ret(this->admit,ERROR);
     put_item(table,page,TABLE_INDEX((Pointer)ptr),7);
     ret(this->admit,OK);
 }

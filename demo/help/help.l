@@ -5,13 +5,6 @@
 FILE *stdin;
 FILE *stdout;
 static inline object_t fileno(FILE *file){return *file;}
-static inline char *strdup(const char *s) {
-    size_t  len = strlen(s) + 1;
-    void *new = malloc(len);
-    if (new == NULL)
-        return NULL;
-    return (char *)memcpy(new,s,len);
-}
 static inline int fwrite(void *buffer,size_t cnt,size_t size,FILE *file) {return write(*file,buffer,cnt * size);}
 #define isatty(x) x
 #define EOF -1
