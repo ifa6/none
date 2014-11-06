@@ -32,14 +32,19 @@ static inline int parse(char *buffer,char **argv,int len){
     return argc;
 }
 int system(char *cmd) {
-    pid_t pid;
+    object_t pid;
     char *argv[10];
     int  argc = 0;
     argc = parse(cmd,argv,10);
-    if( 0 == (pid = fork())){
-        exec(argv[0],argc,argv);
-    } else if(pid > 0){
+    if(0 < (pid = fork())){
         return 0;
+    } else if(pid == 0){
+        printf("<%s>\n",cmd);
+        exit(0);
+        return 0;
+        exec(argv[0],argc,argv);
+    } else {
+        return -1;
     }
     return 0;
 }

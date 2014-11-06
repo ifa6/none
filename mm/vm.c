@@ -5,14 +5,15 @@
 #include <z.h>
 
 #define vm_entry(ptr)   list_entry(ptr,VM,list)
+#define VMHEAD(ptr)     ((VMHead*)(ptr->private_data))
 
 
 int mkvm(Object *thiz,Registers *reg){
     Elf32_Ehdr ehdr;
     Elf32_Phdr *phdr = NULL;
     size_t psize = 0;
+    VMHead *vmhead = NULL;
     /*! Elf32_Shdr *shdr = NULL; !*/ /*! only ycm !*/
-    Task *t = TASK(thiz->admit);
     struct {
         char *argv[32];
         char env[0];
@@ -21,56 +22,60 @@ int mkvm(Object *thiz,Registers *reg){
 
     strcpy(thiz->admit->name,buff->argv[0]);
 
-    rlen = try(-1 == ,read(thiz->lng,&ehdr,sizeof(ehdr)),throw e_fail);
+    rlen = try(-1 == ,read(thiz->object,&ehdr,sizeof(ehdr)),throw e_fail);
     reg->eip = ehdr.e_entry;
     reg->ss = thiz->count;
     reg[1].gs = (long)buff->argv;
 
     psize = ehdr.e_phentsize * ehdr.e_phnum;
     phdr = try(NULL == ,kalloc(psize),throw e_fail);
-    lseek(thiz->lng,ehdr.e_phoff,SEEK_SET);
-    rlen = try(-1 == ,read(thiz->lng,phdr,psize),throw e_fail); 
+    lseek(thiz->object,ehdr.e_phoff,SEEK_SET);
+    rlen = try(-1 == ,read(thiz->object,phdr,psize),throw e_fail); 
 
-    INIT_LIST_HEAD(&(t->vm));
+    vmhead = try(NULL == ,kalloc(sizeof(VMHead)),throw e_fail);
+    vmhead->object = thiz->object;
+    vmhead->cnt = 1;
+    INIT_LIST_HEAD(&(vmhead->list));
     foreach(i,0,ehdr.e_phnum){
         if(phdr[i].p_type == PT_LOAD){
             VM *new = try(NULL == ,kalloc(sizeof(*new)),throw e_fail);
             new->flags = phdr[i].p_flags;
-            new->count = 1;
             new->vaddr = (void*)phdr[i].p_vaddr;
             new->offset = phdr[i].p_offset;
             new->memsz = phdr[i].p_memsz;
             new->filesz = phdr[i].p_filesz;
-            new->object = thiz->lng;
-            list_add(&new->list,&(t->vm));
+            list_add(&(new->list),&(vmhead->list));
         }
     }
+    thiz->admit->private_data = vmhead;
+    printk("<task %p>\n",&(vmhead->list));
     return 0;
     catch(e_fail){
-        TEST_AND_FREE(kfree,phdr,NULL);
+        delvm(vmhead);
+        TEST_AND_FREE(kfree,vmhead,NULL);
     }
     unused(rlen);
     return -1;
 }
 
-void delvm(struct list_head *vm){
-    if(!vm) panic("Free VM");
-    struct list_head *next,*pos = vm->next;
-    vm_entry(pos)->count--;
-    if(!vm_entry(pos)->count){
+void delvm(VMHead *vmhead){
+    if(vmhead && !(--vmhead->cnt)) {
+        printk("\erTODO : MM can't close object,call link {mm -> object -> mm} is die.%s %d\ew\n",__FILE__,__LINE__);
         //close(vm_entry(pos)->object);
-        printk("\erTODO : close object %s %d\ew\n",__FILE__,__LINE__);
-        do{
-            next = pos;
-            pos = pos->next;
-            kfree(vm_entry(next));
-        }while(vm != pos);
+        struct list_head *head = &(vmhead->list);
+        for(struct list_head *pos = head,*next;pos != head;) {
+            next = pos->next;
+            printk("<pos %p>\n",pos);
+            kfree(vm_entry(pos));
+            pos = next;
+        }
+        kfree(vmhead);
     }
-    INIT_LIST_HEAD(vm);
 }
 
-void copyvm(struct list_head *vm){
-    vm_entry(vm->next)->count++;
+void copyvm(VMHead *vmhead){
+    if(vmhead)
+        vmhead->cnt--;
 }
 
 static size_t clr(VM *pos,void *vaddr){
@@ -83,21 +88,24 @@ static size_t clr(VM *pos,void *vaddr){
     return PAGE_SIZE;
 }
 
-void *dovm(struct list_head *vm,void *vaddr){
-    void *page = try(NULL ==, get_free_page(),throw e_fail);
-    size_t len = 0;
-    list_for_each(_pos,vm){
-        VM *pos = vm_entry(_pos);
-        if((vaddr >= pos->vaddr) && vaddr < (pos->vaddr + pos->memsz)){
-            len = clr(pos,vaddr);
-            if(len){
-                lseek(pos->object,pos->offset + ((vaddr - pos->vaddr) & (~0xfff)),SEEK_SET);
-                try(-1 ==,read(pos->object,page,len),throw e_fail);
+void *dovm(VMHead *vmhead,void *vaddr){
+    if(vmhead) {
+        void *page = try(NULL ==, get_free_page(),throw e_fail);
+        size_t len = 0;
+        struct list_head *head = &(vmhead->list);
+        list_for_each(_pos,head){
+            VM *pos = vm_entry(_pos);
+            if((vaddr >= pos->vaddr) && vaddr < (pos->vaddr + pos->memsz)){
+                len = clr(pos,vaddr);
+                if(len){
+                    lseek(vmhead->object,pos->offset + ((vaddr - pos->vaddr) & (~0xfff)),SEEK_SET);
+                    try(-1 ==,read(vmhead->object,page,len),throw e_fail);
+                }
+                break;
             }
-            break;
         }
+        return page;
     }
-    return page;
     catch(e_fail){
         return NULL;
     }

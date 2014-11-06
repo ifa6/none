@@ -100,7 +100,7 @@ ifeq ($(SUBDIR),true)
 	$(call sub-dir,$$*)
 endif
 	$Q echo "  [$(BUILD)]	Install    lib/   <=== "`basename $(MODULE)`
-	$Q $(AR) -r $@ $? > /dev/null 2>&1
+	$Q $(AR) -ur $@ $? > /dev/null 2>&1
 else
 all:
 ifeq ($(SUBDIR),true)

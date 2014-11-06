@@ -1,5 +1,5 @@
 #include    "vga.h"
-#include    "keyboard.h"
+#include    "input/keyboard.h"
 
 #define MAX_CONSOLES    1
 

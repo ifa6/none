@@ -40,12 +40,12 @@ struct _object{
     size_t  cnt;                        /*! 对象引用计数，当该标记为0时，系统可以将其释放 !*/
     char    name[OBJECT_NAME_LEN];      /*! 对象名称，用来给人看的，与机器无关 !*/
     pid_t   friend[NR_FRIEND];          /*! friend都是可直接访问的对象,他们是祖先指定的,祖先可信任,则他们就可信任 !*/
-    union{ struct{
+    struct{
         union{
             long status;
             unsigned long mode;
             unsigned long r1;
-            object_t      lng;
+            object_t      object;
             off_t offset;
         };
         union{
@@ -58,7 +58,7 @@ struct _object{
             void *buffer;
             void *ptr;
         };
-    }; };
+    };
     Object  *admit;                     /*! 调用者 !*/
     Object  *wait;                      /*! 这个类等待你的回复 !*/
     int     talk;                       /*! 与爱人之间的桥梁 !*/
@@ -69,6 +69,7 @@ struct _object{
         int     fn;
         Methon  fns[NR_METHON];
     };
+    void        *private_data;  /*! 私有数据指针,仿Linux FS !*/
 };
 
 #ifndef OBJECT

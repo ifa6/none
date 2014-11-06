@@ -95,13 +95,15 @@ void kfree_s(void *obj,unsigned int size){
 
     for(bdir = bucket_dir;bdir->size;bdir++){
         prev = NULL;
-        if(bdir->size < size) continue;
+        if(bdir->size < size) 
+            continue;
         for(bdesc = bdir->bucket;bdesc;bdesc = bdesc->next){
             if(bdesc->page == page)
                 goto found;
             prev = bdesc;
         }
     }
+    printk("<%p> : ",obj);
     panic("Bad address passed to kernel free_s()");
 found:
     lock();

@@ -92,7 +92,7 @@ static void clone(Object *this){
     }else{
         nt->core = (Pointer)clone_space((void *)(ot->core),nt);
         nt->father = ot;
-        copyvm(&(nt->vm));
+        copyvm(this->admit->private_data);
         ret(OBJECT(nt),OK);
         ret(this->admit,OBJECT(nt)->id);
     }
@@ -133,7 +133,8 @@ static void delete(Object *this){
     try(ERROR ==,free_page((Pointer)(nsp)),{
         panic("free page fail");
     });
-    delvm(&(t->vm));
+    delvm(this->admit->private_data);
+    this->admit->private_data  = NULL;
     /*! object_table[this->admit->id] = NULL; !*/
     //trace(OBJECT(t->father));
     ret(OBJECT(t->father),this->admit->id);
@@ -157,7 +158,7 @@ static int put_page(PageItem *dirs,void *va,void *page){
 static void np_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
-    void *page = dovm(&(t->vm),ptr);
+    void *page = dovm(this->admit->private_data,ptr);
     //trace(this->admit);
     //mm_log("page : %p virtual : %p\n",page,ptr);
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
@@ -248,7 +249,8 @@ static void mm_execvp(Object *thiz){
     Task * t = TASK(thiz->admit);
     Registers *reg = __va((void*)(t->core),t->registers);
     unused(__va);
-    delvm(&(t->vm));
+    delvm(thiz->admit->private_data);
+    thiz->admit->private_data = NULL;
     try(-1==,mkvm(thiz,reg));
     _delete((void*)t->core);
     //trace(thiz->admit);
@@ -263,7 +265,8 @@ static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *nsp = (void*)get_free_page();
     PageItem *ntp = (void*)get_free_page();
     PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
-    if(or(!,nsp,ntp)) panic("memeory very full!-_-|||");
+    if(or(!,nsp,ntp)) 
+        panic("memeory very full!-_-|||");
     copy_page(nsp,space);
     for(int i = CMEM >> 22;i < 1024;i++){
         clrPresent(nsp + i);
@@ -278,22 +281,13 @@ static PageItem *__clone_space__(PageItem *space,void *page){
 #if 1
 static Task* make_task(String name,int (*entry)(void)){
     Task *task;
-    VM *vm;
+    //VM *vm;
     task = TASK(cloneObject(self()));
     task->core = (Pointer)__clone_space__((void *)(TASK(self())->core),task);
     task->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     task->pri = PRI_TASK;
     task->count = 20;
     task->ucount = 20;
-    INIT_LIST_HEAD(&(task->vm));
-    vm = kalloc(sizeof(vm));
-    vm->object = 0;
-    vm->offset = 0;
-    vm->count  = 2; /*! never eq 0 ,it's right !*/
-    vm->vaddr  = NULL;
-    vm->memsz  = -1; /*! MAX size !*/
-    vm->filesz = 0;
-    list_add(&(vm->list),&(task->vm));
 
     strcpy(OBJECT(task)->name,name);
     /*! 之前COPY到KERBEL_STACK,这是不对的,因为还没有切换到那个页去,谨记 !*/

@@ -41,7 +41,6 @@ struct _task{
     Pointer     core;           /*! 任务的内存空间,cr3      !*/
     Task        *next,*prev;    /*! 任务链 !*/
     Task        *father;        /*! !*/
-    struct list_head vm;        /*! Only MM !*/
 };
 
 struct _stack{

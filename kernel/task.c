@@ -207,7 +207,6 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
     task->ucount = 20;
     task->core = getcr3();
     task->registers = (void*)(STACK(task)->stackp) - sizeof(Registers);
-    INIT_LIST_HEAD(&(task->vm));
     strcpy(OBJECT(task)->name,name);
     memcpy(task->registers,&(Registers){
             .gs = data,

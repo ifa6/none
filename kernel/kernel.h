@@ -65,7 +65,7 @@ extern void panic(const char *msg);
 
 extern void *kalloc(unsigned int);
 extern void kfree_s(void *,unsigned int);
-#define kfree(p)    kfree_s(p,0)
+#define kfree(p)    kfree_s(p,0) //({ printk("%s:%d :",__FILE__,__LINE__);kfree_s(p,0); })
 
 
 #endif

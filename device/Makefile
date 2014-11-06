@@ -6,7 +6,7 @@
 MODULE_NAME := $(notdir $(shell pwd))
 MODULE		:= lib$(MODULE_NAME).a
 BUILD		:= LIBRARY
-SRC_FILES   := $(wildcard ne2k/*.c)
+SRC_FILES   := $(wildcard ne2k/*.c) $(wildcard input/*.c)
 
 ifeq ($(ROOT_DIR),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)
