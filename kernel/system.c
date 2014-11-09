@@ -8,6 +8,7 @@ extern int clock_main();
 extern int rs_main();
 extern int ramdisk_main();
 extern int ne2k_main();
+static int system_shell();
 
 struct {
     String name;
@@ -20,11 +21,13 @@ struct {
     {.name = "Serial",        .entry = rs_main},
     {.name = "Ram Disk",      .entry = ramdisk_main},
     {.name = "NE2K",          .entry = ne2k_main},
+    {.name = "Shell",         .entry = system_shell},
 };
 
 
-static void shell(void){
-    exec("/bin/v6sh",0,NULL);
+static int system_shell(void){
+    run(SYSTEM_PID,1,.r1 = PRI_USER);
+    return exec("/bin/v6sh",0,NULL);
 }
 
 static void system_dup2(Object *thiz){
@@ -40,6 +43,12 @@ static void system_init(void){
     hook(DUP2,system_dup2);
 }
 
+static void system_pri(Object *thiz) {
+    Task *task = TASK(thiz->admit);
+    task->pri = thiz->r1;
+    ret(task,OK);
+}
+
 int system_main(void){
     count_t i = 0;
     id_t id = 0;
@@ -53,10 +62,10 @@ hel:
         tasks[i].entry();
     }else{
         i++;
-        if(i < ARRAY_SIZE(tasks)) goto hel;
-        else shell();
+        if(i < ARRAY_SIZE(tasks)) 
+            goto hel;
     }
+    hook(1,system_pri);
     dorun();
-    while(1);
     return OK;
 }

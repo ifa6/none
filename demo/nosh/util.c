@@ -31,19 +31,18 @@ static inline int parse(char *buffer,char **argv,int len){
     if(pos != buffer) argc++;
     return argc;
 }
+#include <sys/inter.h>
 int system(char *cmd) {
-    object_t pid;
+    object_t o;
     char *argv[10];
     int  argc = 0;
     argc = parse(cmd,argv,10);
-    if(0 < (pid = fork())){
-        return 0;
-    } else if(pid == 0){
-        printf("<%s>\n",cmd);
-        exit(0);
-        return 0;
+    o = fork();
+    if(0 == o){
+        printf("> %s %d\n",argv[0],argc);
         exec(argv[0],argc,argv);
-    } else {
+    } else if(0 > o) {
+        printf("Error\n");
         return -1;
     }
     return 0;

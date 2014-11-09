@@ -10,8 +10,10 @@ static  time_t startup_time;
 
 int clock_handler(object_t o,int irq){
     (void)irq;
-    if(TASK(leading)->ucount) TASK(leading)->ucount--;
-    if(!(jiffies % 1000)) doint(o,HANDLER,0,0,0);   /*!-------!*/
+    if(TASK(leading)->ucount)
+        TASK(leading)->ucount--;
+    if(!(jiffies % 1000)) 
+        doint(o,HANDLER,0,0,0);   /*!-------!*/
     return OK;
 }
 

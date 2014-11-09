@@ -21,11 +21,19 @@ int mkvm(Object *thiz,Registers *reg){
     int rlen = 0;
 
     strcpy(thiz->admit->name,buff->argv[0]);
+    strcat(thiz->admit->name,"<mm>");
 
     rlen = try(-1 == ,read(thiz->object,&ehdr,sizeof(ehdr)),throw e_fail);
-    reg->eip = ehdr.e_entry;
-    reg->ss = thiz->count;
-    reg[1].gs = (long)buff->argv;
+    memcpy(reg,&(Registers){
+        .gs  = KERNEL_DATA, .fs = KERNEL_DATA,
+        .ds  = KERNEL_DATA, .es = KERNEL_DATA,
+        .edi = 0,           .esi = 0, 
+        .ebp = 0,           .ebx = 0, 
+        .edx = 0, 
+        .ecx = thiz->count, .eax = (unsigned long)buff->argv,
+        .eip = ehdr.e_entry,.cs  = KERNEL_CODE, 
+        .eflags = 0x200,
+    },sizeof(Registers));
 
     psize = ehdr.e_phentsize * ehdr.e_phnum;
     phdr = try(NULL == ,kalloc(psize),throw e_fail);
@@ -48,7 +56,6 @@ int mkvm(Object *thiz,Registers *reg){
         }
     }
     thiz->admit->private_data = vmhead;
-    printk("<task %p>\n",&(vmhead->list));
     return 0;
     catch(e_fail){
         delvm(vmhead);
@@ -60,12 +67,11 @@ int mkvm(Object *thiz,Registers *reg){
 
 void delvm(VMHead *vmhead){
     if(vmhead && !(--vmhead->cnt)) {
-        printk("\erTODO : MM can't close object,call link {mm -> object -> mm} is die.%s %d\ew\n",__FILE__,__LINE__);
+        printk("\erTODO : MM can't close object,call link {mm -> object -> mm} is die.  %s:%d\ew\n",__FILE__,__LINE__);
         //close(vm_entry(pos)->object);
         struct list_head *head = &(vmhead->list);
         for(struct list_head *pos = head,*next;pos != head;) {
             next = pos->next;
-            printk("<pos %p>\n",pos);
             kfree(vm_entry(pos));
             pos = next;
         }

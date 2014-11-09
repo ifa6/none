@@ -21,6 +21,7 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
     zone_t  zone = offset / BLOCK_SIZE;
     static char   block[BLOCK_SIZE];
     count_t read_count = BLOCK_SIZE - (offset % BLOCK_SIZE);
+
     count = MIN(inode->i_size - offset,count);
     read_count = MIN(count ,read_count);
     if(read_count){

@@ -1643,10 +1643,6 @@ yyreturn:
 
 int main(void) {
     built();
-    //object_t file = open("/test.l",0);
-    //stdin = &file;
-    system("ls /bin/");
-    return 0;
     yyparse();
 }
 

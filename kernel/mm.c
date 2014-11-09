@@ -25,6 +25,7 @@ void *get_free_page(void){
             }
         }
     }
+    printk("mm out.\n");
     return NULL;
 }
 
@@ -42,7 +43,7 @@ void *get_kfree_page(void){
 
 int share_page(Pointer page){
     if(page < OBJECT_START) {
-        mm_error("Address %08x, does not require a shared kernel memory",page);
+        mm_error("Address %08x, does not require a shared kernel memory.",page);
         return ERROR;
     }
     mmap[page >> 12]++;

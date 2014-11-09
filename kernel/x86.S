@@ -330,7 +330,6 @@ sys_call:
     movl    %edx,%es
     movl    %edx,%fs
 
-#    sti
     call    *sys_call_table(,%eax,4)
 
 ret_from_sys_call:

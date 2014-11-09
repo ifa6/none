@@ -28,26 +28,34 @@ volatile unsigned long cr3 = 0;
 static Registers *pick_task(Registers *reg){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
 
-#ifdef  PRINT_SCHED
+#ifndef  PRINT_SCHED
     Object *oo = self();
 #endif
 
     leading->registers = reg;
-    if(rdy_head[PRI_TASK] != NULL) leading = rdy_head[PRI_TASK];    
-    else if(rdy_head[PRI_USER] != NULL) leading = rdy_head[PRI_USER];
-    else leading = rdy_head[PRI_GOD];       /*! 上帝只有在我们都不干了的时候才过来擦屁股,很明显,他做得很好 !*/
-#ifdef  PRINT_SCHED
-    if(oo != self()){
-        printk("\eb%s \er-> \eb%s\ew\n",oo->name,self()->name);
-    }
-#endif
+    if(rdy_head[PRI_TASK] != NULL) 
+        leading = rdy_head[PRI_TASK];    
+    else if(rdy_head[PRI_USER] != NULL) 
+        leading = rdy_head[PRI_USER];
+    else 
+        leading = rdy_head[PRI_GOD];       /*! 上帝只有在我们都不干了的时候才过来擦屁股,很明显,他做得很好 !*/
     tss->esp0 = (unsigned long)(STACK(leading)->stackp);
     cr3 = leading->core;
+#ifdef  PRINT_SCHED
+    if(oo != self()){
+        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,cr3);
+    }
+#endif
+    if(cr3 == 0x7ff0d4){
+        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,cr3);
+        printk("EIP %p -> EIP %p\n",TASK(oo)->registers->eip,TASK(self())->registers->eip);
+        while(1);
+    }
     return leading->registers;
 }
 
 Registers *sched(Registers *reg){
-    if(rdy_head[PRI_USER] && rdy_head[PRI_USER]->ucount){
+    if(rdy_head[PRI_USER] && !(rdy_head[PRI_USER]->ucount)){
         rdy_tail[PRI_USER]->next = rdy_head[PRI_USER];
         rdy_tail[PRI_USER] = rdy_head[PRI_USER];
         rdy_head[PRI_USER] = rdy_head[PRI_USER]->next;

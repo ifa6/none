@@ -1,18 +1,19 @@
 #include    "../kernel/kernel.h"
 #include "vm.h"
 
-#define MM_LOG
+//#define MM_LOG
 
 /*! BUG !*/
 #define CMEM   0xC00000   //CONST_MEM
 
-#define mm_error(fmt,...)   printk("\er[MM   ] : \ew"fmt"\n",##__VA_ARGS__)
+#define mm_error(fmt,...)   printk("\er[MM   ] : \ew"fmt" %s:%d\n",##__VA_ARGS__,__FILE__,__LINE__)
 
 #ifdef  MM_LOG
 #define mm_log(fmt,...) printk("[  MM] : %-4d "fmt,__LINE__,##__VA_ARGS__)
 #else
 #define mm_log(fmt,...)
 #endif
+//#define free_page(x) ({ if((x & ~(0x3ff)) == 0x82d000) { printk("%s %d\n",__FILE__,__LINE__); } free_page(x); })
 
 static void trace(Object *);
 
@@ -130,6 +131,7 @@ static void delete(Object *this){
     Task *t = TASK(this->admit);
     PageItem *nsp = (PageItem *)t->core;
     _delete(nsp);
+    //trace(this->admit);
     try(ERROR ==,free_page((Pointer)(nsp)),{
         panic("free page fail");
     });
@@ -158,9 +160,9 @@ static int put_page(PageItem *dirs,void *va,void *page){
 static void np_page(Object *this){
     void *ptr = this->ptr;
     Task *t = TASK(this->admit);
-    void *page = dovm(this->admit->private_data,ptr);
     //trace(this->admit);
-    //mm_log("page : %p virtual : %p\n",page,ptr);
+    void *page = dovm(this->admit->private_data,ptr);
+    mm_log("page : %p virtual : %p\n",page,ptr);
     ret(this->admit,put_page((PageItem *)t->core,ptr,page));
 }
 
@@ -168,7 +170,7 @@ static PageItem *_un_table(PageItem *dir,void *va){
     PageItem *table = (void*)(((Pointer)dir[DIR_INDEX((Pointer)va)].table) & (~0xfff));
     PageItem *new_table = NULL;
     if(!(dir[DIR_INDEX((Pointer)va)].present)){
-        mm_error("Virtual address %08x",va);
+        mm_error("Virtual address %08x not present.",va);
         return NULL;
     };
 
@@ -247,13 +249,13 @@ static void trace(Object *obj){
 
 static void mm_execvp(Object *thiz){
     Task * t = TASK(thiz->admit);
+    t->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     Registers *reg = __va((void*)(t->core),t->registers);
-    unused(__va);
     delvm(thiz->admit->private_data);
     thiz->admit->private_data = NULL;
     try(-1==,mkvm(thiz,reg));
-    _delete((void*)t->core);
     //trace(thiz->admit);
+    _delete((void*)t->core);
     ret(thiz->admit,OK);
 }
 

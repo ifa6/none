@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 #else
     promp = "% ";
 #endif
-
+    (void)f;
 	if(argc > 1) {	/* 有参数或选项 */
 		promp = 0;	/* 设置为非交互模式 */
 		if (*argv[1]=='-') { /* 有选项 */

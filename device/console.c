@@ -106,7 +106,6 @@ static inline void scrdown(int cons){
 }
 
 static inline void lf(int cons){
-
     if(pos + video_size_row > bottom) scrtop(cons);
     pos += video_size_row;
     set_cur(cons);
@@ -117,16 +116,8 @@ static inline void cr(int cons){
     set_cur(cons);
 }
 
-#if 0
-static inline void ri(int cons){
-    if(pos - video_size_row < top) scrdown(cons);
-    pos -= video_size_row;
-    set_cur(cons);
-}
-#endif
-
 static inline void del(int cons){
-    if((pos - mem_start)% video_size_row){
+    if((pos - mem_start) % video_size_row){
         pos -= 2;
         *(unsigned short *)pos = erase_char;
     }
