@@ -59,6 +59,7 @@ sexp_list
 
 int main(void) {
     built();
+    printf("? ");
     yyparse();
 }
 

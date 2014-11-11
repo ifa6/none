@@ -28,7 +28,7 @@ volatile unsigned long cr3 = 0;
 static Registers *pick_task(Registers *reg){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
 
-#ifndef  PRINT_SCHED
+#ifdef  PRINT_SCHED
     Object *oo = self();
 #endif
 
@@ -46,11 +46,6 @@ static Registers *pick_task(Registers *reg){
         printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,cr3);
     }
 #endif
-    if(cr3 == 0x7ff0d4){
-        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,cr3);
-        printk("EIP %p -> EIP %p\n",TASK(oo)->registers->eip,TASK(self())->registers->eip);
-        while(1);
-    }
     return leading->registers;
 }
 

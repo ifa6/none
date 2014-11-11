@@ -32,6 +32,10 @@ static inline int parse(char *buffer,char **argv,int len){
     return argc;
 }
 #include <sys/inter.h>
+#ifdef  wait
+#undef  wait
+#define wait(x) run(MM_PID,15)
+#endif
 int system(char *cmd) {
     object_t o;
     char *argv[10];
@@ -39,9 +43,10 @@ int system(char *cmd) {
     argc = parse(cmd,argv,10);
     o = fork();
     if(0 == o){
-        printf("> %s %d\n",argv[0],argc);
         exec(argv[0],argc,argv);
-    } else if(0 > o) {
+    } else if(0 < o) {
+        wait(o);
+    } else {
         printf("Error\n");
         return -1;
     }

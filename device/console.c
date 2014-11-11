@@ -93,6 +93,8 @@ static inline void scrtop(int cons){
     } else {
         __asm__ __volatile__("rep stosw\n\t\t"
                 ::"D"(bottom),"c"(video_num_columns),"a"(erase_char));
+        top += video_size_row;
+        bottom += video_size_row;
     }
     set_top(cons);
 }

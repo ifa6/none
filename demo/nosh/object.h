@@ -1,6 +1,6 @@
 #ifndef __NOSH_OBJECT_H__
 #define __NOSH_OBJECT_H__
-#include <stddef.h>
+#include <stdbool.h>
 
 extern int yylineno;
 void yyerror(const char *s,...);
@@ -14,6 +14,7 @@ typedef enum {
     OBJECT_NIL,
     OBJECT_CONS,
     OBJECT_LIST,
+    OBJECT_BOOL,
     OBJECT_QUOTE,
     OBJECT_SYMBOL,
     OBJECT_NUMBER,
@@ -24,6 +25,7 @@ typedef enum {
 
 typedef union {
     int    value;
+    bool   _bool;
     Object *object;
     char   *string;
     Symbol *symbol;

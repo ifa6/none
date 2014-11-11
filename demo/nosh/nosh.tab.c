@@ -1643,6 +1643,7 @@ yyreturn:
 
 int main(void) {
     built();
+    printf("? ");
     yyparse();
 }
 

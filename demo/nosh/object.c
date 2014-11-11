@@ -2,12 +2,18 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "util.h"
 #include "symbol.h"
+#include "util.h"
 
-#define error(o,fmt,...) ({printf("Error: ");display(o);printf(fmt,##__VA_ARGS__);})
-
+static void _display(Object *object) ;
 static Object *_eval(Object *object,bool evl);
+#define error(o,fmt,...) ({fprintf(stdout,"Error: <");_display(o);fprintf(stdout,">"fmt,##__VA_ARGS__);})
+
+static Object * const _false = &(Object){OBJECT_BOOL,{._bool = false}};
+static Object * const _true =  &(Object){OBJECT_BOOL,{._bool = true}};
+static Object * const _nil = &(Object){OBJECT_NIL,{}};
+
+
 
 Object *newObject(int type,ObjectImpl impl) {
     Object *a = NULL;
@@ -36,7 +42,7 @@ static Object *_car(Object *object) {
             error(object," is not a list.\n");
         }
     }
-    return NULL;
+    return _nil;
 }
 
 static Object *_cdr(Object *object) {
@@ -49,7 +55,7 @@ static Object *_cdr(Object *object) {
             error(object," is not a list.\n");
         }
     }
-    return NULL;
+    return _nil;
 }
 
 static Object *_symbol(Object *object) {
@@ -58,7 +64,7 @@ static Object *_symbol(Object *object) {
     else {
         error(object," is not symbol.\n");
     }
-    return object;
+    return _nil;
 }
 
 static Object *_fncall(Object *fn,Object *args) {
@@ -75,24 +81,12 @@ static Object *_fncall(Object *fn,Object *args) {
     } else {
         error(fn," is not a function name or lambda-expression.\n");
     }
-    return NULL;
+    return _nil;
 }
 
 static Object *_list(Object *object) {
-    //Object *lst = NULL;
     if(object && object->type == OBJECT_LIST) {
         return _fncall(_car(object),object->impl.object->impl.cdr);
-#if 0
-        lst = object->impl.object;
-        if(lst) {
-            if(lst->type == OBJECT_CONS) {
-                return _fncall(_car(lst),lst->impl.cdr);
-            } else if(lst->type == OBJECT_SYMBOL) {
-                return _fncall(lst,NULL);
-            } 
-            return lst;
-        }
-#endif
     } else {
         error(object," is not a list.why do this?\n");
     }
@@ -105,18 +99,23 @@ static Object *_set(Object *object) {
         if(object->type == OBJECT_CONS){
             o = _car(object);
             if(o && o->type == OBJECT_SYMBOL){
-                o->impl.symbol->object = _cdr(object);
-                return o->impl.symbol->object;
+                Object *a = _cdr(object);
+                if(a && a->type != OBJECT_CONS) {
+                    o->impl.symbol->object = a;
+                    return a;
+                } else {
+                    error(object," too many arguments to function call.\n");
+                }
             } else {
-                error(object," is not a symbol.\n");
+                error(object," is not a symbol to function.\n");
             }
         } else {
-            error(object," arg");
+            error(object,"too few arguments to function call.");
         }
     } else {
-        error(object,"too few arguments.");
+        error(object,"too few arguments to function call.");
     } 
-    return object;
+    return _nil;
 }
 
 static char *mergeString(char *str1,char *str2) {
@@ -157,7 +156,7 @@ static Object *_quit(Object *object) {
 
 static Object *_exec(Object *object) {
     char *str = NULL;
-    Object *o = NULL;
+    Object *o = _nil;
     if(object) {
         str = merge(object);
         if(str) {
@@ -166,6 +165,37 @@ static Object *_exec(Object *object) {
         }
     }
     return o;
+}
+/* (if bool-exp `exp1 `exp2) 如果bool-exp为真,执行exp1否则执行exp2 */
+static Object *_if(Object *object) {
+    if(object){
+        if(object->type == OBJECT_CONS) {
+            Object *o = _car(object);
+            if(o && o->type == OBJECT_BOOL) {
+                if(o->impl._bool == false){
+                    return _eval(_cdr(_cdr(object)),true);
+                } else {
+                    return _eval(_car(_cdr(object)),true);
+                }
+            } else {
+                error(_car(object)," is not a boolean object.\n");
+            }
+        }
+    }
+    return _nil;
+}
+
+static Object *_eq(Object *object) {
+    if(object) {
+        if(object->type == OBJECT_CONS) {
+            Object *a = _car(object);
+            Object *b = _cdr(object);
+            if(a == b) {
+                return _true;
+            }
+        }
+    }
+    return _false;
 }
 
 static Object *builtImpl(Object *(*fn)(Object *)) {
@@ -185,6 +215,8 @@ void built(void) {
     lookup("set")->object = builtImpl(_set);
     lookup("exec")->object = builtImpl(_exec);
     lookup("quit")->object = builtImpl(_quit);
+    lookup("if")->object = builtImpl(_if);
+    lookup("eq")->object = builtImpl(_eq);
 }
 
 static Object *_eval(Object *object,bool evl) {
@@ -192,7 +224,7 @@ static Object *_eval(Object *object,bool evl) {
         switch(object->type) {
         case OBJECT_SYMBOL:
             if(evl)
-                object = _eval(_symbol(object),evl);
+                object = _symbol(object);
             break;
         case OBJECT_LIST:
             if(evl)
@@ -268,4 +300,5 @@ static void _display(Object *object) {
 
 void display(Object *object) {
     _display(object);
+    printf("\n? ");
 }
