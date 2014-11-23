@@ -22,11 +22,16 @@
 
 # vim swap file
 *.swp
+
 # ctags
 tags 
-G*
+GPATH
+GRTAGS
+GTAGS
+
 # debug file
 *.src
+
 # 临时文件夹
 mnt/
 objs/
