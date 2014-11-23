@@ -9,6 +9,6 @@ object_t open(String path,int mode){
     return o;
 }
 
-void close(object_t obj){
-    run(obj,CLOSE);
+int close(object_t obj){
+    return run(obj,CLOSE);
 }

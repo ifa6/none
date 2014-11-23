@@ -28,7 +28,7 @@ G*
 # debug file
 *.src
 # 临时文件夹
-mnt/*
+mnt/
 objs/
 lib/
 bin/

@@ -12,7 +12,7 @@ extern pid_t fork(void);
 extern int   open(String,int);
 extern int   read(int,void*,int);
 extern int   write(int,void*,int);
-extern void  close(object_t);
+extern int   close(object_t);
 extern void  *malloc(size_t );
 extern int   atoi(const char *);
 extern void  srand(unsigned seed);
