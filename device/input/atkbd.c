@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "keymap.h"
+#include <stdbool.h>
 
 #define KB_IN_BYTES 0x32
 #define MAXBUFF 0x100

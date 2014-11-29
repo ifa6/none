@@ -1,5 +1,4 @@
 %option nodefault yylineno
-
 %top {
 #include <string.h>
 #include "object.h"
@@ -8,8 +7,10 @@ static object_t STDIN = 0,STDOUT = 1;
 FILE *stdin = &STDIN,*stdout = &STDOUT;
 int  errno;
 }
+
+
 %{
-#include "symbol.h"
+#include "object.h"
 #include "nosh.tab.h"
 %}
 
@@ -31,7 +32,7 @@ a       [()`,=@&:]
 [1-9]{d}*   { yylval.number = atoi(yytext); return NUMBER; }
 
 \"(\\.|[^\\"\n])*\"   { yytext[yyleng - 1] = 0;yylval.string = strdup(yytext + 1); return STRING; }
-[^ \t\v\n\f()`,=@&:]+ { yylval.symbol = lookup(yytext); return SYMBOL; }
+[^ \t\v\n\f()`,=@&:]+ { yylval.string = strdup(yytext); return SYMBOL; }
 
 %%
 

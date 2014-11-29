@@ -1,37 +1,43 @@
 #ifndef __NOSH_OBJECT_H__
 #define __NOSH_OBJECT_H__
-#include <stdbool.h>
+#include "types.h"
+#include "util.h"
 
 extern int yylineno;
 void yyerror(const char *s,...);
 
-typedef struct _Object Object;
-typedef struct _Symbol Symbol;
-typedef struct _SymbolList SymbolList;
+typedef struct _Object* Object;
 
 typedef enum {
-    OBJECT_INVAL,
-    OBJECT_NIL,
-    OBJECT_CONS,
-    OBJECT_LIST,
-    OBJECT_BOOL,
-    OBJECT_QUOTE,
-    OBJECT_SYMBOL,
-    OBJECT_NUMBER,
-    OBJECT_STRING,
-    OBJECT_LAMBDA,
-    OBJECT_FUNCTION,
+    Object_Nil,
+    Object_Cons,
+    Object_List,
+    Object_Eval,
+    Object_Bool,
+    Object_Quote,
+    Object_Number,
+    Object_String,
+    Object_Symbol,
+    Object_Lambda,
+    Object_Function,
 } ObjectType;
 
+#define tn(t)    [Object_##t] = #t
+#define typename(o) ((char *[]){\
+        tn(Nil),tn(Cons),tn(List),tn(Quote),tn(Number),tn(String),tn(Symbol),\
+        tn(Function),tn(Lambda),tn(Bool),\
+        })[o->type]
+
 typedef union {
-    int    value;
+    long   number;
     bool   _bool;
-    Object *object;
-    char   *string;
-    Symbol *symbol;
-    struct { Object *car ,*cdr; };
-    struct { Object *args,*sexp;};
-    Object *(*fn)(Object *);
+    String key;
+    String string;
+    Object eval;
+    Object quote;
+    struct { Object car,cdr; };
+    struct { Object fn,args; };
+    Object (*function)(Object);
 }ObjectImpl;
 
 struct _Object {
@@ -39,33 +45,24 @@ struct _Object {
     ObjectImpl impl;
 };
 
-struct _Symbol {
-    char        *name;
-    Object      *object;
-    SymbolList  *symbols;
-};
+#define _typeis(o,t)    (o->type == Object_##t)
+#define typeis(o,t)     _typeis(o,t)
 
-struct _SymbolList {
-    Symbol *symbol;
-    SymbolList *next;
-};
+extern Object Nil;
+extern Object True;
+extern Object False;
 
-Object *newObject(int type,ObjectImpl impl);
-void delObject(Object *object);
-Object *eval(Object *object);
-void display(Object *);
-void built(void);
+extern Object newObject(ObjectType type,ObjectImpl impl);
+extern Object newList(Object lst);
+extern Object newCons(Object car,Object cdr);
+extern Object newEval(Object evl);
+extern Object newQuote(Object quote);
+extern Object newNumber(long number);
+extern Object newString(String string); 
+extern Object newSymbol(String key); 
+extern Object newLambda(Object fn,Object args);
+extern Object newFunction(Object (*fn)(Object));
+extern Object copyObject(Object object);
+void initialObject(void);
 
-#define objImpl(...)    (ObjectImpl){ __VA_ARGS__ }
-#define newCons(a,d)    newObject(OBJECT_CONS  ,objImpl(.car = a,.cdr = d))
-//#define newList(obj)    newObject(OBJECT_LIST  ,objImpl(.object = obj))
-static inline Object *newList(Object *object) {
-    if(object && object->type != OBJECT_CONS)
-        object = newCons(object,NULL);
-    return newObject(OBJECT_LIST,objImpl(.object = object));
-}
-#define newQuote(obj)   newObject(OBJECT_QUOTE ,objImpl(.object = obj))
-#define newNumber(num)  newObject(OBJECT_NUMBER,objImpl(.value = num))
-#define newString(str)  newObject(OBJECT_STRING,objImpl(.string = str))
-#define newSymbol(sym)  newObject(OBJECT_SYMBOL,objImpl(.symbol = sym))
 #endif

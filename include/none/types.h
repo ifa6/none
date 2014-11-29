@@ -18,11 +18,6 @@ typedef long        object_t;
 
 typedef int (*IrqHandler)(object_t,int);
 
-typedef enum{
-    false = 0,
-    true = 1
-}bool;
-
 typedef union{ struct{
     union{
         long status;

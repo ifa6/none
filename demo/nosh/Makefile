@@ -9,6 +9,7 @@ SUBDIR		  := true
 ENTRY 		  := 0xc00000
 OBJS 		  := nosh.tab.o nosh.yy.o
 CLEANS		  := $(basename $(wildcard *.c)) nosh.tab.c nosh.tab.h nosh.yy.c
+CFLAGS 		  := -DDEBUG
 
 ifeq ($(ROOT_DIR),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)

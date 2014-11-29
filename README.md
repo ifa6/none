@@ -2,9 +2,9 @@
 %罗忠尧
 % Wed Apr 16 22:00:50 CST 2014
 
-[源码]: https://github.com/TaiChiForLuoZhongYao/none
-[none]: https://github.com/TaiChiForLuoZhongYao/none
-[GITHUB]: https://github.com/TaiChiForLuoZhongYao/none
+[源码]: https://github.com/LuoZhongYao/none
+[none]: https://github.com/LuoZhongYao/none
+[GITHUB]: https://github.com/LuoZhongYao/none
 [lzy]: mail:LuoZhongYao@gmail.com
 
 <h2 id="overview">概述</h2>
@@ -23,7 +23,7 @@
 *  虚拟内存管理
     * ELF格式文件加载
     * 需时加载,内存首次使用时才分配内存
-    * 写时复制
+    * 写时复制,需时加载
 *  文件系统
     * 当前的文件系统是Minix 2,因为这个文件系统简单,同时又强大.文件系统的活动部分,现在很简单,只是刚好能运行.这部分也是需要重点修改的
 *  C库
@@ -35,9 +35,8 @@
     * 使用v6sh做为默认shell,替代之前不完成的shell,因为none 还没有完全实现posix接口,所以这个v6sh是精简版,管道,重定向未实现
 *  几个演示程序,在tests/目录下
     * ascii 打印ascii码,包括扩展码
-    * test 使用VESA3.0保护模式接口绘制了一幅画
     * rootfs 准备实现的none标准文件系统,使用git存储方式
-* TCP/IP
+    * tertis 移植的俄罗斯方块游戏,还不能运行
 
 <h3 id="befora">之前none家族是什么样子</h3>
 
@@ -85,7 +84,7 @@ sudo bochs
 下载[源码][]简单.使用执行下面命令即可(git的安装,请自行Google):
 
 ```bash
-$ git clone https://github.com/TaiChiForLuoZhongYao/none.git
+$ git clone https://github.com/LuoZhongYao/none.git
 ```
 
 <h3 id="env">编译环境</h3>
@@ -139,3 +138,4 @@ GCC4.9的发布无疑是今年最大的惊喜,我希望我的操作系统成为�
 * 方法的调用由内核实现,不需要用户空间干预.
 > 用户空间不需要调用dorun来阻塞自己,方法使用类POSIX signal.但不是线程安全的,需用户空间维护同步
 * 方法的调用占用调用者CPU时间,而不是拥有者时间
+* 对象不应该传递Object对象,该对象仅仅内核可见

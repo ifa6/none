@@ -1,53 +1,53 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "symbol.h"
 #include "util.h"
+#include "config.h"
 
-#define NHASH   9997
+#define error(fmt,...) ({ printf(fmt,##__VA_ARGS__); exit(1);})
+static Symbol table[NHASH] = {NULL};
 
-static Symbol symbolTable[NHASH];
-
-static unsigned hashSymbol(const char *symbol) {
+static unsigned int hash(String s) {
     unsigned hash = 0;
     unsigned c;
-    while(0 != (c = *symbol++)) hash = hash * 9 ^ c;
+    while(0 != (c = *s++)) 
+        hash = hash * 9 ^ c;
     return hash;
 }
 
-Symbol *lookup(const char *symbol) {
-    Symbol *sp = &symbolTable[hashSymbol(symbol) % NHASH];
-    int scount = NHASH;
-    while(--scount >= 0) {
-        if(sp->name && !strcmp(sp->name,symbol))
-            return sp;
-        if(!sp->name) {
-            sp->name    = strdup(symbol);
-            sp->object  = NULL;
-            sp->symbols = NULL;
-            return sp;
+static Symbol symbol(String key,Object binding,Symbol next) {
+    Symbol symbol = cmalloc(sizeof(Symbol));
+    symbol->key = key;
+    symbol->binding = binding;
+    symbol->next = next;
+    return symbol;
+}
+
+Symbol insert(String key,Object binding) {
+    int index = hash(key) % NHASH;
+    table[index] = symbol(key,binding,table[index]);
+    return table[index];
+}
+
+void pop(String key) {
+    assert(symbol);
+    int index = hash(key) % NHASH;
+    Symbol *head = &table[index];
+    for(;*head;head = &((*head)->next)) {
+        if(eq((*head)->key,key)) {
+            *head = (*head)->next;
+            break;
         }
-        if(++sp >= symbolTable + NHASH) 
-            sp = symbolTable;
-    }
-    yyerror("symbol table overflow\n");
-    exit(1);
-}
-
-SymbolList *newSymbolList(Symbol *symbol,SymbolList *next) {
-    SymbolList *sl = malloc(sizeof(SymbolList));
-    if(sl) {
-        sl->symbol = symbol;
-        sl->next = next;
-    }
-    return sl;
-}
-
-void delSymbolList(SymbolList *symbols) {
-    SymbolList *symbol;
-    while(symbols) {
-        symbol = symbols->next;
-        free(symbols);
-        symbols = symbol;
     }
 }
 
+Symbol lookup(String key) {
+    int index = hash(key) % NHASH;
+    Symbol symbol;
+    for(symbol = table[index];symbol;symbol = symbol->next) {
+        if(eq(symbol->key,key))
+            return symbol;
+    }
+    return NULL;
+}

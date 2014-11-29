@@ -1,47 +1,45 @@
 %{
-#include <string.h>
 #include <stdio.h>
 #include "object.h"
+#include "eval.h"
 #include "util.h"
 #define YYSIZE_T size_t
 #define YYCOPY memcpy
-
 
 extern int yylex(void);
 
 %}
 
 %union {
-    Object  *object;
     long    number;
-    char    *string;
-    Symbol *symbol;
-    SymbolList *symbols;
+    String  string;
+    Object  object;
 }
 
 %token <number>NUMBER
-%token <symbol>SYMBOL
+%token <string>SYMBOL
 %token <string>STRING
-%type <object>atom sexp list sexp_list
+%type  <object>atom sexp list sexp_list
 
 %start start
 
 %%
 
 start
-    : sexp              { display(eval($1)); }
-    | start sexp        { display(eval($2)); }
+    : sexp              {_echo(_eval($1));printf("\n? ");}
+    | start sexp        {_echo(_eval($2));printf("\n? ");}
     ;
 
 sexp
     : atom
     | list
+    | ',' sexp          { $$ = newEval($2);  }
+    | '`' sexp          { $$ = newQuote($2); }
     ;
 
 list
-    : '(' ')'           { $$ = newList(NULL);}
+    : '(' ')'           { $$ = newList(Nil);}
     | '(' sexp_list ')' { $$ = newList($2);  }
-    | '`' sexp          { $$ = newQuote($2); }
     ;
 
 atom
@@ -56,13 +54,7 @@ sexp_list
     ;
     
 %%
-
-int main(void) {
-    built();
-    printf("? ");
-    yyparse();
-}
-
 void yyerror(const char *str,...) {
     printf("lisp : %s\n",str);
 }
+

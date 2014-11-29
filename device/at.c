@@ -1,5 +1,6 @@
 #include "../kernel/kernel.h"
 #include "at.h"
+#include <stdbool.h>
 
 /*!
  *

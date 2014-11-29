@@ -57,17 +57,15 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 14 "nosh.y"
+#line 13 "nosh.y"
 
-    Object  *object;
     long    number;
-    char    *string;
-    Symbol *symbol;
-    SymbolList *symbols;
+    String  string;
+    Object  object;
 
 
 /* Line 2058 of yacc.c  */
-#line 71 "nosh.tab.h"
+#line 69 "nosh.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

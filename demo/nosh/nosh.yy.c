@@ -1,5 +1,5 @@
 #line 2 "nosh.yy.c"
-#line 4 "nosh.l"
+#line 3 "nosh.l"
 #include <string.h>
 #include "object.h"
 #include "util.h"
@@ -498,8 +498,8 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "nosh.l"
 
-#line 12 "nosh.l"
-#include "symbol.h"
+#line 13 "nosh.l"
+#include "object.h"
 #include "nosh.tab.h"
 #line 505 "nosh.yy.c"
 
@@ -675,7 +675,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 22 "nosh.l"
+#line 23 "nosh.l"
 
 
 #line 682 "nosh.yy.c"
@@ -773,48 +773,48 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 24 "nosh.l"
+#line 25 "nosh.l"
 { /* comment */ ; }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 25 "nosh.l"
+#line 26 "nosh.l"
 { ; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 27 "nosh.l"
+#line 28 "nosh.l"
 { return yytext[0]; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 29 "nosh.l"
+#line 30 "nosh.l"
 { yylval.number = atoi(yytext); return NUMBER; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 30 "nosh.l"
+#line 31 "nosh.l"
 { yylval.number = atoi(yytext); return NUMBER; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 31 "nosh.l"
+#line 32 "nosh.l"
 { yylval.number = atoi(yytext); return NUMBER; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 33 "nosh.l"
+#line 34 "nosh.l"
 { yytext[yyleng - 1] = 0;yylval.string = strdup(yytext + 1); return STRING; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 34 "nosh.l"
-{ yylval.symbol = lookup(yytext); return SYMBOL; }
+#line 35 "nosh.l"
+{ yylval.string = strdup(yytext); return SYMBOL; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 36 "nosh.l"
+#line 37 "nosh.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
 #line 821 "nosh.yy.c"
@@ -1823,7 +1823,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 36 "nosh.l"
+#line 37 "nosh.l"
 
 
 

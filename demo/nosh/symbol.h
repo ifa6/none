@@ -1,9 +1,17 @@
 #ifndef __NOSH_SYMBOL_H__
 #define __NOSH_SYMBOL_H__
+#include "types.h"
 
-#include "object.h"
-Symbol *lookup(const char *symbol) ;
-SymbolList *newSymbolList(Symbol *sym,SymbolList *next);
-void delSymbolList(SymbolList *symbols);
-Symbol *lookup(const char *symbol);
+typedef struct _Object* Object;
+typedef struct _Symbol* Symbol;
+
+struct _Symbol {
+    String key;
+    Object binding;
+    Symbol next;
+};
+
+Symbol insert(String key,Object binding);
+Symbol lookup(String s);
+void pop(String key);
 #endif
