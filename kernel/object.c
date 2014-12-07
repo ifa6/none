@@ -18,6 +18,7 @@ Object *cloneObject(Object *obj){
             memcpy(o,obj,PAGE_SIZE);
             object_table[od] = o;
             o->id = od;
+            o->father = obj->id;
             return o;
         }
     }
@@ -26,7 +27,7 @@ Object *cloneObject(Object *obj){
 
 /*! 由文件名返回一个对象 !*/
 object_t byName(String name){
-    return run(FS_PID,OPEN,.name = name);
+    return run(FS_PID,OPEN,name,0,0);
 }
 
 /*! 由ID返回一个对象 !*/

@@ -18,27 +18,6 @@ typedef long        object_t;
 
 typedef int (*IrqHandler)(object_t,int);
 
-typedef union{ struct{
-    union{
-        long status;
-        unsigned long mode;
-        unsigned long r1;
-        object_t lng;
-        off_t offset;
-    };
-    union{
-        int     whence;
-        unsigned long r2;
-        count_t count;
-    };
-    union{
-        unsigned long r3;
-        void *buffer;
-        void *ptr;
-        const char *const name;
-    };
-}; }sysarg_t;
-
 typedef struct{
     long back_link;
     long esp0;

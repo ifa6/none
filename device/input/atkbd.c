@@ -50,15 +50,15 @@ static char buffer[MAXBUFF];
 static count_t index = 0;
 
 
-static Object *admit = NULL;
-static count_t count = 0;
-static void *_buf = NULL;
+static object_t _caller = 0;
+static count_t  _count = 0;
+static void     *_buf = NULL;
 
-static void _ispress(Object *thiz){
-    ret(thiz->admit,index);
+static void _ispress(object_t caller){
+    ret(caller,index);
 }
-static void _input(Object *this){
-    (void)this;
+static void _input(object_t caller){
+    (void)caller;
     unsigned int ch = pop();
     static const unsigned int *str = keymap[0];
     switch(ch){
@@ -94,18 +94,18 @@ static void _input(Object *this){
             buffer[index++] = str[ch];
             printk("%c",buffer[index - 1]);
         }
-        if(admit && index) {
-            copy_buffer(admit,_buf,count);
+        if(_caller && index) {
+            copy_buffer(_caller,_buf,_count);
         }
         break;
     }
 }
 
-void copy_buffer(Object *o,void *buf,count_t len){
+void copy_buffer(object_t caller,void *buf,count_t len){
     int _v = 0;;
     if(0 == index){
-        admit = o;
-        count = len;
+        _caller = caller;
+        _count = len;
         _buf = buf;
     } else {
         if(len >= index){
@@ -118,16 +118,16 @@ void copy_buffer(Object *o,void *buf,count_t len){
             index -= len;
             memcpy(buffer,buffer + len, index);
         }
-        ret(o,_v);
-        admit = NULL;
-        count = 0;
+        ret(caller,_v);
+        _caller = 0;
+        _count = 0;
         _buf = NULL;
     }
 }
 
-static void _reset(Object *thiz){
+static void _reset(object_t caller){
     outb_p(0xfe,0x64);
-    ret(thiz->admit,OK);
+    ret(caller,OK);
 }
 
 void keyboard_init(void){

@@ -34,7 +34,7 @@ static inline int parse(char *buffer,char **argv,int len){
 #include <sys/inter.h>
 #ifdef  wait
 #undef  wait
-#define wait(x) run(MM_PID,15)
+#define wait(x) run(MM_PID,15,0,0,0)
 #endif
 int system(char *cmd) {
     object_t o;

@@ -25,7 +25,7 @@ int exec(const char *path,int argc,char **argv){
         strcpy(ptr,argv[i]);
         ptr += strlen(ptr) + 1;
     }
-    _v = run(MM_PID,EXEC,.lng = o,.ptr = buff,.count = argc);
+    _v = run(MM_PID,EXEC,o,buff,argc);
     _pop(buff);
     catch(e_fail){
         return _v;

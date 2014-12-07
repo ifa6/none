@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define eprint(fmt,...) printk(fmt" %s %d\n",##__VA_ARGS__,__FILE__,__LINE__)
 #include <z.h>

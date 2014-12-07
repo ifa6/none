@@ -21,7 +21,7 @@ typedef struct {
     struct list_head list;
 }VMHead;
 
-int mkvm(Object *thiz,Registers *reg);
+void *mkvm(object_t,void *ptr,count_t ,Registers *reg);
 void *dovm(VMHead*,void *vaddr);
 void copyvm(VMHead *);
 void delvm(VMHead *vm);

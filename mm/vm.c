@@ -8,7 +8,7 @@
 #define VMHEAD(ptr)     ((VMHead*)(ptr->private_data))
 
 
-int mkvm(Object *thiz,Registers *reg){
+void *mkvm(object_t o,void *ptr,count_t count,Registers *reg){
     Elf32_Ehdr ehdr;
     Elf32_Phdr *phdr = NULL;
     size_t psize = 0;
@@ -17,31 +17,31 @@ int mkvm(Object *thiz,Registers *reg){
     struct {
         char *argv[32];
         char env[0];
-    } *buff = thiz->ptr;
+    } *buff = ptr;
     int rlen = 0;
 
-    strcpy(thiz->admit->name,buff->argv[0]);
-    strcat(thiz->admit->name,"<mm>");
+    //strcpy(thiz->admit->name,buff->argv[0]);
+    //strcat(thiz->admit->name,"<mm>");
 
-    rlen = try(-1 == ,read(thiz->object,&ehdr,sizeof(ehdr)),throw e_fail);
+    rlen = try(-1 == ,read(o,&ehdr,sizeof(ehdr)),throw e_fail);
     memcpy(reg,&(Registers){
         .gs  = KERNEL_DATA, .fs = KERNEL_DATA,
         .ds  = KERNEL_DATA, .es = KERNEL_DATA,
         .edi = 0,           .esi = 0, 
         .ebp = 0,           .ebx = 0, 
         .edx = 0, 
-        .ecx = thiz->count, .eax = (unsigned long)buff->argv,
+        .ecx = count,       .eax = (unsigned long)buff->argv,
         .eip = ehdr.e_entry,.cs  = KERNEL_CODE, 
         .eflags = 0x200,
     },sizeof(Registers));
 
     psize = ehdr.e_phentsize * ehdr.e_phnum;
     phdr = try(NULL == ,kalloc(psize),throw e_fail);
-    lseek(thiz->object,ehdr.e_phoff,SEEK_SET);
-    rlen = try(-1 == ,read(thiz->object,phdr,psize),throw e_fail); 
+    lseek(o,ehdr.e_phoff,SEEK_SET);
+    rlen = try(-1 == ,read(o,phdr,psize),throw e_fail); 
 
     vmhead = try(NULL == ,kalloc(sizeof(VMHead)),throw e_fail);
-    vmhead->object = thiz->object;
+    vmhead->object = o;
     vmhead->cnt = 1;
     INIT_LIST_HEAD(&(vmhead->list));
     foreach(i,0,ehdr.e_phnum){
@@ -55,14 +55,13 @@ int mkvm(Object *thiz,Registers *reg){
             list_add(&(new->list),&(vmhead->list));
         }
     }
-    thiz->admit->private_data = vmhead;
-    return 0;
+    return vmhead;
     catch(e_fail){
         delvm(vmhead);
         TEST_AND_FREE(kfree,vmhead,NULL);
     }
     unused(rlen);
-    return -1;
+    return NULL;
 }
 
 void delvm(VMHead *vmhead){

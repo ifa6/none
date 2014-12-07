@@ -118,7 +118,7 @@ static inline void setcolor(int color) {
 #define nosound()
 #define delay(x) ({ for(int i = 0;i < x*0x100;i++)\
     for(int j = 0;j < 0x200;j++); })
-#define kbhit() run(CONS_PID,RUN)
+#define kbhit() run(CONS_PID,RUN,0,0,0)
     
 static void inline outtextxy(int x,int y,const char *string){
     g->text(g,x,y,string);

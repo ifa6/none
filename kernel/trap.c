@@ -78,7 +78,7 @@ static void print_task_info(String str,long nr){
 static inline void die(String str,long *reg,long nr){
     print_task_info(str,nr);
     print_cpu_info((void*)(reg - 1));
-    run(MM_PID,CLOSE);
+    run(MM_PID,CLOSE,0,0,0);
     /* panic(":-("); */
 }
 
@@ -143,9 +143,9 @@ extern void do_page_fault(long code,long *reg){
     (void)reg;
     void* cr2 = (void*)getcr2();
     if(!(code & 0x1)){
-        run(MM_PID,NO_PAGE,.ptr = cr2);
+        run(MM_PID,NO_PAGE,cr2,0,0);
     } else if(code & 0x2){
-        run(MM_PID,WP_PAGE,.ptr = cr2);
+        run(MM_PID,WP_PAGE,cr2,0,0);
     }
 }
 

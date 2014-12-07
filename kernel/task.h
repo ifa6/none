@@ -1,7 +1,7 @@
 #ifndef __KERNEL_TASK_H__
 #define __KERNEL_TASK_H__
-#include <none/object.h>
 #include <none/list.h>
+#include "object.h"
 /*!
  *!     特殊说明:
  *          我打算在对象中加入页面,存在标志,这样,我就无需再分开维护页面和对象.所有对象共享同一地址空间,
@@ -40,7 +40,6 @@ struct _task{
     Registers   *registers;     /*! 指向任务私有的堆栈结构  !*/
     Pointer     core;           /*! 任务的内存空间,cr3      !*/
     Task        *next,*prev;    /*! 任务链 !*/
-    Task        *father;        /*! !*/
 };
 
 struct _stack{
@@ -49,6 +48,6 @@ struct _stack{
     char stackp[0];                     /*! 内核栈顶 !*/
 };
 
-#define TASK(x)     ((Task *)(x))
+#define TASK(x)     container_of(x,Task,object)
 #define STACK(x)    ((struct _stack *)x)
 #endif

@@ -1,10 +1,10 @@
 #include "../kernel/kernel.h"
 
 typedef struct _ioInq{
-    Object *admit;
-    count_t count;
-    off_t   offset;
-    char    *buffer;
+    object_t caller;
+    count_t  count;
+    off_t    offset;
+    char     *buffer;
     struct _ioInq *next;
 }IOInq;
 
@@ -47,21 +47,21 @@ static void rs_pop(void){
 }
 
 
-static void rs_write(Object *this){
+static void rs_write(object_t caller,void *ptr,count_t count){
     IOInq *in = kalloc(sizeof(IOInq));
     if(in){
-        in->admit = this->admit;
-        in->buffer = this->buffer;
+        in->caller = caller;
+        in->buffer = ptr;
         in->offset = 0;
         in->next = NULL;
-        in->count = this->count;
+        in->count = count;
         rs_push(in);
     }
     outb(inb_p(0x3f8 + 1) | 0x02,0x3f8 + 1);
 }
 
-static void _io(Object *this){
-    (void)this;
+static void _io(object_t caller){
+    (void)caller;
     int status;
     if(inq){
         status = inb_p(0x3fa);
@@ -77,7 +77,7 @@ again:
                             outb_p(inq->buffer[inq->offset],0x3f8);
                             inq->offset++;
                         }else{
-                            ret(inq->admit,OK);
+                            ret(inq->caller,OK);
                             rs_pop();
                             goto again;
                         }
@@ -101,6 +101,6 @@ static void rs_init(void){
 
 int rs_main(void){
     rs_init();
-    dorun();
+    workloop();
     return 0;
 }

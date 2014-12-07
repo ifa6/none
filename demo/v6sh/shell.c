@@ -1132,7 +1132,7 @@ int equal(char *as1, char *as2)
  */
 #ifdef  wait
 #undef  wait
-#define wait(x) run(MM_PID,15)
+#define wait(x) run(MM_PID,15,0,0,0)
 #endif
 int pwait(pid_t i)
 {

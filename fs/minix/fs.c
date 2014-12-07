@@ -51,20 +51,19 @@ static int do_read(MinixInode *inode,void *buffer,off_t offset,count_t count){
     }
 }
 
-static void fs_read(Object *this){
-    File    *file = _FILE(this);
+static void fs_read(object_t o,void *buffer,count_t count){
     count_t read_count;
-    read_count = do_read(&(file->inode),this->buffer,file->offset,this->count);
+    File *file = self()->private_data;
+    fs_log("read %d bytes offset %d for %s\n",count,file->offset,self()->name);
+    read_count = do_read(&(file->inode),buffer,file->offset,count);
     file->offset += read_count;
-    ret(this->admit,read_count); 
+    ret(o,read_count); 
 }
 
 /*! !*/
-static void fs_write(Object *this){
-    File    *file = _FILE(this);
-    void *buffer = this->buffer;
-    count_t count = this->count;
+static void fs_write(object_t o,void *buffer,count_t count){
     count_t write_count;
+    File *file = self()->private_data;
     zone_t  zone = file->offset / BLOCK_SIZE;
 
     off_t   offset = file->offset;
@@ -72,7 +71,7 @@ static void fs_write(Object *this){
         count = file->inode.i_size - offset;
     }
 
-    fs_log("write %d bytes offset %d for %s\n",count,zone,this->name);
+    fs_log("write %d bytes offset %d for %s\n",count,zone,self()->name);
     /*! ~~~~~~~~~~~~~~~~~~~ 第一步,拷贝开头不足一个区部分 ~~~~~~~~~~~~~~~~~~~~~~~ !*/
     write_count = BLOCK_SIZE - (offset % BLOCK_SIZE);
     write_count = MIN(count ,write_count);
@@ -100,47 +99,49 @@ static void fs_write(Object *this){
     }
 
     catch(e_zone_rw){ 
-        this->offset += write_count;
-        ret(this->admit,write_count); 
+        offset += write_count;
+        ret(o,write_count); 
     }
 }
 
-static void fs_close(Object *thiz){
-    ret(thiz->admit,OK);
-    run(MM_PID,CLOSE);
+static void fs_close(object_t o){
+    ret(o,OK);
+    kfree(self()->private_data);
+    self()->private_data = NULL;
+    run(MM_PID,CLOSE,0,0,0);
 }
 
-static void fs_seek(Object *thiz){
-    File *file = (void*)self();
-    switch(thiz->whence){
-    case SEEK_SET: file->offset = thiz->offset;break;
-    case SEEK_CUR: file->offset += thiz->offset;break;
-    case SEEK_END: file->offset = thiz->offset + file->inode.i_size;break;
+static void fs_seek(object_t o,int whence,off_t offset){
+    File *file = self()->private_data;
+    switch(whence){
+    case SEEK_SET: file->offset = offset;break;
+    case SEEK_CUR: file->offset += offset;break;
+    case SEEK_END: file->offset = offset + file->inode.i_size;break;
     };
-    ret(thiz->admit,file->offset);
+    ret(o,file->offset);
 }
 
-static void fs_open(Object *this){
-    MinixInode *inode = eat_path(this->buffer);
-    fs_log("|OPEN| inode %p,file : %s\n",inode,this->buffer);
+static void fs_open(object_t o,void *buffer){
+    MinixInode *inode = eat_path(buffer);
+    fs_log("|OPEN| inode %p,file : %s\n",inode,buffer);
     if(inode){
         id_t id = fork();
         if(0 == id){
-            File *file = (void*)self();
-            TASK(file)->father = TASK(this->admit);
-            memcpy(self()->name,this->buffer,strlen(this->buffer) + 1);
-            memcpy(&(file->inode),inode,sizeof(MinixInode));
+            File *file = kalloc(sizeof(File));
+            memcpy(self()->name,buffer,strlen(buffer) + 1);
+            memcpy(&file->inode,inode,sizeof(MinixInode));
             file->offset = 0;
+            self()->private_data = file;
             hook(READ,fs_read);
             hook(WRITE,fs_write);
             hook(CLOSE,fs_close);
             hook(SEEK,fs_seek);
-            dorun();
+            workloop();
         }else if(id > 0){
-            ret(this->admit,id);
+            ret(o,id);
         }
     } else {
-        ret(this->admit,ERROR);
+        ret(o,-ENFILE);
     }
 }
 
@@ -156,6 +157,6 @@ static void fs_init(void){
 
 int fs_main(void){
     fs_init();
-    dorun();
+    workloop();
     return 0;
 }

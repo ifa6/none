@@ -201,13 +201,13 @@ extern void cons_init(void){
 
 }
 
-static void cons_write(Object *this){
-    cons_print(0,this->buffer,this->count);
-    ret(this->admit,OK);
+static void cons_write(object_t caller,void *ptr,count_t count){
+    cons_print(0,ptr,count);
+    ret(caller,OK);
 }
 
-static void cons_read(Object *this){
-    copy_buffer(this->admit,this->buffer,this->count);
+static void cons_read(object_t caller,void *ptr,count_t count){
+    copy_buffer(caller,ptr,count);
 }
 
 int cons_main(void){
@@ -215,6 +215,6 @@ int cons_main(void){
     keyboard_init();
     hook(READ ,cons_read);
     hook(WRITE,cons_write);
-    dorun();
+    workloop();
     return 0;
 }

@@ -24,11 +24,11 @@
 
 
 typedef struct _ioInq{
-    Object  *inq;                   /*! 请求对象    !*/
-    int     cmd;                    /*! 请求命令    !*/
-    off_t   offset;                 /*! 请求的偏移字节 !*/
-    count_t count;                  /*! 请求字节数 !*/
-    void    *buffer;                /*! 数据buffer !*/
+    object_t    caller;                 /*! 请求对象    !*/
+    int         cmd;                    /*! 请求命令    !*/
+    off_t       offset;                 /*! 请求的偏移字节 !*/
+    count_t     count;                  /*! 请求字节数 !*/
+    void        *buffer;                /*! 数据buffer !*/
     struct _ioInq   *next,*prev;    /*! 请求链  !*/
 }IOInq;
 
@@ -44,7 +44,8 @@ static void _add(IOInq *iq){
     }else{
         IOInq *in = inq;
         do{
-            if(iq->offset < in->offset)break;
+            if(iq->offset < in->offset)
+                break;
             in = in->next;
         }while(in != inq);
         iq->next =  in;
@@ -64,8 +65,10 @@ static void _sub(void){
         next->prev = prev;
         prev->next = next;
         kfree(admit);
-        if(prev != next) admit = next;
-        else inq = admit = NULL;
+        if(prev != next) 
+            admit = next;
+        else 
+            inq = admit = NULL;
     }
 }
 static bool at_isbusy(void){
@@ -73,7 +76,8 @@ static bool at_isbusy(void){
     for(int i = 50000;i;i--){
         s = inb_p(AT_STATUS);
         s &= (ATS_BUSY | ATS_READY | ATS_SEEK);
-        if( s == (ATS_READY | ATS_SEEK)) return false;
+        if( s == (ATS_READY | ATS_SEEK)) 
+            return false;
     }
     printk("\erAT DiskHard controller time out \n\ew");
     return true;
@@ -104,9 +108,10 @@ static void _doio(){
     off_t   offset = admit->offset;
     at_cmd(cmd,0,count,offset,false);
     if(at_isbusy()){
-        ret(admit->inq,ERROR);
+        ret(admit->caller,-EBUSY);
         _sub();
     }
+
     if(cmd == AT_WRITE){
         void *buffer = admit->buffer;
         for(int i = 50000;i && !(inb_p(AT_STATUS) & ATS_DRQ);i--);
@@ -117,20 +122,29 @@ static void _doio(){
 }
 
 /*! 请求的处理 !*/
-static void _rw(Object *this){
+static void _rw(object_t caller,int cmd,void *buffer,off_t offset,count_t count){
     IOInq *in = kalloc(sizeof(IOInq));
     if(in){
-        in->inq = this->admit;
-        in->cmd = (this->fn == READ ? AT_READ : AT_WRITE);
-        in->offset = this->offset;
-        in->count = this->count;
-        in->buffer = this->buffer;
+        in->caller = caller;
+        in->cmd = cmd;
+        in->offset = offset;
+        in->count =  count;
+        in->buffer = buffer;
         _add(in);
         if(!admit){
             admit = in;
             _doio();
         }
-    }else ret(this,ERROR);
+    } else 
+        ret(caller,-ENOMEM);
+}
+
+static void at_read(object_t caller,void *buffer,off_t offset,count_t count) {
+    _rw(caller,AT_READ,buffer,offset,count);
+}
+
+static void at_write(object_t caller,void *buffer,off_t offset,count_t count) {
+    _rw(caller,AT_WRITE,buffer,offset,count);
 }
 
 
@@ -143,36 +157,40 @@ static int at_handler(object_t o,int irq){
 
 
 /*! 发送读写设备给硬盘,然后返回等待硬盘准备好 !*/
-static void _io(Object *this){
+static void _io(object_t caller,int status){
     if(admit){
-        int status = this->status;
         void *buffer = admit->buffer;
-        if(at_isbusy()) ret(admit->inq,ERROR);
+        if(at_isbusy()) 
+            ret(admit->caller,-EBUSY);
         if(ATS_READY & status){
             if(admit->cmd == AT_READ)
                 port_read(AT_DATA,buffer,256);
             else if(admit->cmd == AT_WRITE){
                 for(int i = 50000;i && !(inb_p(AT_STATUS) & ATS_DRQ);i--);
                 port_write(AT_DATA,buffer,256);
-            } else panic("\erHardware IO \eb[\erFail\eb]\n");
+            } else  {
+                printk("At command %x is unkonw.\n",admit->cmd);
+                panic("\erHardware IO \eb[\erFail\eb]\n");
+            }
             admit->buffer += 512;
             admit->count--;
         }
 
         if(admit->count <= 0){
-            ret(admit->inq,OK);
+            ret(admit->caller,OK);
             _sub();
             if(admit){
                 _doio();
             }
         }
     }
+    unused(caller);
 }
 
 
 static void at_init(void){
-    hook(WRITE, _rw);
-    hook(READ,_rw);
+    hook(WRITE, at_write);
+    hook(READ,at_read);
     hook(HARDWARE,_io);
     put_irq_handler(AT_IRQ,at_handler);
     //enable_irq(AT_IRQ);
@@ -181,6 +199,6 @@ static void at_init(void){
 
 int at_main(void){
     at_init();
-    dorun();
+    workloop();
     return 0;
 }

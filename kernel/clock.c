@@ -1,5 +1,4 @@
 #include <none/time.h>
-#include <none/object.h>
 #include "kernel.h"
 
 volatile unsigned long jiffies = 0;
@@ -78,8 +77,8 @@ static void cmos_time(void){
 }
 
 
-static void get_time(Object *thiz){
-    ret(thiz->admit,startup_time);
+static void get_time(object_t caller){
+    ret(caller,startup_time);
 }
 
 static void _clk(Object *this){
@@ -98,6 +97,6 @@ static void clock_init(void){
 }
 int clock_main(void){
     clock_init();
-    dorun();
+    workloop();
     return 0;
 }

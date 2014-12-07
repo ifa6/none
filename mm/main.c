@@ -15,8 +15,6 @@
 #endif
 //#define free_page(x) ({ if((x & ~(0x3ff)) == 0x82d000) { printk("%s %d\n",__FILE__,__LINE__); } free_page(x); })
 
-static void trace(Object *);
-
 typedef union _pageItem{
     union _pageItem *table;
     struct{
@@ -85,17 +83,16 @@ static PageItem *clone_space(PageItem *space,void *page){
     return nsp;
 }
 
-static void clone(Object *this){
-    Task *ot = TASK(this->admit);
+static void clone(object_t o){
+    Task *ot = TASK(toObject(o));
     Task *nt = TASK(cloneObject(OBJECT(ot)));
     if(!nt){
-        ret(this->admit,ERROR);
+        ret(o,-ENOMEM);
     }else{
         nt->core = (Pointer)clone_space((void *)(ot->core),nt);
-        nt->father = ot;
-        copyvm(this->admit->private_data);
-        ret(OBJECT(nt),OK);
-        ret(this->admit,OBJECT(nt)->id);
+        copyvm(OBJECT(ot)->private_data);
+        ret(OBJECT(nt)->id,OK);
+        ret(o,OBJECT(nt)->id);
     }
 }
 
@@ -127,19 +124,16 @@ static void _delete(PageItem *dir){
     }
 }
 
-static void delete(Object *this){
-    Task *t = TASK(this->admit);
+static void delete(object_t o){
+    Task *t = TASK(toObject(o));
     PageItem *nsp = (PageItem *)t->core;
     _delete(nsp);
-    //trace(this->admit);
     try(ERROR ==,free_page((Pointer)(nsp)),{
         panic("free page fail");
     });
-    delvm(this->admit->private_data);
-    this->admit->private_data  = NULL;
-    /*! object_table[this->admit->id] = NULL; !*/
-    //trace(OBJECT(t->father));
-    ret(OBJECT(t->father),this->admit->id);
+    delvm(OBJECT(t)->private_data);
+    OBJECT(t)->private_data  = NULL;
+    ret(OBJECT(t)->father,o);
     /*! free_page((Pointer)t); !*/
 }
 
@@ -157,13 +151,11 @@ static int put_page(PageItem *dirs,void *va,void *page){
     return OK;
 }
 
-static void np_page(Object *this){
-    void *ptr = this->ptr;
-    Task *t = TASK(this->admit);
-    //trace(this->admit);
-    void *page = dovm(this->admit->private_data,ptr);
+static void np_page(object_t o,void *ptr){
+    Task *t = TASK(toObject(o));
+    void *page = dovm(OBJECT(t)->private_data,ptr);
     mm_log("page : %p virtual : %p\n",page,ptr);
-    ret(this->admit,put_page((PageItem *)t->core,ptr,page));
+    ret(o,put_page((PageItem *)t->core,ptr,page));
 }
 
 static PageItem *_un_table(PageItem *dir,void *va){
@@ -183,7 +175,6 @@ static PageItem *_un_table(PageItem *dir,void *va){
     if(page_share_nr(dir[DIR_INDEX((Pointer)va)].pointer) > 1){
         try(ERROR == ,free_page(dir[DIR_INDEX((Pointer)va)].pointer),{
             mm_error("Not release the virtual memory address %08x",va);
-            trace(self()->admit);
         });
         new_table = (void*)get_free_page();
         if(!new_table) return NULL;
@@ -215,19 +206,18 @@ static PageItem *_un_page(PageItem *table,void *va){
     return page;
 }
 
-static void nw_page(Object *this){
-    void *ptr = this->ptr;
-    Task *t = TASK(this->admit);
+static void nw_page(object_t o,void *ptr){
+    Task *t = TASK(toObject(o));
     PageItem *table = _un_table((PageItem *)t->core,ptr);
     //mm_log("virtual : %p\n",ptr);
     if(!table) 
-        ret(this->admit,ERROR);
+        ret(o,ERROR);
     put_item((PageItem*)t->core,table,DIR_INDEX((Pointer)ptr),7);
     void *page = _un_page(table,ptr);
     if(!page) 
-        ret(this->admit,ERROR);
+        ret(o,ERROR);
     put_item(table,page,TABLE_INDEX((Pointer)ptr),7);
-    ret(this->admit,OK);
+    ret(o,OK);
 }
 
 static void *__va(PageItem *dirs,void *va){
@@ -235,28 +225,14 @@ static void *__va(PageItem *dirs,void *va){
     return (void*)((((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff)) + (((Pointer) va) & 0xfff));
 }
 
-static void trace(Object *obj){
-    Task *t = TASK(obj);
-    Registers *reg = __va((void*)(t->core),t->registers);
-    printk("-----------------Object : %s--------------\n",obj->name);
-    printk("gs : %08x reg : %08x\n",reg->gs,reg);
-    printk("es : %08x esi : %08x\n",reg->es,reg->esi);
-    printk("ds : %08x edi : %08x\n",reg->ds,reg->edi);
-    printk("cs : %08x eip : %08x\n",reg->cs,reg->eip);
-    printk("ss : %08x esp : %08x\n",reg->ss,reg->esp);
-    printk("fs : %08x flg : %08x\n",reg->fs,reg->eflags);
-}
-
-static void mm_execvp(Object *thiz){
-    Task * t = TASK(thiz->admit);
+static void mm_execvp(object_t o,object_t file,void *ptr,count_t count){
+    Task * t = TASK(toObject(o));
     t->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     Registers *reg = __va((void*)(t->core),t->registers);
-    delvm(thiz->admit->private_data);
-    thiz->admit->private_data = NULL;
-    try(-1==,mkvm(thiz,reg));
-    //trace(thiz->admit);
+    delvm(OBJECT(t)->private_data);
+    OBJECT(t)->private_data = try(NULL == ,mkvm(file,ptr,count,reg));
     _delete((void*)t->core);
-    ret(thiz->admit,OK);
+    ret(o,OK);
 }
 
 static void _wait(Object *this){
@@ -324,12 +300,11 @@ static void _mm_init(void){
     extern int system_main(void);
     task = make_task("System",system_main);
     OBJECT(task)->wait = self();
-    ret(OBJECT(task),OK);
+    ret(OBJECT(task)->id,OK);
 }
 
 int mm_main(void){
     _mm_init();
-    dorun();
+    workloop();
     return 0;
-    unused(trace);
 }

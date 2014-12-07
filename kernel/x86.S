@@ -32,6 +32,7 @@
 .globl  do_keybord
 .globl  do_call
 .globl  sched
+.globl  doloop
 .globl  switch_task
 
 .globl  hwint00
@@ -236,7 +237,6 @@ hwint00:
 
     incl    jiffies
 
-#sti; 
     pushl   $0
     movl    $0,%eax
     pushl   irq_object_table(,%eax,4)
@@ -276,7 +276,7 @@ hwint07:
     outb    %al,$INT2_CTLMASK;  \
     movb    $0x20,%al;   \
     outb    %al,$INT_CTL; \
-    jmp .+2;     \
+    jmp     .+2;     \
     outb    %al,$INT2_CTL;    \
     movl    $irq,%eax;\
     sti;     \
@@ -308,11 +308,47 @@ hwint15:
     hwint_slave(15);
 
 bad_sys_call:
-    movl   $-1,%eax
-    jmp     ret_from_sys_call
-# eax = function args = {ebx ,ecx,edx}
+    movl    $-1,%eax
+    sti
+    iret
+
+method:
+    pushl   %esi
+    pushl   %edi
+    pushl   %edx
+    pushl   %ecx
+    pushl   %ebx
+
+    call    *%eax
+
+    addl    $20,%esp
+    movl    $0x0,%eax
+    int     $0x80
+
+_workloop:
+    pushl   %ds
+    pushl   %es
+    movl    $KERNEL_DATA,%eax
+    movl    %eax,%ds
+    movl    %eax,%es
+
+    call    doloop
+
+    popl    %es
+    popl    %ds
+    addl    $4,%esp
+    pushl   $method
+    sti
+    iret
+
+# eax = function args = {ebx,ecx,edx,edi,esi}
 sys_call:
     cli
+    cmpl    NR_syscalls,%eax
+    jae     bad_sys_call
+    cmpl    $0,%eax
+    je      _workloop
+
     pushl   %ds
     pushl   %es
     pushl   %fs
@@ -322,13 +358,12 @@ sys_call:
     pushl   %ecx
     pushl   %ebx
 
-    cmpl    NR_syscalls,%eax
-    jae     bad_sys_call
-
-    movl    $KERNEL_DATA,%edx
-    movl    %edx,%ds
-    movl    %edx,%es
-    movl    %edx,%fs
+    pushl   %eax
+    movl    $KERNEL_DATA,%eax
+    movl    %eax,%ds
+    movl    %eax,%es
+    movl    %eax,%fs
+    popl    %eax
 
     call    *sys_call_table(,%eax,4)
 

@@ -5,7 +5,7 @@
 
 /*! 读取在dev设备的offset逻辑扇区读写count块数据到buffer !*/
 int block_rw(const dev_t dev,const int cmd,void *buff,off_t offset,size_t count){
-    return run(dev,cmd,.offset = BLOCK(offset),.count =  BLOCK(count),.buffer = buff);
+    return run(dev,cmd, buff,BLOCK(offset),BLOCK(count));
 }
 
 static zone_t get_indir(MinixInode *inode,zone_t zone,int num) {

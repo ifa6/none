@@ -33,7 +33,7 @@ struct time{
 
 static inline time_t time(time_t *sp){
     time_t _time;
-    _time = run(CLOCK_PID,GETTIME,.ptr = sp);
+    _time = run(CLOCK_PID,GETTIME,sp,0,0);
     if(sp)
         *sp = _time;
     return _time;

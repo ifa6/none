@@ -7,11 +7,8 @@
 typedef struct _file File;
 
 struct _file{
-    Task        task;
     MinixInode  inode;
     off_t       offset;
 };
-
-#define _FILE(x)    ((File *)(x))
 
 #endif

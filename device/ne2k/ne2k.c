@@ -160,9 +160,9 @@ static int ne2k_handler(object_t o,int irq){
 }
 
 typedef struct _ioInq{
-    Object *admit;
-    count_t count;
-    char   *buffer;
+    object_t caller;
+    count_t  count;
+    char    *buffer;
     struct _ioInq *next;
 }IOInq;
 
@@ -188,8 +188,8 @@ static void ne2k_pop(void){
     }
 }
 
-static void _rw(Object *thiz){
-    if(thiz->fn == WRITE){
+static void _rw(object_t caller,int fn,void *ptr,count_t count){
+    if(fn == WRITE){
         /*
         if(thiz->count < 60){
             char buf[60];
@@ -199,38 +199,37 @@ static void _rw(Object *thiz){
             neSend(buf,thiz->count);
             printx(buf,thiz->count);
         } else */{
-            neSend(thiz->ptr,thiz->count);
+            neSend(ptr,count);
         }
         //printx(thiz->ptr,thiz->count);
-        ret(thiz->admit,OK);
+        ret(caller,OK);
     }else{
         IOInq *in = kalloc(sizeof(IOInq));
         if(in){
-            in->admit = thiz->admit;
-            in->admit = thiz->admit;
-            in->buffer = thiz->buffer;
+            in->caller = caller;
+            in->buffer = ptr;
             in->next = NULL;
-            in->count = thiz->count;
+            in->count = count;
             ne2k_push(in);
         }else{
-            ret(thiz->admit,ERROR);
+            ret(caller,ERROR);
         }
     }
 }
 
-static void _io(Object *thiz){
+static void _io(object_t caller,int status){
 #if 1
     size_t len;
-    if(thiz->status & NE_ISR_PRX){
+    if(status & NE_ISR_PRX){
         if(inq){
             len = neRecv(inq->buffer,inq->count);
             //printx(inq->buffer,inq->count);
-            ret(inq->admit,len);
+            ret(inq->caller,len);
             ne2k_pop();
         }
     }
 #endif
-    unused(len);
+    unused(caller,len);
 }
 
 static void ne2k_init(void){
@@ -244,7 +243,7 @@ static void ne2k_init(void){
 
 int ne2k_main(void){
     ne2k_init();
-    dorun();
+    workloop();
     return 0;
 }
 

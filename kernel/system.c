@@ -26,27 +26,28 @@ struct {
 
 
 static int system_shell(void){
-    run(SYSTEM_PID,1,.r1 = PRI_USER);
+    run(SYSTEM_PID,1,PRI_USER,0,0);
     return exec("/bin/v6sh",0,NULL);
 }
 
-static void system_dup2(Object *thiz){
-    Object *obj = thiz->admit;
+static void system_dup2(object_t caller,long r1,long r2){
+    Object *obj = toObject(caller);
     if(obj->r1 < NR_FRIEND) {
-        obj->friend[thiz->r1] = thiz->r2;
-        ret(thiz->admit,OK);
+        obj->friend[r1] = r2;
+        ret(caller,OK);
     }
-    ret(thiz->admit,ERROR);
+    ret(caller,ERROR);
+}
+
+static void system_pri(object_t caller,long r1) {
+    Task *task = TASK(caller);
+    task->pri = r1;
+    ret(caller,OK);
 }
 
 static void system_init(void){
     hook(DUP2,system_dup2);
-}
-
-static void system_pri(Object *thiz) {
-    Task *task = TASK(thiz->admit);
-    task->pri = thiz->r1;
-    ret(task,OK);
+    hook(1,system_pri);
 }
 
 int system_main(void){
@@ -55,8 +56,8 @@ int system_main(void){
     system_init();
 hel:
     id = fork();
-    if(ERROR == id){
-        printk("Fork Failt\n");
+    if(0 > id){
+        printk("Fork falt\n");
     }else if(0 == id){
         memcpy(self()->name,tasks[i].name,strlen(tasks[i].name) + 1);
         tasks[i].entry();
@@ -65,7 +66,6 @@ hel:
         if(i < ARRAY_SIZE(tasks)) 
             goto hel;
     }
-    hook(1,system_pri);
-    dorun();
+    workloop();
     return OK;
 }

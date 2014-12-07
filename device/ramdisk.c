@@ -6,18 +6,18 @@ extern multiboot_info_t *envp;
 static void *ramdisk;
 static count_t ramdiskCount;
 
-static void ramdisk_read(Object *thiz){
-    off_t offset = ((thiz->offset)* 512);
-    count_t count = min(thiz->count * 512,ramdiskCount - offset);
-    memcpy(thiz->buffer,ramdisk + offset,count);
-    ret(thiz->admit,OK);
+static void ramdisk_read(object_t caller,void *ptr,off_t offset,count_t count){
+    off_t off = offset* 512;
+    count_t cnt = min(count * 512,ramdiskCount - off);
+    memcpy(ptr,ramdisk + off,cnt);
+    ret(caller,OK);
 }
 
-static void ramdisk_write(Object *thiz){
-    off_t offset = ((thiz->offset)* 512);
-    count_t count = min(thiz->count * 512,ramdiskCount - offset);
-    memcpy(ramdisk + offset,thiz->buffer,count);
-    ret(thiz->admit,OK);
+static void ramdisk_write(object_t caller,void *ptr,off_t offset,count_t count){
+    off_t off = offset * 512;
+    count_t cnt = min(count * 512,ramdiskCount - off);
+    memcpy(ramdisk + off,ptr,cnt);
+    ret(caller,OK);
 }
 
 static void ramdisk_init(void){
@@ -40,6 +40,6 @@ static void ramdisk_init(void){
 
 int ramdisk_main(void){
     ramdisk_init();
-    dorun();
+    workloop();
     return 0;
 }

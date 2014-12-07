@@ -1,12 +1,8 @@
-#ifndef INTER_H
-#define INTER_H
+#ifndef __NONE_INTER_H__
+#define __NONE_INTER_H__
 
 #include <x86/io.h>
 #include <none/types.h>
-
-/* 任意进程 */
-#define ANY         -1
-
 
 /* System Message Type */
 typedef enum{
@@ -39,8 +35,8 @@ typedef enum {
 }PID;
 /* System Call type */
 
-#define _NR_run     0
-#define _NR_get     1
+#define _NR_loop    0
+#define _NR_run     1
 #define _NR_ret     2
 #define _NR_hook    3
 #define _NR_buffer  4
@@ -54,27 +50,24 @@ typedef enum {
 #define SEEK_END    2
 
 
-#define OK  0
+#define OK      0
 #define ERROR   -1
 
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
-#define syscall(_sys_call,obj,fn,r1,r2,r3,...) ({\
+#define syscall(_sys_call,obj,fn,r1,r2,r3) ({\
         long __v__; \
         __asm__("int $0x80":"=a"(__v__):"a"(_sys_call),"b"(obj),"c"(fn),"d"(r1),"S"(r3),"D"(r2));  \
         __v__; })
+
 #define lock()      cli()
 #define unlock()    sti()
 
-static inline long _run( object_t o,long fn, sysarg_t args){
-    return syscall(_NR_run,o,fn,args.r1,args.r2,args.r3);
-};
-
-#define run(o,fn,...)    _run(o,fn,(sysarg_t){__VA_ARGS__})
-#define ret(_obj,_talk) syscall(_NR_ret,_obj,_talk,0,0,0)
-#define get()   (Object *)syscall(_NR_get,0,0,0,0,0)
-#define hook(fn,methon) syscall(_NR_hook,fn,methon,0,0,0)
-#define _push(s,c)  (void*)(syscall(_NR_buffer,WRITE,s,c,0,0))
-#define _pop(s)     syscall(_NR_buffer,READ,s,0,0,0)
+static inline long ret(object_t caller,long talk) { return syscall(_NR_ret,caller,talk,0,0,0);}
+#define run(callee,fn,r1,r2,r3) syscall(_NR_run,callee,fn,r1,r2,r3)
+#define workloop()          syscall(_NR_loop,0, 0,0,0,0)
+#define hook(fn,m)          syscall(_NR_hook,fn,m,0,0,0)
+#define _push(s,c)          (void*)(syscall(_NR_buffer,WRITE,s,c,0,0))
+#define _pop(s)             syscall(_NR_buffer,READ,s,0,0,0)
 
 #endif
