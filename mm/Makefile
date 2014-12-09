@@ -3,11 +3,11 @@
 #	Author : lzy
 .PHONY:all clean
 #当前目录
-MODULE_NAME := $(notdir $(shell pwd))
+module_name := $(notdir $(shell pwd))
 BUILD		:= LIBRARY
 
-ifeq ($(ROOT_DIR),)
+ifeq ($(root_dir),)
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)
 else
-include $(ROOT_DIR)/tools/Makefile.rule
+include $(root_dir)/tools/Makefile.rule
 endif

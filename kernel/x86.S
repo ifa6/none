@@ -5,8 +5,9 @@
 #   X86硬件相关处理包括x86中断,时钟中断,硬件中断等入口,系统调用入口也在该文件处理
 #   
 #
-#include    "const.h"
-#include    "i8259.h"
+#include "const.h"
+#include "i8259.h"
+#include "offsets.h"
 
 .globl	divide_error               # 除法出错
 .globl	single_step_exception      # 单步异常
@@ -35,33 +36,27 @@
 .globl  doloop
 .globl  switch_task
 
-.globl  hwint00
-.globl  hwint01
-.globl  hwint02
-.globl  hwint03
-.globl  hwint04
-.globl  hwint05
-.globl  hwint06
-.globl  hwint07
-.globl  hwint08
-.globl  hwint09
-.globl  hwint10
-.globl  hwint11
-.globl  hwint12
-.globl  hwint13
-.globl  hwint14
-.globl  hwint15
+.globl hwint00 , hwint01 , hwint02 , hwint03 ,  hwint04 ,  hwint05 ,  hwint06 ,  hwint07 
+.globl hwint08 , hwint09 , hwint10 , hwint11 ,  hwint12 ,  hwint13 ,  hwint14 ,  hwint15
 
 .globl  jiffies
-.globl  cr3
+.globl  leading
 
 .globl  NR_syscalls,sys_call_table
 .globl  irq_table,irq_object_table
 
 
+.macro sched_task
+    movl leading,%ebx
+    movl %esp,registers(%ebx)
+    call sched
+    movl leading,%ebx
+    movl registers(%ebx),%esp
+    movl core(%ebx),%eax
+    movl %eax,%cr3
+.endm
 
 .macro save
-    
     pushal   
     pushl   %es
     pushl   %ds
@@ -220,11 +215,7 @@ none:
 
 switch_task:
     save;
-    pushl   %esp
-    call   sched
-    movl    %eax,%esp
-    movl    cr3,%eax
-    movl    %eax,%cr3
+    sched_task;
     recov;   
     iret
 hwint00:
@@ -241,12 +232,8 @@ hwint00:
     movl    $0,%eax
     pushl   irq_object_table(,%eax,4)
     call    *irq_table(,%eax,4)
-    addl    $8,%esp;    \
-    push    %esp
-    call    sched
-    movl    %eax,%esp
-    movl    cr3,%eax
-    movl    %eax,%cr3
+    addl    $8,%esp
+    sched_task;
 0:
     inb     $INT_CTLMASK,%al;    
     andb    $(~1),%al; 

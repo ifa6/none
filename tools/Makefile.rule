@@ -4,7 +4,7 @@
 #	一个把消息机制用得非常烂的蓝牙开发平台。
 #
 # 根目录项检测,如果不定义又该项,很可能误伤系统
-ifeq ("$(ROOT_DIR)","")
+ifeq ("$(root_dir)","")
 	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 endif
 
@@ -16,24 +16,26 @@ endif
 
 .PHONY: clean all
 ##########################################################################
-#
 #	目录定义
 ##########################################################################	
-LOCAL_PATH  := $(shell pwd)
-INCLUDE_DIR += $(ROOT_DIR)/include
-OUT_DIR 	:= $(ROOT_DIR)/objs
-LIB_DIR 	+= $(OUT_DIR)/lib
-BIN_DIR	    := $(OUT_DIR)/bin
-OBJS_DIR	:= $(subst $(ROOT_DIR),$(OUT_DIR),$(LOCAL_PATH))
+local_path  := $(shell pwd)
+include_dir += $(root_dir)/include
+o 			:= $(root_dir)/out
+lib_dir 	+= $o/lib
+bin_dir	    := $o/bin
+out_dir		:= $(subst $(root_dir),$o,$(local_path))
 
-ifndef	MODULE_NAME
-MODULE_NAME	:= $(notdir $(LOCAL_PATH))
+define depfile 	
+	-MD -MP -MF"$(@:%.o=%.d)" -MT"$@" 
+endef
+
+ifndef	module_name
+module_name	:= $(notdir $(local_path))
 endif
 
-SRC_FILES	+= $(wildcard *.[cSs])
+src_files	+= $(wildcard *.[cSs])
 
-$(shell mkdir -p  $(LIB_DIR)/ $(OBJS_DIR)/ $(BIN_DIR)/)
-#sub-dir = $Q for dir in `find ./ -type d -maxdepth 1`;do $(MAKE)  -s -C $$dir V=$V $$* || exit 1; done;
+$(shell mkdir -p  $(lib_dir)/ $(out_dir)/ $(bin_dir)/)
 
 define sub-dir
 	$Q \
@@ -48,7 +50,7 @@ define sub-dir
 		done;\
 		for f in $$files;do \
 			dir=`dirname $$f`;\
-			$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+			$(MAKE) -s -C $$dir V=$V $$* || exit 1;\
 		done;
 endef
 
@@ -64,75 +66,72 @@ LD	:= ld
 #########################################################################
 #	选项
 #########################################################################
-ASFLAGS  += --32
-CFLAGS   += $(addprefix -I,$(INCLUDE_DIR)) -m32 -std=c11 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
+a_flags  += --32
+c_flags  += $(addprefix -I,$(include_dir)) -m32 -std=c11 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
 
 ########################################################################
 #	中间文件生成
 ########################################################################
-#OBJS	:= $(addprefix objs/$(LOCAL_PATH)/,$(sort $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.c,%.o,$(SRC_FILES))))))
-OBJS    := $(addprefix $(OBJS_DIR)/,$(OBJS))
-OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.S,%.o,$(filter %.S,$(SRC_FILES))))
-OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.s,%.o,$(filter %.s,$(SRC_FILES))))
-OBJS	+= $(addprefix $(OBJS_DIR)/,$(patsubst %.c,%.o,$(filter %.c,$(SRC_FILES))))
-#OBJS 	:= $(sort $(OBJS))
-#$(warning  $(OBJS))
+objs    := $(addprefix $(out_dir)/,$(objs))
+objs	+= $(addprefix $(out_dir)/,$(patsubst %.S,%.o,$(filter %.S,$(src_files))))
+objs	+= $(addprefix $(out_dir)/,$(patsubst %.s,%.o,$(filter %.s,$(src_files))))
+objs	+= $(addprefix $(out_dir)/,$(patsubst %.c,%.o,$(filter %.c,$(src_files))))
+
 ########################################################################
 
 ifeq ($(BUILD),BINARY)
-MODULE 	:= $(addprefix $(OBJS_DIR)/,$(MODULE_NAME))
-LIBS    += $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
-LDFLAGS += $(addprefix -L,$(LIB_DIR)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
-$(MODULE) : $(LIBS)
-$(MODULE) : $(OBJS)
-ifeq ($(SUBDIR),true)
+module 	 := $(addprefix $(out_dir)/,$(module_name))
+libs     += $(addprefix $(lib_dir)/lib,$(addsuffix .a,$(STATIC_LIBARY)))
+ld_flags += $(addprefix -L,$(lib_dir)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i386 -nostdlib
+$(module) : $(libs)
+$(module) : $(objs)
+ifeq ($(subdir),true)
 	$(call sub-dir,$$*)
 endif
-	$Q $(LD) $^ $(LDFLAGS) -Ttext $(ENTRY) -o $@
-	$Q echo "  [$(BUILD)]	Install    bin/   <=== "`basename $@`
-	$Q cp $@ $(BIN_DIR)/
+	$Q echo  "  [LD]	$@"
+	$Q $(LD) $^ $(ld_flags) -Ttext $(ENTRY) -o $@
+	$Q cp $@ $(bin_dir)/
 endif
 
 ifeq ($(BUILD),LIBRARY)
-MODULE := $(LIB_DIR)/lib$(MODULE_NAME).a
-$(MODULE): $(OBJS)
-ifeq ($(SUBDIR),true)
+module := $(lib_dir)/lib$(module_name).a
+$(module): $(objs)
+ifeq ($(subdir),true)
 	$(call sub-dir,$$*)
 endif
-	$Q echo "  [$(BUILD)]	Install    lib/   <=== "`basename $(MODULE)`
+	$Q echo  "  [AR]	$(module)"
 	$Q $(AR) -ur $@ $? > /dev/null 2>&1
 else
 all:
-ifeq ($(SUBDIR),true)
+ifeq ($(subdir),true)
 	$(call sub-dir,$$*)
 endif
 endif
 
 clean:
 	$Q -rm -f -- *.doa
-	$Q -rm -rf $(OBJS_DIR)/*
-ifdef CLEANS
-	$Q echo "  [CLEAN]	Clean	$(CLEANS)"
-	$Q -rm -f $(CLEANS)
+	$Q -rm -rf $(out_dir)/*
+ifdef cleans
+	$Q echo  "  [CL]	$(cleans)"
+	$Q -rm -f $(cleans)
 endif
 ########################################################################
 #	编译规则
 ########################################################################
-$(OBJS_DIR)/%.o: %.c
-	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
-	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
-	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+$(out_dir)/%.o: %.c
+	$Q mkdir -p $(dir $@)
+	$Q echo  "  [CC]	$@"
+	$Q $(CC) -c $< $(c_flags) $(depfile) -o $@
 
 # 调用了C预处理的汇编文件 
-$(OBJS_DIR)/%.o: %.S	
-	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
-	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
-	$Q $(CC) -c $< $(CFLAGS) -MD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@
+$(out_dir)/%.o: %.S	
+	$Q mkdir -p $(dir $@)
+	$Q echo  "  [CC]	$@"
+	$Q $(CC) -c $< $(c_flags) $(depfile) -o $@
 
-$(OBJS_DIR)/%.o: %.s
-	$Q if [ ! -d "$(dir $@)" ];then mkdir -p "$(dir $@)"; fi
-	$Q echo  "  [$(BUILD)]	Compiler   $(notdir $(MODULE))   <=== $<"
-	$Q $(AS) $< -o $@ $(ASFLAGS) -c
+$(out_dir)/%.o: %.s
+	$Q mkdir -p $(dir $@)
+	$Q echo  "  [AS]	$@"
+	$Q $(AS) $< -o $@ $(a_flags) -c
 
-
--include	$(OBJS:%.o=%.d)
+-include	$(objs:%.o=%.d)

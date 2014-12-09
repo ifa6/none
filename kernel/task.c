@@ -2,10 +2,8 @@
 
 static Task    *rdy_head[NR_PRI];  /*! 调度队列头,参考MINIX设计 !*/
 static Task    *rdy_tail[NR_PRI];
-Task   *leading = NULL;    /*! 主角,在你的世界里,你就是主角 ~*/
+       Task    *leading = NULL;    /*! 主角,在你的世界里,你就是主角 ~*/
 static Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO操作允许 !*/
-
-volatile unsigned long cr3 = 0;
 
 #define isTaskp(p)  ((p)->pri == PRI_TASK)  /*! 是任务,具有高优先级 !*/
 #define isUserp(p)  ((p)->pri == PRI_USER)  /*! 普通任务,时间片调度 !*/
@@ -23,31 +21,28 @@ volatile unsigned long cr3 = 0;
 
 //#define PRINT_SCHED
 
-static Registers *pick_task(Registers *reg){
+static void pick_task(void){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
 
 #ifdef  PRINT_SCHED
     Object *oo = self();
 #endif
 
-    leading->registers = reg;
-    if(rdy_head[PRI_TASK] != NULL) 
-        leading = rdy_head[PRI_TASK];    
-    else if(rdy_head[PRI_USER] != NULL) 
+    if(rdy_head[PRI_TASK] != NULL)
+        leading = rdy_head[PRI_TASK];
+    else if(rdy_head[PRI_USER] != NULL)
         leading = rdy_head[PRI_USER];
-    else 
+    else
         leading = rdy_head[PRI_GOD];       /*! 上帝只有在我们都不干了的时候才过来擦屁股,很明显,他做得很好 !*/
     tss->esp0 = (unsigned long)(STACK(leading)->stackp);
-    cr3 = leading->core;
 #ifdef  PRINT_SCHED
     if(oo != self()){
-        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,cr3);
+        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,leading->core);
     }
 #endif
-    return leading->registers;
 }
 
-Registers *sched(Registers *reg){
+void sched(void){
     if(rdy_head[PRI_USER] && !(rdy_head[PRI_USER]->ucount)){
         rdy_tail[PRI_USER]->next = rdy_head[PRI_USER];
         rdy_tail[PRI_USER] = rdy_head[PRI_USER];
@@ -55,11 +50,11 @@ Registers *sched(Registers *reg){
         rdy_tail[PRI_USER]->next = NULL;
         rdy_head[PRI_USER]->ucount = rdy_head[PRI_USER]->count;
     }
-    return pick_task(reg);
+    pick_task();
 }
 
 /*! 接受党和人民考验的时候到了,是时候派我上场啦?你是说我还要排队,shit !*/
-/*static */void ready(Task *rt){
+static void ready(Task *rt){
     if(!rt) panic("\erReady \eb[rTask is <null>\eb]");
     if(!rdy_head[rt->pri])
         rdy_head[rt->pri] = rt;

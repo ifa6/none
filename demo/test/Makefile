@@ -5,13 +5,12 @@
 # LIBS 
 STATIC_LIBARY :=  posix c
 BUILD		  := BINARY
-SUBDIR		  := true
+subdir		  := true
 ENTRY 		  := 0xc00000
-#LDFLAGS	 	  := -e main
-CLEANS		  := $(basename $(wildcard *.c))
+cleans		  := $(basename $(wildcard *.c))
 
-ifeq ($(ROOT_DIR),"")
+ifeq ($(root_dir),"")
 $(error Undefined project root directory, you should run the 'source tools/setenv.sh' in the project root directory.)
 else
-include $(ROOT_DIR)/tools/Makefile.rule
+include $(root_dir)/tools/Makefile.rule
 endif

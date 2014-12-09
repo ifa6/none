@@ -1,2 +1,2 @@
 #!/bin/bash
-export ROOT_DIR=`pwd`
+export root_dir=`pwd`

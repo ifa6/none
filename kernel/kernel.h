@@ -18,7 +18,7 @@
 extern Task *leading;
 #define self()  OBJECT(leading)
 
-extern Registers *sched(Registers *reg);
+extern void sched(void);
 extern int doint(object_t obj,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3);
 
 extern IrqHandler irq_table[NR_IRQ_VECTORS];

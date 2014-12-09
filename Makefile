@@ -5,7 +5,7 @@
 
 # Directories.
 # root directories
-OUT_DIR  := objs
+OUT_DIR  := out
 ifeq ("$(RAMDISK)",1)
 h 		:= ramdisk.img
 else
@@ -20,7 +20,7 @@ KERNELDIR 	:= kernel
 DEMODIR 	:= demo
 MMDIR 		:= mm
 DEVICEDIR	:= device
-SUBDIRS 	:= \
+subdirs 	:= \
 	$(LIBDIR)\
 	$(FSDIR)\
 	$(MMDIR)\
@@ -32,9 +32,8 @@ MAKE = make
 RM = rm
 $(shell mkdir -p  $(hw))
 
-
 all :
-	@for dir in  $(SUBDIRS);do\
+	@for dir in  $(subdirs);do\
 		$(MAKE) -s -C $$dir $$@ || exit 1;\
 	done
 
@@ -60,6 +59,8 @@ go: install uninstall
 clean:
 	@-rm -rf -- objs/
 	@-rm -f -- *.out *.src tags *.swap
-	@for dir in $(SUBDIRS);do\
+	@for dir in $(subdirs);do\
 		$(MAKE) -s -C $$dir $@ || exit 1;\
 	done
+
+

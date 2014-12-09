@@ -3,11 +3,11 @@
 #	Author : lzy
 .PHONY:all clean
 #当前目录
-MODULE_NAME := $(notdir $(shell pwd))
-BUILD		:= LIB
+module_name := $(notdir $(shell pwd))
+build		:= LIB
 
-ifeq ("$(ROOT_DIR)","")
+ifeq ("$(root_dir)","")
 	$(error "Do not set the project directory, you should run 'source toos/setev.sh' in the project root directory")
 else
-include $(ROOT_DIR)/tools/Makefile.rule
+include $(root_dir)/tools/Makefile.rule
 endif
