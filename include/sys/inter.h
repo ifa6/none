@@ -3,35 +3,16 @@
 
 #include <x86/io.h>
 #include <none/types.h>
+#include <none/if.h>
 
-/* System Message Type */
-typedef enum{
-    REPLY =     -1,
-    READ  =     0,
-    WRITE       ,
-    OPEN        ,
-    CLOSE       ,
-    CLONE       ,
-    IOCTL       ,
-    HARDWARE    ,
-    NO_PAGE     ,
-    WP_PAGE     ,
-    DUP2        ,
-    RUN         ,
-    EXEC        ,
-    SEEK        ,
-}DefaultMothon;
-
-/*! Const task PID !*/
 typedef enum {
     GOD = 0,
     CONS_PID = 1,
     MM_PID = 3,
     SYSTEM_PID,
     CLOCK_PID,
-    AT_PID = 7,
-    FS_PID,
-    RS_PID,
+    RAMDISK_PID = 7,
+    ROOTFS_PID,
 }PID;
 /* System Call type */
 
@@ -67,7 +48,7 @@ static inline long ret(object_t caller,long talk) { return syscall(_NR_ret,calle
 #define run(callee,fn,r1,r2,r3) syscall(_NR_run,callee,fn,r1,r2,r3)
 #define workloop()          syscall(_NR_loop,0, 0,0,0,0)
 #define hook(fn,m)          syscall(_NR_hook,fn,m,0,0,0)
-#define _push(s,c)          (void*)(syscall(_NR_buffer,WRITE,s,c,0,0))
-#define _pop(s)             syscall(_NR_buffer,READ,s,0,0,0)
+#define _push(s,c)          (void*)(syscall(_NR_buffer,IF_WRITE,s,c,0,0))
+#define _pop(s)             syscall(_NR_buffer,IF_READ,s,0,0,0)
 
 #endif

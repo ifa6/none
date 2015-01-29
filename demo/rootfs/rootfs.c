@@ -82,8 +82,8 @@ RFS *newRFSTree(RFS *old,const RFS *new,const char *name){
     return newRFS(tree,RFS_TREE,size + sizeof(RFSTree));
 }
 
-int main(/*!int argc,char **argv!*/void){
-#if 1
+int main(int argc,char **argv){
+#if 0
     char *argv[] = {
         "rootfs","/gpl.txt", "/none.txt",
     };
@@ -92,7 +92,8 @@ int main(/*!int argc,char **argv!*/void){
     int fd = -1;
     off_t len = 1024;
     void *buffer = NULL;
-    if(argc < 2) return -1;
+    if(argc < 2) 
+        return -1;
     RFS *rfs = NULL;
     foreach(i,0,ARRAY_SIZE(dir)){
         dir[i].first = NULL;
@@ -100,7 +101,7 @@ int main(/*!int argc,char **argv!*/void){
     foreach(i,1,argc){
         len = 1024;
         RFS *new;
-        fd = try(-1 == ,open(argv[i],0),{
+        fd = try(0 > ,open(argv[i],0),{
             throw e_fial;
         });
         buffer = try(NULL == ,zalloc(len),{

@@ -33,7 +33,8 @@ ifndef	module_name
 module_name	:= $(notdir $(local_path))
 endif
 
-src_files	+= $(wildcard *.[cSs])
+src_dirs    += .
+src_files	+= $(foreach dir,$(src_dirs),$(wildcard $(dir)/*.[csS]))
 
 $(shell mkdir -p  $(lib_dir)/ $(out_dir)/ $(bin_dir)/)
 

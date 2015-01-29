@@ -1,13 +1,11 @@
-#include    "kernel.h"
+#include "kernel.h"
 #include <sys/inter.h>
+#include <none/scntl.h>
 
-extern int at_main();
-extern int fs_main();
 extern int cons_main();
 extern int clock_main();
-extern int rs_main();
 extern int ramdisk_main();
-extern int ne2k_main();
+extern int rootfs_main();
 static int system_shell();
 
 struct {
@@ -16,18 +14,15 @@ struct {
 }tasks[] = {
     {.name = "Clock",         .entry = clock_main},
     {.name = "Conslo",        .entry = cons_main},
-    {.name = "AT Hard",       .entry = at_main},
-    {.name = "File System",   .entry = fs_main},
-    {.name = "Serial",        .entry = rs_main},
     {.name = "Ram Disk",      .entry = ramdisk_main},
-    {.name = "NE2K",          .entry = ne2k_main},
+    {.name = "rootfs",        .entry = rootfs_main},
     {.name = "Shell",         .entry = system_shell},
 };
 
 
 static int system_shell(void){
     run(SYSTEM_PID,1,PRI_USER,0,0);
-    return exec("/bin/v6sh",0,NULL);
+    return exec("/bin/v6sh",1,(char *[]){"v6sh"});
 }
 
 static void system_dup2(object_t caller,long r1,long r2){
@@ -46,7 +41,7 @@ static void system_pri(object_t caller,long r1) {
 }
 
 static void system_init(void){
-    hook(DUP2,system_dup2);
+    hook(SIF_DUP2,system_dup2);
     hook(1,system_pri);
 }
 
@@ -60,6 +55,8 @@ hel:
         printk("Fork falt\n");
     }else if(0 == id){
         memcpy(self()->name,tasks[i].name,strlen(tasks[i].name) + 1);
+        clear_methon();
+        //sys_log("task(%s:%d).\n",self()->name,self()->id);
         tasks[i].entry();
     }else{
         i++;

@@ -11,15 +11,12 @@ static Tss     *tss;               /*! 保存任务的内核态堆栈,以及IO�
 #define working(x)  ((x)->work)
 #define isSleep(x)  (working(x) == SLEEPING)
 #define isWait(x)  (working(x) == WAITING)
-#define isAcctive(x)  (working(x) == ACTIVE)
 #define setSleep(x) (working(x) = SLEEPING)
 #define setWait(x) (working(x) = WAITING)
 #define setActive(x)    (working(x) = ACTIVE)
 #define isWaitMe(x) ((x->wait) == self())
 
 #define TASK_GOD()  TASK(toObject(GOD))   /*! 和上帝对话,我想你大概不会很喜欢他 !*/
-
-//#define PRINT_SCHED
 
 static void pick_task(void){
     /*! 只有基础服务得于优先运作,我们的工作才有意义 !*/
@@ -36,8 +33,8 @@ static void pick_task(void){
         leading = rdy_head[PRI_GOD];       /*! 上帝只有在我们都不干了的时候才过来擦屁股,很明显,他做得很好 !*/
     tss->esp0 = (unsigned long)(STACK(leading)->stackp);
 #ifdef  PRINT_SCHED
-    if(oo != self()){
-        printk("\eb%s \er-> \eb%s<%x>\ew\n",oo->name,self()->name,leading->core);
+    if(oo != self() && oo->id && self()->id){
+        printk("\eb%s:%d \er-> \eb%s:%d<%x>\ew\n",oo->name,oo->id,self()->name,self()->id,leading->core);
     }
 #endif
 }
@@ -128,11 +125,33 @@ int dofn(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned 
 }
 
 /*! 中断具有高优先级,必须优先处理 !*/
+static iLink *first_iLink = NULL;
+static count_t count_iLink = 0;
+static iLink *alloc_iLink(void) {
+    iLink *tmp;
+    if(!first_iLink)
+        return kalloc(sizeof(*first_iLink));
+    tmp = first_iLink;
+    first_iLink = first_iLink->inext;
+    count_iLink--;
+    return tmp;
+}
+
+static void free_iLink(iLink *ptr) {
+    if(count_iLink < 32) {
+        ptr->inext = first_iLink;
+        first_iLink = ptr;
+        count_iLink++;
+    } else {
+        free(ptr);
+    }
+}
+
 int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned long r3){
     Object *obj = toObject(o);
     if(!obj) 
         panic("\er doint   \eb[\rnull\eb]\n");
-    iLink   *in = kalloc(sizeof(iLink));
+    iLink   *in = alloc_iLink();
     if(!in) 
         panic("\er doint \eb[memory full\eb]\n");;
     in->fn = fn; in->r1 = r1;
@@ -166,7 +185,7 @@ _again:
         fn = in->fn; r1 = in->r1;
         r2 = in->r2; r3 = in->r3;
         self()->ilink = in->inext;
-        kfree(in);
+        free_iLink(in);
     } else if(self()->wlink) {
         Object *in = self()->wlink;
         id = in->id;
@@ -179,7 +198,7 @@ _again:
     }
 
     if(NULL == self()->fns[fn]) {
-        ret(id,-ENOSYS);
+        doret(id,-ENOSYS);
         goto _again;
     } else {
         ptr = (long)self()->fns[fn];
@@ -231,6 +250,8 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
 
 void god_init(void){
     Pointer tr = TR_DESC;
+
+    //sys_log("god task init.\n");
 
     for(int i = 0;i < NR_PRI;i++) rdy_head[i] = rdy_tail[i] = NULL;
     leading = make_task(GOD,"God",KERNEL_DATA,KERNEL_CODE,PRI_GOD,NULL);

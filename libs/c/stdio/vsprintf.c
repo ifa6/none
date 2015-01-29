@@ -169,7 +169,7 @@ repeat:
             switch(*fmt){
             case 'c': *str++ = (unsigned char)va_arg(args,int);continue;
             case 's': _type = _string;break;
-            case 'p': style |= STYLE_SPECIAL;
+            case 'p': style |= STYLE_SPECIAL; base = HEX; break;
             case 'X': style |= STYLE_LARGE;
             case 'x': base = HEX;break;
             case 'd': base = DECIMAL;

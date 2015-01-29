@@ -1,11 +1,23 @@
 #ifndef __NONE_TYPES_H__
 #define __NONE_TYPES_H__
+#include <stdint.h>
 
 typedef unsigned long Pointer;
 typedef unsigned long size_t;
 typedef unsigned long off_t;
 typedef unsigned char byte_t;
 typedef unsigned long count_t;
+
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t  s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+
 
 typedef const char * String;
 

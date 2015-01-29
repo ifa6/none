@@ -1,66 +1,62 @@
 # Makefile for install.
 # Install ask root.
-#
-.PHONY:go all clean 
+
+.PHONY: all libs kernel modules demo clean \
+	install uninstall  go
 
 # Directories.
-# root directories
-OUT_DIR  := out
-ifeq ("$(RAMDISK)",1)
-h 		:= ramdisk.img
-else
-h		:= c.img
-endif
-s 		:= $(OUT_DIR)/bin/none 
-hw		:= $(OUT_DIR)/mnt/hw
+out_dir  	:= out
+ramdisk 	:= ramdisk.img
+disk		:= c.img
+kernel_bin 	:= $(out_dir)/bin/none 
+kernel_dir  := $(out_dir)/mnt/disk
+modules_dir := $(out_dir)/mnt/ramdisk
 
-FSDIR 		:= fs
 LIBDIR 		:= libs
 KERNELDIR 	:= kernel
 DEMODIR 	:= demo
-MMDIR 		:= mm
-DEVICEDIR	:= device
-subdirs 	:= \
-	$(LIBDIR)\
-	$(FSDIR)\
-	$(MMDIR)\
-	$(DEVICEDIR)\
-	$(KERNELDIR)\
-	$(DEMODIR) \
+MODULESDIR  := modules
 
 MAKE = make
 RM = rm
-$(shell mkdir -p  $(hw))
+$(shell mkdir -p  $(kernel_dir) $(modules_dir))
 
-all :
-	@for dir in  $(subdirs);do\
-		$(MAKE) -s -C $$dir $$@ || exit 1;\
-	done
+all : libs kernel demo
 
-host:
-	@cp $s $h /boot/
+kernel :  libs
+	@$(MAKE) -s -C $(KERNELDIR)
 
-install: $s
-	@-mount $h $(hw)
-	@chmod a+w $(hw)
-	@-cp $(OUT_DIR)/bin/ $(hw)/ -r
+libs :
+	@$(MAKE) -s -C $(LIBDIR)
+
+modules : libs
+	@$(MAKE) -s -C $(MODULESDIR)
+
+demo : libs
+	@$(MAKE) -s -C $(DEMODIR)
+
+install : 
+	@echo "Install modules to ramdisk."
+	@-mount $(ramdisk) $(modules_dir)
+	@chmod a+w $(modules_dir)
+	@-cp $(out_dir)/bin $(modules_dir)/ -r
+	@-rm -f -- $(modules_dir)/bin/none
+	@sleep 1
+	@umount $(modules_dir)
+	@echo "Install kernel to hardisk."
+	@-mount $(disk) $(kernel_dir)
+	@chmod a+w $(kernel_dir)
+	@-cp $(kernel_bin) $(kernel_dir)/
+	@-cp $(ramdisk) $(kernel_dir)/
 	@sleep 1
 
-uninstall:
-	@-umount $(hw)
+uninstall :
+	@-umount $(kernel_dir)
+	@-umount $(modules_dir)
 
 go: install uninstall
-	@mount  $h $(hw)
-	@-cp $s $(hw)
-	@sleep 1
-	@-umount $(hw)
-	@bochs
+	@bochs -q
 
 clean:
-	@-rm -rf -- objs/
+	@-rm -rf -- out/
 	@-rm -f -- *.out *.src tags *.swap
-	@for dir in $(subdirs);do\
-		$(MAKE) -s -C $$dir $@ || exit 1;\
-	done
-
-

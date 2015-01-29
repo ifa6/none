@@ -24,14 +24,3 @@ Object *cloneObject(Object *obj){
     }
     return NULL;
 }
-
-/*! 由文件名返回一个对象 !*/
-object_t byName(String name){
-    return run(FS_PID,OPEN,name,0,0);
-}
-
-/*! 由ID返回一个对象 !*/
-object_t byId(id_t id){
-    (void)id;
-    return 0;
-}

@@ -1,7 +1,3 @@
-%none操作系统用户手册
-%罗忠尧
-% Wed Apr 16 22:00:50 CST 2014
-
 [源码]: https://github.com/LuoZhongYao/none
 [none]: https://github.com/LuoZhongYao/none
 [GITHUB]: https://github.com/LuoZhongYao/none
@@ -10,52 +6,7 @@
 <h2 id="overview">概述</h2>
 ![None新特性预览](http://r.photo.store.qq.com/psb?/2f055629-26d1-450a-b719-0c9a5862abb4/8f5clD6S9VIPUSTIu8Oa52PZh58NjPIIgMlTow0Hi6A!/o/dMaLGsdKEAAA&bo=oAWEA6AFhAMCACQ!&t=5&rf=viewer_311)
 
-<h3 id="what-is-fuck">什么是none</h3>
-[none][]是[lzy][]编写的,一个微内核,不兼容POSIX,不可工作的实验性质的操作系统,项目开源,并且[lzy][]希望它是自由的.编写目的是**just for fun**.编写的最初目的是因为[lzy][]初次接触**GNU/Linux**的时候,觉得**GNU/Linux**太复杂了,我的参考目标是**MS-DOS**.**MS-DOS**只需要`io.sys`,`command.com`两个文件即可跑起来,然后根据需要自己添加需要的程序.整个系统都在掌控之中.而**GNU/Linux**,一装上就几百个目录,几千个文件,看起来十分复杂.于是萌生了写一个**MS-DOS**一样简洁(看起来简洁),**GNU/Linux**一样强大的操作系统.项目几经波折,数次重写,数次更名,两次更换托管方式,却都因本人水平太菜,进展缓慢,[none][]的编写过程就是本人学习的过程.如今,[none][]看起来像是一个内核了,可以执行程序,读写文件,打印图像.[none][]当前托管在[GITHUB][].
-
-<h3 id="schedule">当前none是什么样子</h3>
-*  使用grub引导
-    * [none][]使用grub作为引导,这样省去了引导,进入保护模式,获取内存map等繁琐的工作(之前版本这部分都是自己做的)
-*  多进程(多对象)
-    * [none][]支持`fork`方式创建进程.进程是以对象的方式实现的(当时我是单身).
-*  进程间通信(对象调用其他对象的方法)
-    * 进程间的IPC是直接调其他对象的方法,每个对象都有一个固定数目的外部方法,该方法集首先重父进程(父对象)那里继承过来,对象可以修改默认的方法.
-*  虚拟内存管理
-    * ELF格式文件加载
-    * 需时加载,内存首次使用时才分配内存
-    * 写时复制,需时加载
-*  文件系统
-    * 当前的文件系统是Minix 2,因为这个文件系统简单,同时又强大.文件系统的活动部分,现在很简单,只是刚好能运行.这部分也是需要重点修改的
-*  C库
-    * `stdlib.h` 支持 `fork`,`execvp`,`malloc`,`free`,`exit`,`open`,`close`,`write`,`read`,`seek`
-    * `string.h` 支持 `strlen`,`strcmp`,`strncmp`,`memcmp`,`strcpy`,`memset`
-    * `stdio.h`  支持 `printf`,`vsprintf`
-    * `z.h` C语言一个小型不可移植扩展
-*  shell
-    * 使用v6sh做为默认shell,替代之前不完成的shell,因为none 还没有完全实现posix接口,所以这个v6sh是精简版,管道,重定向未实现
-*  几个演示程序,在tests/目录下
-    * ascii 打印ascii码,包括扩展码
-    * rootfs 准备实现的none标准文件系统,使用git存储方式
-    * tertis 移植的俄罗斯方块游戏,还不能运行
-
-<h3 id="befora">之前none家族是什么样子</h3>
-
-[none][]家族第一代是一个引导程序(MBR),只有512字节.仅仅像屏幕打印"Hello world",在[CSDN论坛的fdisksys](http://bbs.csdn.net/topics/340013748)能见到后来改进的版本.
-第二代MBR引导固定地址的二进制文件,实现了简单的多进程,没有实现bash.第三代实现了NE2K网卡驱动,实现了ARP,IP,UDP协议(**非常非常非常精简版**),使用ARP欺骗了路由器,使用UDP实现了两台局域网主机(物理主机Ubuntu,虚拟主机XP,虚拟主机none)之间的通信(*打印Hello world*).第一代代码丢失,第二代代码在[Google Code](https://code.google.com/p/osgml/),[第三代](https://code.google.com/p/gml-vm/)也在Googe Code.
-
-<h3 id="learn-more">了解更多</h3>
-
-想了解更多,请联系[lzy][].
-
-<h3 id="about-this">关于这份文档</h3>
-
-这份文档使用`markdown`编写,编译工具是`pandoc`,文档的源码可通过[](https://naiz.biz/none/user-manual.md)下载.
-
-<h2 id='now-start'>马上开始</h2>
-
 <h3 id='prepare'>准备</h3>
-运行none需要bochs,近期提供其他虚拟机的镜像,和使用方法.
-Ubuntu下bochs的安装
 
 ```bash
 sudo apt-get install bochs
@@ -72,32 +23,18 @@ git clone https://github.com/TaiChiForLuoZhongYao/none.git
 ```
 
 <h3 id='run'>运行</h3>
-`a.img` `n.hd`是已经编译好的的启动镜像和AT硬盘镜像,直接可以在bochs下运行.安装好bochs后使用如下命令即可运行
-```bash
-sudo bochs
+`c.img` `ramdisk.img`是已经编译好的的启动镜像(虚拟AT硬盘)和ramdisk镜像,直接可以在bochs下运行.安装好bochs后使用如下命令即可运行
+```bash -q
+bochs
 ```
 
 <h2 id="compile">编译none</h2>
-
-<h3 id="download">下载源码</h3>
-
-下载[源码][]简单.使用执行下面命令即可(git的安装,请自行Google):
-
 ```bash
-$ git clone https://github.com/LuoZhongYao/none.git
-```
-
-<h3 id="env">编译环境</h3>
-
-编译[none][]需要Linux环境,GCC编译器需要4.9版本.
-
-<h3 id="compile-option">编译选项</h3>
-
-```bash
-$ make  # 编译生成none
-$ sudo make go # 将生成的none安装到a.img,将tests/下面的程序,安装到n.hd,并启动bochs运行
-$ sudo make install #将`a.img`,`n.hd`挂载到`mnt/boot/`,`mnt/hw/`目录下
-$ sudo make uninstall #`mnt/boot/`,`mnt/hw/`的卸载
+git clone https://github.com/LuoZhongYao/none.git # 下载源码
+cd none                 # 进入none源码目录
+source tools/setenv.sh  # 设置root_dir环境变量
+make                    # 编译生成out/bin/none,及demo/目录下的演示,测试程序,生成的二进制文件在out/bin/目录下
+sudo make go            # 将out/bin/non拷贝到a.img的/目录下,将out/bin/下面的程序,拷贝到ramdisk.img的/bin/目录下,并启动bochs运行
 ```
 <h3 id="bochs">虚拟机</h3>
 
@@ -105,37 +42,22 @@ $ sudo make uninstall #`mnt/boot/`,`mnt/hw/`的卸载
 bochs需要特殊编译.可参考本人的另一篇文章[编译支持VESA3的bochs](http://www.cnblogs.com/-lzy/p/3486142.html)
 <h3 id="pc">物理机</h3>
 
-因为外部程序,bash都放在外部硬盘,而文件系统当前使用的minix2文件系统是建立在AT硬盘之上,所以当前OS还无法在物理机上运行,我将近快将AT硬盘替换成ramdisk设备,这样将可在物理机上运行[none][]
+如果安装的是linux系统,运行[none][]很简单.将out/bin/none和ramdisk.img拷贝到/boot/目录下,如果是grub 2.0,编辑/boot/grub2/grub.cfg,在末尾加入
 
-<h2 id="wiki">更新记录</h2>
-<h3 id="gcc">使用GCC4.9</h3>
+```bash
+menuentry 'none OS' {
+    load_video
+    insmod part_msdos
+    insmod minix2
+    search --file /none --set root
+    multiboot /none
+    module    /ramdisk.img
+}
+```
+重新开机,在grub2启动菜单选择none OS即可运行none.
 
-GCC4.9在4.23发布了,这次更新C语言方面提供了如下特性:
 
-*   更人性化,更可读的错误报告,fedora源里面的gcc4.8已经支持这个.
-*   C11 `_Generic`关键字的支持,本次更新我最爱的一个特性
-*   `_auto_type`关键字的支持,这个跟\_\_typeof\_\_功能有重叠.也许它更好吧
-其他特性请到[GCC官网](http://gcc.gnu.org)查看.我期望以后编译器的设计者将更多在编译时编译器的很多特性像语言开放,这样我们就能写出更多灵活,简短的代码.比如\_\typeos\_\_,\_Generic等就是很好的例子.
+<h3 id="about-this">关于这份文档</h3>
 
-<h3 id="for-gcc4.9">none针对GCC4.9的更改</h3>
+这份文档使用`markdown`编写,编译工具是`pandoc`,文档的源码可通过[](https://naiz.biz/none/user-manual.md)下载.
 
-GCC4.9的发布无疑是今年最大的惊喜,我希望我的操作系统成为前沿的跟上时代的,我不会为了兼容性,移植性,而舍弃C语言,开发工具更简便强大的特性抱着古老的标准不放.阻碍新技术的普及.C语言发展这么多年,标准不断更新,但大部分程序依然使用古老的C89,ANSI C编写,这方面的例子有[VIM](http://vim.org),[mixin](http://minix3.org)甚至,Minix还在使用AT&T风格的C语言.为此,GCC4.9的发布,none没有道理不使用,为了使用GCC4.9,none进行了如下修改:
-
-*   `asm`关键字使用`__asm__`代替,因为`asm`在GCC4.9的-std=c11下不可用
-*   利用C99的匿名结构体,字段赋值将run宏改写,现在能这么使用run,`run(PID,READ,.offset = offset,.count = count,.ptr = ptr)`,`run(PID,CLOSE)`,`run(PID,EXEC,.name = "/bin/sh")`,该用法灵感来源于[C技巧：结构体参数转成不定参数](http://coolbash.cn/articles/2801.html)
-*   目前没有使用`_Generic`,关键字,但将在合适的时机大量使用,已经使用`__auto_type`关键字
-*   使用了我的一个个人C语言语法扩充库[z.h](https://github.com/TaiChiForLuoZhongYao/lambda),该库还不稳定,但很方便.我将继续维护这个库,并用于none
-
-<h3 id="normal-update">常规更新</h3>
-
-*   Object添加firend数组,用来支持重定向,调用0 ~ NR\_FIREND之间的对象将通过firend转换后发送,中断除外,中断不支持重定向,否则系统错误,并且缺乏安全
-*   ELF文件的加载已经完善,修复minix2文件系统的一个BUG
-
-<h2 id="todo">TODO</h2>
-
-* 实现同步机制,互斥量,信号量,条件变量
-> none一直在逃避这个,是时候面对了.
-* 方法的调用由内核实现,不需要用户空间干预.
-> 用户空间不需要调用dorun来阻塞自己,方法使用类POSIX signal.但不是线程安全的,需用户空间维护同步
-* 方法的调用占用调用者CPU时间,而不是拥有者时间
-* 对象不应该传递Object对象,该对象仅仅内核可见

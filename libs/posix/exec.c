@@ -1,5 +1,6 @@
 #include <elf.h>
 #include <sys/inter.h>
+#include <none/scntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,7 +13,7 @@ int exec(const char *path,int argc,char **argv){
         strcpy(cmd,path);
     else
         strcat(cmd,path);
-    object_t o = try(-1 == ,open(cmd,0),throw e_fail);
+    object_t o = try(0 > ,open(cmd,0),throw e_fail);
     count_t count = argc > 31 ? 31 : argc;
     char *ptr;
     struct {
@@ -25,7 +26,7 @@ int exec(const char *path,int argc,char **argv){
         strcpy(ptr,argv[i]);
         ptr += strlen(ptr) + 1;
     }
-    _v = run(MM_PID,EXEC,o,buff,argc);
+    _v = run(MM_PID,MIF_EXECVP,o,buff,argc);
     _pop(buff);
     catch(e_fail){
         return _v;

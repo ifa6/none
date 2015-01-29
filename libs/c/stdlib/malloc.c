@@ -225,7 +225,7 @@ void free(void *ptr){
 static void *realize(size_t length);
 static void *(*alloc)(size_t) = realize; 
 static void *realize(size_t length){
-    try(-1 == ,realizeMHeap(0x400000),{
+    try(0 > ,realizeMHeap(0x400000),{
         return NULL;
     });
     alloc = domalloc;

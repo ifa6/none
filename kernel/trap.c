@@ -1,6 +1,7 @@
-#include    "kernel.h"
-#include    "i8259.h"
-#include    "sys.h"
+#include "kernel.h"
+#include "i8259.h"
+#include "sys.h"
+#include <none/scntl.h>
 
 #define     INT_GATE    0x8e00
 #define     TRA_GATE    0x8f00
@@ -78,7 +79,7 @@ static void print_task_info(String str,long nr){
 static inline void die(String str,long *reg,long nr){
     print_task_info(str,nr);
     print_cpu_info((void*)(reg - 1));
-    run(MM_PID,CLOSE,0,0,0);
+    run(MM_PID,MIF_CLOSE,0,0,0);
     /* panic(":-("); */
 }
 
@@ -143,9 +144,9 @@ extern void do_page_fault(long code,long *reg){
     (void)reg;
     void* cr2 = (void*)getcr2();
     if(!(code & 0x1)){
-        run(MM_PID,NO_PAGE,cr2,0,0);
+        run(MM_PID,MIF_NOPAGE,cr2,0,0);
     } else if(code & 0x2){
-        run(MM_PID,WP_PAGE,cr2,0,0);
+        run(MM_PID,MIF_WPPAGE,cr2,0,0);
     }
 }
 

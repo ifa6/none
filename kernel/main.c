@@ -4,6 +4,7 @@ extern void cons_init();
 extern int printk(const char *fmt,...);
 extern void god_init(void);
 
+int errno = 0;
 int main(void){
     cli();
     cons_init();

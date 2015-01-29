@@ -40,12 +40,12 @@ static void free_buffer(Buffer *buff){
 void *dobuffer(int fn,void *s,size_t len){
     void  *buff = NULL;
     len &= 0xfff;
-    if(fn == WRITE){
+    if(fn == IF_WRITE){
         buff = get_buffer();
         if(and(,buff,s,len)){
             memcpy(buff,s,len);
         }
-    }else if(fn == READ){
+    }else if(fn == IF_READ){
         free_buffer(s);
     }
     return buff;

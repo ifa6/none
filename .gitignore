@@ -34,7 +34,7 @@ GTAGS
 
 # 临时文件夹
 mnt/
-objs/
+out/
 lib/
 bin/
 .ycm_extra_conf.py*

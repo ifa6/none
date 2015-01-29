@@ -7,7 +7,7 @@
  *
  */
 
-#define core 180 /* offsetof(struct _task, core) */
-#define registers 176 /* offsetof(struct _task, registers) */
+#define core 260 /* offsetof(struct _task, core) */
+#define registers 256 /* offsetof(struct _task, registers) */
 
 #endif

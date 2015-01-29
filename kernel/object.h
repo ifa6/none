@@ -2,9 +2,9 @@
 #define __NONE_OBJECT_H__
 #include    <none/types.h>
 
-#define OBJECT_NAME_LEN     0x10
-#define NR_METHON           0x10
-#define NR_FRIEND           3
+#define OBJECT_NAME_LEN     0x20
+#define NR_METHON           0x20
+#define NR_FRIEND           0x03
 #define NR_OBJECT           0x300       /*! 当前版本所允许的最大对象数量 !*/
 
 typedef struct _object Object;      /*! 对象,none中的一切,当然,现实中很匮乏 ~*/

@@ -3,7 +3,6 @@
 #	Author : lzy
 .PHONY:all clean
 #当前目录
-module_name := $(notdir $(shell pwd))
 BUILD		:= LIBRARY
 src_files   := $(shell find . -name "*.c")
 src_files   += $(shell find . -name "*.s")

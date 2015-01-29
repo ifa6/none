@@ -48,6 +48,7 @@
 #include <string.h>
 #include <sys/inter.h>
 #include <posix.h>
+#include <none/scntl.h>
 
 #define	QUOTE 0x80 /* 引用标志位，限制了字符集为 7 位 ASCII */
 
@@ -1132,7 +1133,7 @@ int equal(char *as1, char *as2)
  */
 #ifdef  wait
 #undef  wait
-#define wait(x) run(MM_PID,15,0,0,0)
+#define wait(x) run(MM_PID,MIF_WAIT,0,0,0)
 #endif
 int pwait(pid_t i)
 {

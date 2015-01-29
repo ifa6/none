@@ -3,7 +3,6 @@
 #	Author : lzy
 .PHONY:all clean
 # LIBS 
-STATIC_LIBARY := c
 subdir		  := true
 
 ifeq ($(root_dir),)

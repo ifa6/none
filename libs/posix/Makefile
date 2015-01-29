@@ -3,7 +3,6 @@
 #	Author : lzy
 .PHONY:all clean
 #当前目录
-MODULE_NAME := $(notdir $(shell pwd))
 BUILD		:= LIBRARY
 SRC_FILES   := $(shell find ./ -name "*.c")
 

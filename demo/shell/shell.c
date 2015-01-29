@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/inter.h>
 #include <posix.h>
+#include <none/scntl.h>
 #include <z.h>
 
 static int _exec(const char *path,int argc,char **argv);
@@ -72,8 +73,8 @@ int main(void){
         if(OK != _exec(argv[0],argc,argv))
             printf("%s : No usch file or directory\n",argv[0]);
         else
-            run(MM_PID,15,0,0,0);
+            run(MM_PID,MIF_WAIT,0,0,0);
     }
-    run(MM_PID,CLOSE,0,0,0);
+    run(MM_PID,MIF_CLOSE,0,0,0);
     return 0;
 }

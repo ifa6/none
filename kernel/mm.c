@@ -94,10 +94,8 @@ void open_pagination(void){
 
 }
 
-
-
-
-extern multiboot_info_t *envp;
+extern  multiboot_info_t *envp;
+count_t ramdiskCount;
 void mm_init(void){
 
 #define alow     map->base_addr_low
@@ -108,10 +106,16 @@ void mm_init(void){
     memory_map_t *end = (memory_map_t *)(envp->mmap_addr + envp->mmap_length);
     module_t     *module = (void*)(envp->mods_addr);
     void *  mod_start = (void*)module->mod_start;
-    count_t count = module->mod_end - module->mod_start;
+    ramdiskCount = module->mod_end - module->mod_start;
 
+#if 0
+    printk("module : %08p\n",module);
+    printk("start  : %08x\n",module->mod_start);
+    printk("end    : %08x\n",module->mod_end);
+    printk("count  : %08x\n",ramdiskCount);
+#endif
     /*! 将让ramdisk 拷贝到合适的位置 !*/
-    memcpy((void*)RAMDISK_ADDR,mod_start,count);
+    memcpy((void*)RAMDISK_ADDR,mod_start,ramdiskCount);
 
     unsigned char busy = 100;
 
