@@ -126,7 +126,9 @@ __asm__("cld\n"
 return __res;
 }
 
-static inline char * strchr(const char * s,char c)
+//#define strchr  __builtin_strchr
+#if 1
+static inline char * strchr(const char * s,int c)
 {
 register char * __res __asm__("ax");
 __asm__("cld\n\t"
@@ -143,8 +145,9 @@ __asm__("cld\n\t"
     :);
 return __res;
 }
+#endif
 
-static inline char * strrchr(const char * s,char c)
+static inline char * strrchr(const char * s,int c)
 {
 register char * __res __asm__("dx");
 __asm__("cld\n\t"
@@ -380,7 +383,7 @@ __asm__("cld\n\t"
 return __res;
 }
 
-static inline void * memchr(const void * cs,char c,int count)
+static inline void * memchr(const void * cs,int c,size_t count)
 {
 register void * __res __asm__("di");
 if (!count)
@@ -396,7 +399,7 @@ __asm__("cld\n\t"
 return __res;
 }
 
-static inline void * memset(void * s,char c,int count)
+static inline void * memset(void * s,int c,size_t count)
 {
 __asm__("cld\n\t"
 	"rep\n\t"

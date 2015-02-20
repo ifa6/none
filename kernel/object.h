@@ -43,8 +43,9 @@ struct _object{
     pid_t   friend[NR_FRIEND];           /*! friend都是可直接访问的对象,他们是祖先指定的,祖先可信任,则他们就可信任 !*/
     unsigned long fn,r1,r2,r3;
     Methon  fns[NR_METHON];
+    long    talk;                           /*! 方法调用返回值 !*/
+    long    errno;                          /*! 出错号       !*/   
     Object  *wait;                          /*! 等待这个对象的答复 !*/
-    int     talk;                           /*! 上面这个对象的答复 !*/
     enum { WAITING,SLEEPING,ACTIVE }work;   /*! 等待一个请求的完成,等待一个请求的到来,正在运行中 !*/
     struct{Object *wlink,*wnext,*wtail;};   /*! 等待调用你的方法的类的队列 !*/
     iLink   *ilink;                         /*! 优先执行链(中断请求) !*/

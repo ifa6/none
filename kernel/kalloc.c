@@ -91,7 +91,7 @@ void kfree_s(void *obj,unsigned int size){
     struct _bucket_dir *bdir;
     Bucket  *bdesc,*prev;
 
-    page = (void *)(get_pointer((Pointer)obj));
+    page = (void *)(get_pointer((pointer_t)obj));
 
     for(bdir = bucket_dir;bdir->size;bdir++){
         prev = NULL;
@@ -121,7 +121,7 @@ found:
                 panic("malloc bucket corrupted\n");
             bdir->bucket = bdesc->next;
         }
-        free_page((Pointer)bdesc->page);
+        free_page((pointer_t)bdesc->page);
         bdesc->next = free_bucket;
         free_bucket = bdesc;
     }

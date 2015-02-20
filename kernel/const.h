@@ -37,7 +37,7 @@
 #define NR_TASKS 0x100
 
 #define PAGE_SIZE   0x1000
-#define BLOCK_SIZE  1024
+#define PAGE_SHIFT  12
 #define PAGE_OFFSETOF(x) (((unsigned long)(x)) & 0xfff)
 #define KERNEL_STACK_SIZE PAGE_SIZE
 

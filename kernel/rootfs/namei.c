@@ -1,22 +1,22 @@
-#include    "minix_fs.h"
-#include    "../kernel.h"
-
-struct minix_inode_info *minix_lookup(struct minix_inode_info *dir,String name,size_t nlen){
-    unsigned long inr;
-    struct minix_inode_info *inode = NULL;
-    if(nlen > dir->i_sb->s_namelen)
+#include "minix_fs.h"
+static struct inode *minix_lookup(struct inode *dir, String name,size_t nlen) {
+    struct inode *inode = NULL;
+    struct super_block *sb = inode_sb(dir);
+    struct minix_sb_info *sbi = sb_info(sb);
+    unsigned long ino;
+    if(nlen > sbi->s_namelen)
         return NULL;
 
-    inr = minix_inode_by_name(dir,name,nlen);
-    fs_log("inode(%d) by %s.\n",inr,name);
-    if(inr)
-        inode = minix_find_inode(dir->i_sb,inr);
-    fs_log("inode(%p,%d,%d,%d) by %s.\n",inode,inr,inode->i_size,inode->i_zone[0],name);
+    ino = minix_inode_by_name(dir,name,nlen);
+    fs_log("inode(%s,%d).\n",name,ino);
+    if(ino)
+        inode = minix_find_inode(sb,ino);
+    fs_log("inode(%s,&%p,[%d],%d).\n",name,inode,ino,inode->i_size);
     return inode;
 }
 
-object_t minix_path_walk(struct minix_inode_info *dir,String name,unsigned long mode) {
-    struct minix_inode_info *inode = dir;
+object_t minix_path_walk(struct inode *dir,String name,unsigned long mode) {
+    struct inode *inode = dir;
     while(*name && *name == '/') name++;
     for(;*name && inode;name++) {
         String p = name;

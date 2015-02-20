@@ -15,5 +15,12 @@
 /* system interface */
 #define SIF_PRI     IF_USER1
 #define SIF_DUP2    IF_USER2
+#define SIF_PRIVATE IF_USER3
+#include <sys/inter.h>
+static inline void *self_private(void){
+    return (void*)run0(SYSTEM_PID,SIF_PRIVATE);
+}
+
+
 
 #endif

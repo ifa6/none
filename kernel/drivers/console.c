@@ -137,7 +137,7 @@ static inline void insert(int cons,unsigned char ch){
     set_cur(cons);
 }
 
-extern void cons_print(int cons,const char * buf,count_t count){
+extern void cons_print(int cons,const char * buf,cnt_t count){
     unsigned char ch;
 
     foreach(i,0,count){
@@ -202,12 +202,12 @@ extern void cons_init(void){
 
 }
 
-static void cons_write(object_t caller,void *ptr,count_t count){
+static void cons_write(object_t caller,void *ptr,cnt_t count){
     cons_print(0,ptr,count);
     ret(caller,OK);
 }
 
-static void cons_read(object_t caller,void *ptr,count_t count){
+static void cons_read(object_t caller,void *ptr,cnt_t count){
     copy_buffer(caller,ptr,count);
 }
 

@@ -2,8 +2,14 @@
 #define __Z_H__
 
 /*! Now, we open a new programming !*/
-#ifndef UNUSED
-#define UNUSED(x)   ((void)x)
+#ifndef _UNUSED
+#define _UNUSED(x)   ((void)x)
+#endif
+
+#if defined(__GNUC__)
+#define unused(v) v  __attribute__((unused))
+#else
+#define unused(v) v
 #endif
 
 #ifndef eprint
@@ -16,11 +22,11 @@
 
 #define TEST_AND_FREE(fn,v,value) do{if(v != value){fn(v);} v = value;}while(0)
 
-#define build_buf_on(e)         (sizeof(char[1 - 2 * !!(e)]))
+#define build_bug_on(e)         (sizeof(char[1 - 2 * !!(e)]))
 #define build_bug_on_zero(e)    (sizeof(char[1 - 2 * !!(e)]) - 1)
 #define __must_be_array(a)  build_bug_on_zero(types_p(__typeof__(a),__typeof__(&a[0])))
 
-#define test(a)   (a)
+#define _test(a)   (a)
 #define $(ret,expr)    ({ ret $$ expr;&$$;})
 #define lambda  $
 #define STRING(x)   _STRING(x)
@@ -32,7 +38,7 @@
 #define foreach(index,start,end) for(var index = start;index < end;index++)
 #define try(expr,code,...) ({\
         var _v = code;\
-        if(test(expr _v)){\
+        if(_test(expr _v)){\
             eprint("Exception : " #code);\
             __VA_ARGS__;\
         }_v;})
@@ -40,7 +46,7 @@
 #define foreach(index,start,end) for(__typeof__(end) index = start;index < end;index++)
 #define try(expr,code,...) ({\
         __typeof__(code) _v = code;\
-        if(test(expr _v)){\
+        if(_test(expr _v)){\
             eprint("Exception : " #code"\n");\
             __VA_ARGS__;\
         }_v;})
@@ -103,6 +109,6 @@
 #define APPLY(fn,link,...)        TOKEN(APPLY,PP_NARG(__VA_ARGS__))(fn,link,__VA_ARGS__)
 #define _CATCH(x)    x:
 #define catch(...)  APPLY(_CATCH,,__VA_ARGS__)
-#define unused(...) APPLY(UNUSED,;,__VA_ARGS__)
+#define UNUSED(...) APPLY(_UNUSED,;,__VA_ARGS__)
 
 #endif

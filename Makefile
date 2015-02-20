@@ -1,62 +1,72 @@
 # Makefile for install.
 # Install ask root.
 
-.PHONY: all libs kernel modules demo clean \
-	install uninstall  go
+.PHONY: all libs  libs_clean \
+	kernel kernel_clean \
+	modules modules_clean \
+	clean install uninstall  go
 
 # Directories.
 out_dir  	:= out
-ramdisk 	:= ramdisk.img
-disk		:= c.img
+ramdisk 	:= img/ramdisk.img
+disk		:= img/c.img
 kernel_bin 	:= $(out_dir)/bin/none 
 kernel_dir  := $(out_dir)/mnt/disk
 modules_dir := $(out_dir)/mnt/ramdisk
 
 LIBDIR 		:= libs
 KERNELDIR 	:= kernel
-DEMODIR 	:= demo
 MODULESDIR  := modules
+DRIVERSDIR	:= drivers
+q 			:= -s
+Q 			:= @
 
 MAKE = make
 RM = rm
 $(shell mkdir -p  $(kernel_dir) $(modules_dir))
 
-all : libs kernel demo
+all : libs kernel modules
 
 kernel :  libs
-	@$(MAKE) -s -C $(KERNELDIR)
+	$(Q) $(MAKE) $(q) -C $(KERNELDIR)
+
+kernel_clean :
+	$(Q) $(MAKE) $(q) -C $(KERNELDIR) clean
 
 libs :
-	@$(MAKE) -s -C $(LIBDIR)
+	$(Q) $(MAKE) $(q) -C $(LIBDIR)
+
+libs_clean :
+	$(Q) $(MAKE) $(q) -C $(LIBDIR) clean
 
 modules : libs
-	@$(MAKE) -s -C $(MODULESDIR)
+	$(Q) $(MAKE) $(q) -C $(MODULESDIR)
 
-demo : libs
-	@$(MAKE) -s -C $(DEMODIR)
+modules_clean :
+	$(Q) $(MAKE) $(q) -C $(MODULESDIR) clean
 
 install : 
-	@echo "Install modules to ramdisk."
-	@-mount $(ramdisk) $(modules_dir)
-	@chmod a+w $(modules_dir)
-	@-cp $(out_dir)/bin $(modules_dir)/ -r
-	@-rm -f -- $(modules_dir)/bin/none
-	@sleep 1
-	@umount $(modules_dir)
-	@echo "Install kernel to hardisk."
-	@-mount $(disk) $(kernel_dir)
-	@chmod a+w $(kernel_dir)
-	@-cp $(kernel_bin) $(kernel_dir)/
-	@-cp $(ramdisk) $(kernel_dir)/
-	@sleep 1
+	$(Q) echo "Install modules to ramdisk."
+	$(Q) -mount $(ramdisk) $(modules_dir)
+	$(Q) chmod a+w $(modules_dir)
+	$(Q) -cp $(out_dir)/bin $(modules_dir)/ -r
+	$(Q) -rm -f -- $(modules_dir)/bin/none
+	$(Q) sleep 1
+	$(Q) umount $(modules_dir)
+	$(Q) echo "Install kernel to hardisk."
+	$(Q) -mount $(disk) $(kernel_dir)
+	$(Q) chmod a+w $(kernel_dir)
+	$(Q) -cp $(kernel_bin) $(kernel_dir)/
+	$(Q) -cp $(ramdisk) $(kernel_dir)/
+	$(Q) sleep 1
 
 uninstall :
-	@-umount $(kernel_dir)
-	@-umount $(modules_dir)
+	$(Q) -umount $(kernel_dir)
+	$(Q) -umount $(modules_dir)
 
-go: install uninstall
-	@bochs -q
+go : install uninstall
+	$(Q) bochs -q
 
-clean:
-	@-rm -rf -- out/
-	@-rm -f -- *.out *.src tags *.swap
+clean : libs_clean kernel_clean modules_clean
+	$(Q) -rm -rf -- out/
+	$(Q) -rm -f -- *.out *.src tags *.swap

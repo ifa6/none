@@ -14,7 +14,7 @@ int exec(const char *path,int argc,char **argv){
     else
         strcat(cmd,path);
     object_t o = try(0 > ,open(cmd,0),throw e_fail);
-    count_t count = argc > 31 ? 31 : argc;
+    cnt_t count = argc > 31 ? 31 : argc;
     char *ptr;
     struct {
         char *argv[32];

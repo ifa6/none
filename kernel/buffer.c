@@ -32,7 +32,7 @@ static void *get_buffer(void){
 
 static void free_buffer(Buffer *buff){
     if(!buff) panic("free buffer error\n");
-    buff = (void*)(((Pointer)buff) & (~0xfff));
+    buff = (void*)(((pointer_t)buff) & (~0xfff));
     buff->next = first;
     first = buff;
 }

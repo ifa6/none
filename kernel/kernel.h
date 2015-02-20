@@ -36,7 +36,7 @@ extern IrqHandler irq_table[NR_IRQ_VECTORS];
 
 /* */
 #define getcr3()    ({  \
-        Pointer _cr3;   \
+        pointer_t _cr3;   \
         __asm__("movl %%cr3,%0\n\t\t":"=a"(_cr3)); \
         _cr3;   \
         })
@@ -46,7 +46,7 @@ extern IrqHandler irq_table[NR_IRQ_VECTORS];
         })
 
 #define getcr2()    ({  \
-        Pointer _cr2;   \
+        pointer_t _cr2;   \
         __asm__("movl %%cr2,%0\n\t\t":"=a"(_cr2)); \
         _cr2;   \
         })
@@ -68,17 +68,19 @@ extern void put_irq_handler(int irq,IrqHandler handler);
 extern void* get_free_page(void);
 extern void* get_kfree_page(void);
 #define get_free_object get_kfree_page
-extern int free_page(Pointer);
-extern int share_page(Pointer);
-extern int page_share_nr(Pointer page);
+extern int free_page(pointer_t);
+extern int share_page(pointer_t);
+extern int page_share_nr(pointer_t page);
 extern int printk(const char *fmt,...);
-extern void printx(const char *data,count_t count);
+extern void printx(const char *data,cnt_t count);
 extern void panic(const char *msg);
 
 extern void *kalloc(unsigned int);
 extern void kfree_s(void *,unsigned int);
-#define kfree(p)    kfree_s(p,0) //({ printk("%s:%d :",__FILE__,__LINE__);kfree_s(p,0); })
+#define kfree(p)    \
+    kfree_s(p,0) 
+  //  ({ printk("%s:%d : %p.\n",__FILE__,__LINE__,p);kfree_s(p,0); })
 //#define kalloc(n) ({void *_v = kalloc(n);printk("%s:%d [%p:%d]\n",__FILE__,__LINE__,_v,n);_v;})
-
+Object *objectById(object_t id);
 
 #endif

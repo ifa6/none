@@ -126,7 +126,7 @@ int dofn(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned 
 
 /*! 中断具有高优先级,必须优先处理 !*/
 static iLink *first_iLink = NULL;
-static count_t count_iLink = 0;
+static cnt_t count_iLink = 0;
 static iLink *alloc_iLink(void) {
     iLink *tmp;
     if(!first_iLink)
@@ -166,10 +166,11 @@ int doint(object_t o,unsigned long fn,unsigned long r1,unsigned long r2,unsigned
     return OK;
 }
 
-int doret(object_t o,unsigned long talk){
+int doret(object_t o,long talk,long err){
     Object *obj = toObject(o);
     if(obj && isWaitMe(obj)){
         obj->talk = talk;
+        obj->errno  = err;
         _wakeup(obj);
     }
     return OK;
@@ -198,7 +199,7 @@ _again:
     }
 
     if(NULL == self()->fns[fn]) {
-        doret(id,-ENOSYS);
+        doret(id,-1,-ENOSYS);
         goto _again;
     } else {
         ptr = (long)self()->fns[fn];
@@ -216,7 +217,7 @@ static inline void gam(Object *this){
     this->friend[2]         = 6;
 }
 
-static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int (*entry)()){
+static Task* make_task(id_t id,String name,pointer_t data,pointer_t code,int pri,int (*entry)()){
     Task *task;
     task = (Task *)get_free_object();
     OBJECT(task)->id = id;
@@ -249,7 +250,7 @@ static Task* make_task(id_t id,String name,Pointer data,Pointer code,int pri,int
 }
 
 void god_init(void){
-    Pointer tr = TR_DESC;
+    pointer_t tr = TR_DESC;
 
     //sys_log("god task init.\n");
 
@@ -261,7 +262,7 @@ void god_init(void){
 
     tss = (Tss*)(TSS_TABLE);
     tss->ss0 = KERNEL_DATA;
-    tss->esp0 = (Pointer)(STACK(leading)->stackp);
+    tss->esp0 = (pointer_t)(STACK(leading)->stackp);
     //tss->gs = tss->fs = tss->es = tss->ds = USER_DATE;
     tss->ldt = 0;
     tss->io = 0xffff0000;

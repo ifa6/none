@@ -34,6 +34,9 @@ typedef enum {
 #define OK      0
 #define ERROR   -1
 
+#define BLOCK_SIZE  1024
+#define BLOCK_SHIFT 10
+
 #define zerror(fmt,...) printk("\er"fmt"\ew\n",##__VA_ARGS__)
 
 #define syscall(_sys_call,obj,fn,r1,r2,r3) ({\
@@ -44,11 +47,16 @@ typedef enum {
 #define lock()      cli()
 #define unlock()    sti()
 
-static inline long ret(object_t caller,long talk) { return syscall(_NR_ret,caller,talk,0,0,0);}
-#define run(callee,fn,r1,r2,r3) syscall(_NR_run,callee,fn,r1,r2,r3)
-#define workloop()          syscall(_NR_loop,0, 0,0,0,0)
-#define hook(fn,m)          syscall(_NR_hook,fn,m,0,0,0)
-#define _push(s,c)          (void*)(syscall(_NR_buffer,IF_WRITE,s,c,0,0))
-#define _pop(s)             syscall(_NR_buffer,IF_READ,s,0,0,0)
+#define eret(caller,talk,err)       syscall(_NR_ret,caller,talk,err,0,0)
+#define ret(caller,talk)            syscall(_NR_ret,caller,talk,0,0,0)
+#define run(callee,fn,r1,r2,r3)     syscall(_NR_run,callee,fn,r1,r2,r3)
+#define run0(callee,fn)             run(callee,fn,0,0,0)
+#define run1(callee,fn,r1)          run(callee,fn,r1,0,0)
+#define run2(callee,fn,r1,r2)       run(callee,fn,r1,r2,0)
+#define run3(callee,fn,r1,r2,r3)    run(callee,fn,r1,r2,r3)
+#define workloop()                  syscall(_NR_loop,0, 0,0,0,0)
+#define hook(fn,m)                  syscall(_NR_hook,fn,m,0,0,0)
+#define _push(s,c)                  (void*)(syscall(_NR_buffer,IF_WRITE,s,c,0,0))
+#define _pop(s)                     syscall(_NR_buffer,IF_READ,s,0,0,0)
 
 #endif

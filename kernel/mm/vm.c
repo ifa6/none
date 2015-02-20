@@ -8,7 +8,7 @@
 #define VMHEAD(ptr)     ((VMHead*)(ptr->private_data))
 
 
-void *mkvm(object_t o,void *ptr,count_t count,Registers *reg,char *name){
+void *mkvm(object_t o,void *ptr,cnt_t count,Registers *reg,char *name){
     Elf32_Ehdr ehdr;
     Elf32_Phdr *phdr = NULL;
     size_t psize = 0;
@@ -18,7 +18,7 @@ void *mkvm(object_t o,void *ptr,count_t count,Registers *reg,char *name){
         char *argv[32];
         char env[0];
     } *buff = ptr;
-    int rlen = 0;
+    int unused(rlen) = 0;
 
     strcpy(name,buff->argv[0]);
 
@@ -59,7 +59,6 @@ void *mkvm(object_t o,void *ptr,count_t count,Registers *reg,char *name){
         delvm(vmhead);
         TEST_AND_FREE(kfree,vmhead,NULL);
     }
-    unused(rlen);
     return NULL;
 }
 

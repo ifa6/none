@@ -22,12 +22,12 @@ typedef struct{
 }VM;
 
 typedef struct {
-    count_t   cnt;          /*! 段共享计数 !*/
+    cnt_t   cnt;          /*! 段共享计数 !*/
     object_t  object;       /*! 段关联文件 !*/
     struct list_head list;
 }VMHead;
 
-void *mkvm(object_t,void *ptr,count_t ,Registers *reg,char *name);
+void *mkvm(object_t,void *ptr,cnt_t ,Registers *reg,char *name);
 void *dovm(VMHead*,void *vaddr);
 void copyvm(VMHead *);
 void delvm(VMHead *vm);

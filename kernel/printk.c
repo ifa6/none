@@ -2,7 +2,7 @@
 #include    <stddef.h>
 #include    "kernel.h"
 
-extern void cons_print(int cons,const char *buf,count_t count);
+extern void cons_print(int cons,const char *buf,cnt_t count);
 
 static  char buf[1024];
 
@@ -17,7 +17,7 @@ extern int printk(const char *fmt,...){
 
 }
 
-extern void printx(const char *data,count_t count){
+extern void printx(const char *data,cnt_t count){
     foreach(i,0,count){
         if(!(i % 16)){
             if(i){

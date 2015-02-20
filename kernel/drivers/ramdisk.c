@@ -4,31 +4,31 @@
 
 static void *ramdisk;
 static off_t offset;
-extern count_t ramdiskCount;
+extern cnt_t ramdiskCount;
 
-static void ramdisk_readpage(object_t caller,void *ptr,count_t count,off_t offset){
+static void ramdisk_readpage(object_t caller,void *ptr,cnt_t count,off_t offset){
     off_t off = offset * BLOCK_SIZE;
-    count_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
+    cnt_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
     memcpy(ptr,ramdisk + off,cnt);
     ret(caller,OK);
 }
 
-static void ramdisk_writepage(object_t caller,void *ptr,count_t count,off_t offset){
+static void ramdisk_writepage(object_t caller,void *ptr,cnt_t count,off_t offset){
     off_t off = offset * BLOCK_SIZE;
-    count_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
+    cnt_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
     memcpy(ramdisk + off,ptr,cnt);
     ret(caller,OK);
 }
 
-static void ramdisk_read(object_t caller,void *ptr,count_t count) {
-    count_t cnt = min(count,ramdiskCount - offset);
+static void ramdisk_read(object_t caller,void *ptr,cnt_t count) {
+    cnt_t cnt = min(count,ramdiskCount - offset);
     memcpy(ptr,ramdisk + offset,cnt);
     offset += cnt;
     ret(caller,cnt);
 }
 
-static void ramdisk_write(object_t caller,void *ptr,count_t count) {
-    count_t cnt = min(count,ramdiskCount - offset);
+static void ramdisk_write(object_t caller,void *ptr,cnt_t count) {
+    cnt_t cnt = min(count,ramdiskCount - offset);
     memcpy(ramdisk + offset,ptr,cnt);
     offset += cnt;
     ret(caller,cnt);

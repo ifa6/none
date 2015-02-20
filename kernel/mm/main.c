@@ -21,12 +21,12 @@ typedef union _pageItem{
         unsigned long :2;
         unsigned long avl:3;
     };
-    Pointer pointer;
+    pointer_t pointer;
 }PageItem;
 
 #define clrWrite(x) ((x)->write = 0)
 #define isWrite(x) (1 == (x)->write)
-#define toPointer(x)    ((x) & (~0xfff))
+#define topointer_t(x)    ((x) & (~0xfff))
 #define isPresent(x)    (1 == (x)->present)
 #define clrPresent(x) ((x)->present = 0)
 /* copy page memory from f to t (4kb) */
@@ -47,7 +47,7 @@ static PageItem *copy_dir(PageItem *dir){
     foreach(i,CMEM >> 22,1024){
         clrWrite(dir + i);
         if(dir[i].present){
-            share_items((PageItem*)toPointer(dir[i].pointer));
+            share_items((PageItem*)topointer_t(dir[i].pointer));
             share_page(dir[i].pointer);
         }
         //clrPresent(items + i);
@@ -61,14 +61,14 @@ static PageItem *copy_dir(PageItem *dir){
 
 static inline void put_item(PageItem *items,void *page,int index,int mode){
     (void)mode;
-    items[index] = (PageItem)(toPointer((Pointer)page) | 7);
+    items[index] = (PageItem)(topointer_t((pointer_t)page) | 7);
 }
 
 
 static PageItem *clone_space(PageItem *space,void *page){
     PageItem *nsp = NULL;
     PageItem *ntb = NULL;
-    PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
+    PageItem *tmp = (PageItem *)topointer_t(space[DIR_INDEX(KERNEL_STACK)].pointer);
     nsp = copy_dir(space);
     ntb = try(NULL == ,get_free_page());
     copy_page(ntb,tmp);//copy_items(tmp,0,0);
@@ -81,9 +81,9 @@ static void clone(object_t o){
     Task *ot = TASK(toObject(o));
     Task *nt = TASK(cloneObject(OBJECT(ot)));
     if(!nt){
-        ret(o,-ENOMEM);
+        eret(o,-1,-ENOMEM);
     }else{
-        nt->core = (Pointer)clone_space((void *)(ot->core),nt);
+        nt->core = (pointer_t)clone_space((void *)(ot->core),nt);
         copyvm(OBJECT(ot)->private_data);
         ret(OBJECT(nt)->id,OK);
         ret(o,OBJECT(nt)->id);
@@ -108,7 +108,7 @@ static int delete_table(PageItem *table){
 static void _delete(PageItem *dir){
     foreach(i,CMEM >> 22,1024){
         if(isPresent(dir + i)){
-            if((ERROR == delete_table((PageItem *)(toPointer(dir[i].pointer)))) || 
+            if((ERROR == delete_table((PageItem *)(topointer_t(dir[i].pointer)))) || 
                     (ERROR == free_page(dir[i].pointer))){
                 mm_error("  dir[%d] = %08x",i,dir[i].pointer);
                 panic("free page fail");
@@ -122,40 +122,53 @@ static void delete(object_t o){
     Task *t = TASK(toObject(o));
     PageItem *nsp = (PageItem *)t->core;
     _delete(nsp);
-    try(ERROR ==,free_page((Pointer)(nsp)),{
+    try(ERROR ==,free_page((pointer_t)(nsp)),{
         panic("free page fail");
     });
     delvm(OBJECT(t)->private_data);
     OBJECT(t)->private_data  = NULL;
     ret(OBJECT(t)->father,o);
-    /*! free_page((Pointer)t); !*/
+    /*! free_page((pointer_t)t); !*/
 }
 
 
 static int put_page(PageItem *dirs,void *va,void *page){
     PageItem *table = NULL;
-    if(!isPresent(dirs + DIR_INDEX((Pointer)va))){
+    if(!isPresent(dirs + DIR_INDEX((pointer_t)va))){
         table = get_free_page();
-        if(!table) return ERROR;
-        put_item(dirs,table,DIR_INDEX((Pointer)va),7);
+        if(!table) 
+            return -ENOMEM;
+        put_item(dirs,table,DIR_INDEX((pointer_t)va),7);
     }
-    if(!page) return ERROR;
-    table = (void *)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
-    put_item(table,page,TABLE_INDEX((Pointer)va),7);
+    if(!page) 
+        return ERROR;
+    table = (void *)(((pointer_t)dirs[DIR_INDEX((pointer_t)va)].table) & (~0xfff));
+    put_item(table,page,TABLE_INDEX((pointer_t)va),7);
     return OK;
 }
 
 static void np_page(object_t o,void *ptr){
     Task *t = TASK(toObject(o));
     void *page = dovm(OBJECT(t)->private_data,ptr);
+    long val = 0;
+    if(!page) {
+        val = ERROR;
+        goto err_out;
+    }
     mm_log("page : %p virtual : %p\n",page,ptr);
-    ret(o,put_page((PageItem *)t->core,ptr,page));
+    val = put_page((PageItem *)t->core,ptr,page);
+    if(val < 0)
+        goto err_out;
+    ret(o,val);
+    return;
+err_out:
+    eret(o,-1,val);
 }
 
 static PageItem *_un_table(PageItem *dir,void *va){
-    PageItem *table = (void*)(((Pointer)dir[DIR_INDEX((Pointer)va)].table) & (~0xfff));
+    PageItem *table = (void*)(((pointer_t)dir[DIR_INDEX((pointer_t)va)].table) & (~0xfff));
     PageItem *new_table = NULL;
-    if(!(dir[DIR_INDEX((Pointer)va)].present)){
+    if(!(dir[DIR_INDEX((pointer_t)va)].present)){
         mm_error("Virtual address %08x not present.",va);
         return NULL;
     };
@@ -166,12 +179,13 @@ static PageItem *_un_table(PageItem *dir,void *va){
         }
     }
 
-    if(page_share_nr(dir[DIR_INDEX((Pointer)va)].pointer) > 1){
-        try(ERROR == ,free_page(dir[DIR_INDEX((Pointer)va)].pointer),{
+    if(page_share_nr(dir[DIR_INDEX((pointer_t)va)].pointer) > 1){
+        try(ERROR == ,free_page(dir[DIR_INDEX((pointer_t)va)].pointer),{
             mm_error("Not release the virtual memory address %08x",va);
         });
         new_table = (void*)get_free_page();
-        if(!new_table) return NULL;
+        if(!new_table) 
+            return NULL;
         copy_page(new_table,table);
         table = new_table;
     }
@@ -180,16 +194,16 @@ static PageItem *_un_table(PageItem *dir,void *va){
 
 
 static PageItem *_un_page(PageItem *table,void *va){
-    PageItem *page = (void*)(((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff));
+    PageItem *page = (void*)(((pointer_t)table[TABLE_INDEX((pointer_t)va)].table) & (~0xfff));
     PageItem *new_page = NULL;
 
-    if(!(table[TABLE_INDEX((Pointer)va)].present)){
+    if(!(table[TABLE_INDEX((pointer_t)va)].present)){
         mm_error("Virtual address %08x",va);
         return NULL;
     };
 
-    if(page_share_nr(table[TABLE_INDEX((Pointer)va)].pointer) > 1){
-        try(ERROR == ,free_page(table[TABLE_INDEX((Pointer)va)].pointer),{
+    if(page_share_nr(table[TABLE_INDEX((pointer_t)va)].pointer) > 1){
+        try(ERROR == ,free_page(table[TABLE_INDEX((pointer_t)va)].pointer),{
             mm_error("Not release the virtual memory address %08x",va);
         });
         new_page = (void*)get_free_page();
@@ -203,23 +217,33 @@ static PageItem *_un_page(PageItem *table,void *va){
 static void nw_page(object_t o,void *ptr){
     Task *t = TASK(toObject(o));
     PageItem *table = _un_table((PageItem *)t->core,ptr);
+    long val = 0;
     //mm_log("virtual : %p\n",ptr);
-    if(!table) 
-        ret(o,ERROR);
-    put_item((PageItem*)t->core,table,DIR_INDEX((Pointer)ptr),7);
+    if(!table) {
+        val = ERROR;
+        goto err_out;
+    }
+    put_item((PageItem*)t->core,table,DIR_INDEX((pointer_t)ptr),7);
     void *page = _un_page(table,ptr);
-    if(!page) 
-        ret(o,ERROR);
-    put_item(table,page,TABLE_INDEX((Pointer)ptr),7);
+    if(!page) {
+        val = ERROR;
+        goto err_out;
+    }
+    put_item(table,page,TABLE_INDEX((pointer_t)ptr),7);
+
     ret(o,OK);
+    return;
+
+err_out:
+    eret(o,-1,val);
 }
 
 static void *__va(PageItem *dirs,void *va){
-    PageItem *table = (void*)(((Pointer)dirs[DIR_INDEX((Pointer)va)].table) & (~0xfff));
-    return (void*)((((Pointer)table[TABLE_INDEX((Pointer)va)].table) & (~0xfff)) + (((Pointer) va) & 0xfff));
+    PageItem *table = (void*)(((pointer_t)dirs[DIR_INDEX((pointer_t)va)].table) & (~0xfff));
+    return (void*)((((pointer_t)table[TABLE_INDEX((pointer_t)va)].table) & (~0xfff)) + (((pointer_t) va) & 0xfff));
 }
 
-static void mm_execvp(object_t o,object_t file,void *ptr,count_t count){
+static void mm_execvp(object_t o,object_t file,void *ptr,cnt_t count){
     Task * t = TASK(toObject(o));
     t->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     Registers *reg = __va((void*)(t->core),t->registers);
@@ -237,7 +261,7 @@ static void _wait(Object *this){
 static PageItem *__clone_space__(PageItem *space,void *page){
     PageItem *nsp = (void*)get_free_page();
     PageItem *ntp = (void*)get_free_page();
-    PageItem *tmp = (PageItem *)toPointer(space[DIR_INDEX(KERNEL_STACK)].pointer);
+    PageItem *tmp = (PageItem *)topointer_t(space[DIR_INDEX(KERNEL_STACK)].pointer);
     if(or(!,nsp,ntp)) 
         panic("memeory very full!-_-|||");
     copy_page(nsp,space);
@@ -256,7 +280,7 @@ static Task* make_task(String name,int (*entry)(void)){
     Task *task;
     //VM *vm;
     task = TASK(cloneObject(self()));
-    task->core = (Pointer)__clone_space__((void *)(TASK(self())->core),task);
+    task->core = (pointer_t)__clone_space__((void *)(TASK(self())->core),task);
     task->registers = (void*)(KERNEL_STACK + 0x1000 - sizeof(Registers));
     task->pri = PRI_TASK;
     task->count = 20;

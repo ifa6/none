@@ -9,6 +9,7 @@
 //#define MM_LOG
 //#define PRINT_SCHED
 
+#define err(own,fmt,...)    printk("[\er%6s\ew] : "fmt,own,##__VA_ARGS__)
 #ifdef DEBUG
 #define  dbg(own,fmt,...)  printk("[%6s] : "fmt,own,##__VA_ARGS__)
 #else
@@ -16,7 +17,7 @@
 #endif
 
 #ifdef TODO
-#define todo(fmt,...)   printk("\er[TODO  ] : "fmt" %s:%d\ew\n",##__VA_ARGS__,__FILE__,__LINE__)
+#define todo(fmt,...)   printk("[\egTODO  \ew] : "fmt" %s:%d\ew\n",##__VA_ARGS__,__FILE__,__LINE__)
 #else
 #define todo(...)
 #endif

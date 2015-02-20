@@ -12,7 +12,7 @@ int clock_handler(object_t o,int irq){
     if(TASK(leading)->ucount)
         TASK(leading)->ucount--;
     if(!(jiffies % 1000)) 
-        doint(o,HANDLER,0,0,0);   /*!-------!*/
+        doint(o,TIF_INTR,0,0,0);   /*!-------!*/
     return OK;
 }
 
@@ -87,8 +87,8 @@ static void _clk(Object *this){
 }
 
 static void clock_init(void){
-    hook(GETTIME,get_time);
-    hook(HANDLER,_clk);
+    hook(TIF_GETTIME,get_time);
+    hook(TIF_INTR,_clk);
     cmos_time();
     outb_p(0x36,0x43);
     outb_p(LATCH & 0xff,0x40);

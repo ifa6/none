@@ -1,13 +1,17 @@
 #include <sys/inter.h> 
 #include <none/if.h>
 #include <string.h>
+#include <stdarg.h>
+#include <errno.h>
 
-object_t open(String path,int mode){
-    object_t o = 0;
+object_t open(String path,int flag,...){
+    object_t res;
+    va_list arg;
     void *buff = _push(path,strlen(path) + 1);
-    o = run(ROOTFS_PID,IF_OPEN,buff,mode,0);
+    va_start(arg,flag);
+    res = run(ROOTFS_PID,IF_OPEN,buff,flag,0);
     _pop(buff);
-    return o;
+    return res;
 }
 
 int close(object_t obj){

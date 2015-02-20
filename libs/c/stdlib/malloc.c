@@ -33,8 +33,6 @@
             AFTER(x)->before = x;   \
         }})
 
-#define exit(n) while(n)
-
 typedef struct _MObject MObject;
 typedef struct _MHeap   MHeap;
 

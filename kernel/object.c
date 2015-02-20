@@ -24,3 +24,7 @@ Object *cloneObject(Object *obj){
     }
     return NULL;
 }
+
+Object *objectById(object_t id) {
+    return object_table[id];
+}

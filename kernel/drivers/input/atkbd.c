@@ -48,11 +48,11 @@ static int keyboard_handler(object_t o,int nr){
 }
 
 static char buffer[MAXBUFF];
-static count_t index = 0;
+static cnt_t index = 0;
 
 
 static object_t _caller = 0;
-static count_t  _count = 0;
+static cnt_t  _count = 0;
 static void     *_buf = NULL;
 
 static void _ispress(object_t caller){
@@ -102,7 +102,7 @@ static void _input(object_t caller){
     }
 }
 
-void copy_buffer(object_t caller,void *buf,count_t len){
+void copy_buffer(object_t caller,void *buf,cnt_t len){
     int _v = 0;;
     if(0 == index){
         _caller = caller;

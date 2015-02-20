@@ -986,7 +986,7 @@ typedef struct
 
 #define AT_EXECFN	31		/* Filename of executable.  */
 
-/* Pointer to the global system page used for system calls and other
+/* pointer_t to the global system page used for system calls and other
    nice things.  */
 #define AT_SYSINFO	32
 #define AT_SYSINFO_EHDR	33

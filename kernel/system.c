@@ -31,7 +31,7 @@ static void system_dup2(object_t caller,long r1,long r2){
         obj->friend[r1] = r2;
         ret(caller,OK);
     }
-    ret(caller,ERROR);
+    eret(caller,-1,-ENOSYS);
 }
 
 static void system_pri(object_t caller,long r1) {
@@ -40,13 +40,18 @@ static void system_pri(object_t caller,long r1) {
     ret(caller,OK);
 }
 
+static void system_private(object_t caller) {
+    ret(caller,objectById(caller)->private_data);
+}
+
 static void system_init(void){
     hook(SIF_DUP2,system_dup2);
+    hook(SIF_PRIVATE,system_private);
     hook(1,system_pri);
 }
 
 int system_main(void){
-    count_t i = 0;
+    cnt_t i = 0;
     id_t id = 0;
     system_init();
 hel:

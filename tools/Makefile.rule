@@ -45,13 +45,13 @@ define sub-dir
 			grep '^BUILD\s*:=\s*LIBRARY\s*$$' $$f > /dev/null;\
 			if [ $$? -eq 0 ] ;then\
 				dir=`dirname $$f`;\
-				$(MAKE)  -s -C $$dir V=$V $$* || exit 1;\
+				$(MAKE)  -s -C $$dir V=$V $(1) || exit 1;\
 				files=$${files//$$f/};\
 			fi;\
 		done;\
 		for f in $$files;do \
 			dir=`dirname $$f`;\
-			$(MAKE) -s -C $$dir V=$V $$* || exit 1;\
+			$(MAKE) -s -C $$dir V=$V $(1) || exit 1;\
 		done;
 endef
 
@@ -68,7 +68,7 @@ LD	:= ld
 #	选项
 #########################################################################
 a_flags  += --32
-c_flags  += $(addprefix -I,$(include_dir)) -m32 -std=c11 -nostdinc -fno-stack-protector -fno-builtin -Wall -Werror
+c_flags  += $(addprefix -I,$(include_dir)) -m32 -std=c11 -fno-builtin -nostdinc -Wall -Werror #-fno-stack-protector 
 
 ########################################################################
 #	中间文件生成
@@ -87,7 +87,7 @@ ld_flags += $(addprefix -L,$(lib_dir)) $(addprefix -l,$(STATIC_LIBARY)) -m elf_i
 $(module) : $(libs)
 $(module) : $(objs)
 ifeq ($(subdir),true)
-	$(call sub-dir,$$*)
+	$(call sub-dir)
 endif
 	$Q echo  "  [LD]	$@"
 	$Q $(LD) $^ $(ld_flags) -Ttext $(ENTRY) -o $@
@@ -98,22 +98,26 @@ ifeq ($(BUILD),LIBRARY)
 module := $(lib_dir)/lib$(module_name).a
 $(module): $(objs)
 ifeq ($(subdir),true)
-	$(call sub-dir,$$*)
+	$(call sub-dir)
 endif
 	$Q echo  "  [AR]	$(module)"
 	$Q $(AR) -ur $@ $? > /dev/null 2>&1
 else
 all:
 ifeq ($(subdir),true)
-	$(call sub-dir,$$*)
+	$(call sub-dir)
 endif
 endif
 
 clean:
+ifeq ($(subdir),true)
+	$(call sub-dir,clean)
+endif
+	$Q echo  "  [CL]	$(out_dir)/"
 	$Q -rm -f -- *.doa
 	$Q -rm -rf $(out_dir)/*
 ifdef cleans
-	$Q echo  "  [CL]	$(cleans)"
+	$Q echo  "  [CL]	$(local_path)/{$(cleans)}"
 	$Q -rm -f $(cleans)
 endif
 ########################################################################

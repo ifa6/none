@@ -1,10 +1,14 @@
 #ifndef __NONE_TIME_H__
 #define __NONE_TIME_H__
 #include <none/types.h>
+#include <none/if.h>
 #include <sys/inter.h>
-enum{
-    GETTIME = 0,
-    HANDLER = 1,
+#define  TIF_INTR           IF_INTR
+#define  TIF_GETTIME        IF_USER1
+
+struct timespec {
+    time_t  tv_sec;
+    long    tv_nsec;
 };
 
 struct tm{
@@ -20,7 +24,7 @@ struct tm{
 };
 
 typedef struct time Time;
-struct time{
+struct time {
     int second;
     int minute;
     int hour;
@@ -33,8 +37,8 @@ struct time{
 
 static inline time_t time(time_t *sp){
     time_t _time;
-    _time = run(CLOCK_PID,GETTIME,sp,0,0);
-    if(sp)
+    _time = run(CLOCK_PID,TIF_GETTIME,sp,0,0);
+    if(sp && _time > 0)
         *sp = _time;
     return _time;
 }
