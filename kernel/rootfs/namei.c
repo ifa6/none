@@ -1,4 +1,6 @@
 #include "minix_fs.h"
+#include <z.h>
+
 static struct inode *minix_lookup(struct inode *dir, String name,size_t nlen) {
     struct inode *inode = NULL;
     struct super_block *sb = inode_sb(dir);

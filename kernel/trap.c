@@ -49,8 +49,7 @@ extern void 	hwint15(void);
 extern void     switch_task(void);      
 extern int      sys_call(int EAX,int EBX,int ECX,int EDX); 
 
-
-static unsigned long (* const idt)[2] = (unsigned long  (*const)[2])(IDT_TABLE);
+#define idt  ((unsigned long (*)[2])IDT_TABLE)
 
 IrqHandler irq_table[NR_IRQ_VECTORS];
 object_t irq_object_table[NR_IRQ_VECTORS];

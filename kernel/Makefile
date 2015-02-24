@@ -4,7 +4,7 @@
 STATIC_LIBARY := posix c fs
 module_name	  := none
 BUILD		  := BINARY
-ENTRY 		  := 0x305000
+ENTRY 		  := 0x361000
 src_dirs 	  := mm drivers drivers/input rootfs
 cleans 		  := offsets.h
 

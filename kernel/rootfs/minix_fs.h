@@ -65,10 +65,14 @@ static inline struct inode *inode_iget(struct minix_inode_info *inode_info){
 }
 
 int blk_rw(const object_t dev,const int cmd, void *buff,off_t offset,blkcnt_t count);
-int zone_rw(struct inode *inode,int cmd,unsigned long zone,void *buff);
+int blk_read(struct inode *inode,unsigned long zone,void *buff);
+int blk_write(struct inode *inode,unsigned long zone,void *buff);
 
 struct inode *minix_find_inode(struct super_block *sb,unsigned long ino);
 struct super_block *minix_sget(object_t dev,int *error);
+struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error);
+void minix_free_inode(struct inode *inode);
+void minix_set_inode(struct inode *inode,object_t rdev);
 unsigned long minix_inode_by_name(struct inode *dir,String name,size_t nlen);
 object_t minix_path_walk(struct inode *dir,String name,umode_t mode);
 object_t normal_open(struct inode *inode,String name,umode_t mode);

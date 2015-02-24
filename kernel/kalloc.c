@@ -41,7 +41,8 @@ static inline void bucket_init(void){
     Bucket *first,*bdesc;
     
     first = bdesc = (Bucket *)(get_kfree_page());
-    if(isnull(bdesc)) panic("Out of memory in init bucket_init!\n");
+    if(isnull(bdesc)) 
+        panic("Out of memory in init bucket_init!\n");
     for(int i = PAGE_SIZE / sizeof(Bucket);i > 1;i--){
         bdesc->next = bdesc + 1;
         bdesc++;
@@ -57,7 +58,8 @@ void *kalloc(unsigned int len){
     for(bdir = bucket_dir;bdir->size;bdir++)
         if(bdir->size > len)
             break;
-    if(!bdir->size) panic("Don't alloc the memory!\n");
+    if(!bdir->size) 
+        panic("Don't alloc the memory!\n");
     lock();
     for(bdesc = bdir->bucket;bdesc;bdesc = bdesc->next)
         if(bdesc->freeptr)
@@ -70,7 +72,8 @@ void *kalloc(unsigned int len){
         bdesc->refcnt = 0;
         bdesc->bucket_size = bdir->size;
         bdesc->page = bdesc->freeptr = cp = (void *)(get_kfree_page());
-        if(isnull(cp)) panic("Out of memory in kernel malloc()\n");
+        if(isnull(cp)) 
+            panic("Out of memory in kernel kalloc()\n");
         for(int i = PAGE_SIZE / bdir->size;i > 1;i--){
             *((char **)cp) = cp + bdir->size;
             cp += bdir->size;

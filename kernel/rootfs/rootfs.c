@@ -29,7 +29,6 @@ static void minix_open(object_t caller,String name,umode_t unused(mode)) {
     ret(caller,self()->id);
 }
 
-
 object_t normal_open(struct inode *inode,String name,umode_t unused(mode)) {
     if(inode) {
         object_t id = fork();

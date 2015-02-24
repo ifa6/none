@@ -28,7 +28,7 @@ int exec(const char *path,int argc,char **argv){
     }
     _v = run(MM_PID,MIF_EXECVP,o,buff,argc);
     _pop(buff);
-    catch(e_fail){
+    catch(e_fail) {
         return _v;
     }
 }

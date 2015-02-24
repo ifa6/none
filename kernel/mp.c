@@ -1,6 +1,7 @@
-#include    "kernel.h"
-#include    <boot/multiboot.h>
-#include    "buffer.h"
+#include "kernel.h"
+#include <boot/multiboot.h>
+#include <none/util.h>
+#include "buffer.h"
 
 
 #define clear_page(p)   \
@@ -70,22 +71,23 @@ int free_page(pointer_t page){
 
 
 void open_pagination(void){
-    pointer_t *dir = (pointer_t *)DIE_DIR;
-    pointer_t *table = (pointer_t *)DIE_TABLE;
+    pointer_t *dir = (pointer_t *)KERNEL_DIR;
+    pointer_t *table = (pointer_t *)KERNEL_TABLE;
     pointer_t page = 0;
 
     memset((void *)dir,0,0x1000);
-    dir[0] = (pointer_t)table | 7;
-    for(int i = 0;i < 1024;i++) table[i] = (i << 12) | 7;
     for(int i = PAGE_START >> 22;i < (KMEM >> 22);i++){
-        table = (pointer_t *)((pointer_t)table + 0x1000);
+        for(int i = 0;i < 1024;i++)
+            table[i] = ((page++) << 12) | 7;
         dir[i] = (pointer_t)table | 7;
-        for(int i = 0;i < 1024;i++) table[i] = ((page++) << 12) | 7;
+        table = (pointer_t *)((pointer_t)table + 0x1000);
     }
+#if 0
     table = (pointer_t *)(dir[1023] & (~0xcff));
-    for(int i = 0;i < 1024;i++) table[i] = (1023 << 22) | (i << 12) | 7;
+    for(int i = 0;i < 1024;i++) 
+        table[i] = (1023 << 22) | (i << 12) | 7;
+#endif
 
-    /* bios */
     __asm__("mov    %0,%%cr3\n\t\t"
             "mov    %%cr0,%%eax\n\t\t"
             "or     $0x80010000,%%eax\n\t"
@@ -107,12 +109,14 @@ void mm_init(void){
     module_t     *module = (void*)(envp->mods_addr);
     void *  mod_start = (void*)module->mod_start;
     ramdiskCount = module->mod_end - module->mod_start;
+    ramdiskCount = MIN(ramdiskCount,RAMDISK_COUNT);
 
 #if 0
     printk("module : %08p\n",module);
     printk("start  : %08x\n",module->mod_start);
     printk("end    : %08x\n",module->mod_end);
     printk("count  : %08x\n",ramdiskCount);
+    printk("map(%p,%p).\n",map,end);
 #endif
     /*! 将让ramdisk 拷贝到合适的位置 !*/
     memcpy((void*)RAMDISK_ADDR,mod_start,ramdiskCount);

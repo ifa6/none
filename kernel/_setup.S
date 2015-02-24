@@ -59,6 +59,7 @@ _start:
     /* 我猜测引导器就是靠checksum和magic来识别multiboot header的. */
     .long   -(MULTIBOOT_HEADER_MAGIC+MULTIBOOT_HEADER_FLAGS)
     /*  如果不是ELF文件格式,下面的信息就是必须的,这个__ELF__不知道是在哪里定义的 */
+#undef __ELF__
 #ifndef __ELF__
     /* multiboot header addr,hi哥们,你在哪? */
     .long   multiboot_header
@@ -80,7 +81,7 @@ start:
     or      $0x20,%eax
     mov     %eax,%cr0
 
-    /* 重新设置GDT,GDT被放置到0x101000处 */
+    /* 重新设置GDT,GDT被放置到GDT_TABLE处 */
     mov     $GDT_TABLE,%edi
     mov     $gdt_start,%esi
     mov     $GDT_LEN,%ecx
@@ -112,7 +113,7 @@ gdt:
     .word   0xFFFF
     .long   GDT_TABLE
 idt:
-    .word   256*8-1
+    .word   0x7FF
     .long   IDT_TABLE
 gdt_start:
     CreateSection(0x0,0xFFFFF,DATA_WRITE|R0|DATA_G);

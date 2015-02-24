@@ -59,6 +59,12 @@ struct file{
     cnt_t   cnt;
 };
 
+struct dentry {
+    struct inode *d_inode;
+    size_t d_inamelen;
+    char d_iname[0];
+};
+
 static inline void *sb_info(struct super_block *sb){
     return sb->s_fs_info;
 }

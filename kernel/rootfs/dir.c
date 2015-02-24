@@ -33,7 +33,7 @@ unsigned long minix_inode_by_name(struct inode *di,String name,size_t nlen) {
     fs_log("dir_per_block(%d),dir block count(%d),i_size(%d).\n"
             ,dir_per_block,dnoze,di->i_size);
     foreach(i,0,dnoze){
-        if(ERROR == zone_rw(di,IF_READPAGE,i,blk)){
+        if(0 > blk_read(di,i,blk)){
             mfs_err("I/O error.\n");
             SET_ERR(-EIO);
             goto error_ret;
@@ -57,20 +57,3 @@ error_ret:
     kfree(blk);
     return 0;
 }
-
-#if 0
-static inline void dir_put_page(u8 *page) {
-    kfree(page);
-}
-
-static unsigned minix_last_byte(struct inode *inode,unsigned long page_nr) {
-    unsigned last_byte = BLOCK_SIZE;
-    if(page_nr == (inode->i_size >> BLOCK_SHIFT))
-        last_byte = inode->i_size & (BLOCK_SIZE - 1);
-    return last_byte;
-}
-
-static inline unsigned long dir_pages(struct inode *inode) {
-    return (inode->i_size + BLOCK_SIZE - 1) >> PAGE_SHIFT;
-}
-#endif

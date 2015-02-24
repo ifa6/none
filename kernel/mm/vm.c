@@ -64,8 +64,8 @@ void *mkvm(object_t o,void *ptr,cnt_t count,Registers *reg,char *name){
 
 void delvm(VMHead *vmhead){
     if(vmhead && !(--vmhead->cnt)) {
-        todo("Can't close object,deadlock {mm -> object -> mm}.");
-        //close(vm_entry(pos)->object);
+        //todo("Can't close object,deadlock {mm -> object -> mm}.");
+        close(vmhead->object);
         struct list_head *head = &(vmhead->list);
         for(struct list_head *pos = head,*next;pos != head;) {
             next = pos->next;

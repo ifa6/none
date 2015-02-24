@@ -2,6 +2,7 @@
 #include <none/time.h>
 
 #define inode_entry(i)  container_of(i,struct inode,i_list)
+
 static struct inode *minix_special_inode(struct super_block *sb,
         void *raw_inode,unsigned long ino) {
     struct inode *inode;
