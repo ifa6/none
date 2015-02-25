@@ -33,7 +33,7 @@ unsigned long minix_inode_by_name(struct inode *di,String name,size_t nlen) {
     fs_log("dir_per_block(%d),dir block count(%d),i_size(%d).\n"
             ,dir_per_block,dnoze,di->i_size);
     foreach(i,0,dnoze){
-        if(0 > blk_read(di,i,blk)){
+        if(0 > inode_bread(di,i,blk)){
             mfs_err("I/O error.\n");
             SET_ERR(-EIO);
             goto error_ret;

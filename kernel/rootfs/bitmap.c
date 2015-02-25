@@ -1,6 +1,8 @@
 #include "minix_fs.h"
 #include <none/util.h>
 #include <none/time.h>
+#define IMAP_OFFSET(x)     (2 + x)
+#define ZMAP_OFFSET(sbi,x) (2 + sbi->s_imap_blocks + x)
 static u32 count_free(u8 *map[],unsigned blocksize,u32 numbits) {
     u32 sum = 0;
     unsigned blocks = DIV_ROUND_UP(numbits,blocksize * 8);
@@ -36,10 +38,10 @@ void minix_free_block(struct inode *inode,unsigned long block) {
     if(!minix_test_and_clear_bit(bit,ib))
         mfs_err("(%d): bit already cleared.\n",block);
     unlock();
-    //mark_buffer_dirty(ib);
+    sb_bwrite(sb,ib,ZMAP_OFFSET(sbi,zone));
 }
 
-int minix_new_block(struct inode *inode){
+unsigned long minix_new_block(struct inode *inode){
     struct super_block *sb = inode_sb(inode);
     struct minix_sb_info *sbi = sb_info(sb);
     unsigned int bits_per_zone = 8 * sb->s_blocksize;
@@ -50,7 +52,9 @@ int minix_new_block(struct inode *inode){
         lock();
         j = minix_find_first_zero_bit(zb,bits_per_zone);
         if(j < bits_per_zone) {
+            minix_set_bit(j,zb);
             unlock();
+            sb_bwrite(sb,zb,ZMAP_OFFSET(sbi,i));
             j += i * bits_per_zone + sbi->s_firstdatazone - 1;
             if(j < sbi->s_firstdatazone || j >= sbi->s_nzones)
                 break;
@@ -72,6 +76,7 @@ static inline void minix_clear_inode(struct inode *inode) {
     struct minix_inode_info * mi = inode_info(inode);
     mi->i_nlinks = 0;
     inode->i_mode = 0;
+    todo("clear_inode : sync inode.\n");
 }
 
 void minix_free_inode(struct inode *inode) {
@@ -98,6 +103,7 @@ void minix_free_inode(struct inode *inode) {
     if(!minix_test_and_clear_bit(bit,ib))
             mfs_err("bit %lu already cleared.\n",bit);
     unlock();
+    sb_bwrite(sb,ib,IMAP_OFFSET(inr));
 }
 
 void minix_inode_init_owner(struct inode *inode,const struct inode *dir,
@@ -126,7 +132,7 @@ struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error) {
     *error = -ENOSPC;
     lock();
     for(i = 0;i < sbi->s_imap_blocks;i++) {
-        ib = sbi->s_imap[0];
+        ib = sbi->s_imap[i];
         j = minix_find_first_zero_bit(ib,bits_per_zone);
         if(j < bits_per_zone)
             break;
@@ -143,6 +149,7 @@ struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error) {
         return NULL;
     }
     unlock();
+    sb_bwrite(sb,ib,IMAP_OFFSET(i));
     j += i * bits_per_zone;
     if(!j || j > sbi->s_ninodes) {
         kfree(inode);

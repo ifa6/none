@@ -2,6 +2,7 @@
 #include <none/time.h>
 
 #define inode_entry(i)  container_of(i,struct inode,i_list)
+#define I_OFFSET(sbi,n) (2 + sbi->s_imap_blocks + sbi->s_zmap_blocks + n)
 
 static struct inode *minix_special_inode(struct super_block *sb,
         void *raw_inode,unsigned long ino) {
@@ -22,6 +23,7 @@ static struct inode *minix_special_inode(struct super_block *sb,
     inode->i_sb = sb;
     inode->i_ino = ino;
     inode->i_rdev = sb->s_bdev;
+    minix_inode->i_rawdata = raw_inode;
     if(sbi->s_version == MINIX_V1) {
         struct minix_inode *v1 = raw_inode;
         inode->i_mode = v1->i_mode;
@@ -33,7 +35,7 @@ static struct inode *minix_special_inode(struct super_block *sb,
         inode->i_size = v1->i_size;
         minix_inode->i_nlinks = v1->i_nlinks;
         for(unsigned long i = 0;i < sbi->s_dzones;i++)
-            minix_inode->i_zone[i] = v1->i_zone[1];
+            minix_inode->i_zone[i] = v1->i_zone[i];
         minix_inode->indir_zone = v1->i_zone[sbi->s_dzones];
         minix_inode->double_indir_zone = v1->i_zone[sbi->s_dzones + 1];
     } else if(sbi->s_version == MINIX_V2){
@@ -58,6 +60,53 @@ static struct inode *minix_special_inode(struct super_block *sb,
     list_add(&(inode->i_list),&(sb->s_inodes));
     return inode;
 }
+
+void minix_sync_inode(struct inode *inode) {
+    struct super_block *sb = inode_sb(inode);
+    struct minix_sb_info *sbi = sb_info(sb);
+    struct minix_inode_info *minix_inode = inode_info(inode);
+    int ino_per_block = sb->s_blocksize / sbi->s_inosize;
+    int bn,in;
+
+    void *blk = NULL;
+    bn = (inode->i_ino - 1) / ino_per_block;
+    in = (inode->i_ino - 1) % ino_per_block;
+    if(sbi->s_version == MINIX_V1) {
+        struct minix_inode *v1 = minix_inode->i_rawdata;
+        v1->i_mode = inode->i_mode;
+        v1->i_uid = inode->i_uid;
+        v1->i_gid = inode->i_gid;
+        v1->i_time = inode->i_mtime.tv_sec;
+        v1->i_size = inode->i_size;
+        v1->i_nlinks = minix_inode->i_nlinks;
+        for(unsigned long i = 0;i < sbi->s_dzones;i++)
+            v1->i_zone[i] = minix_inode->i_zone[i];
+        v1->i_zone[sbi->s_dzones] = minix_inode->indir_zone;
+        v1->i_zone[sbi->s_dzones + 1] = minix_inode->double_indir_zone;
+    } else if(sbi->s_version == MINIX_V2) {
+        struct minix2_inode *v2 = minix_inode->i_rawdata;
+        v2->i_mode = inode->i_mode;
+        v2->i_uid = inode->i_uid;
+        v2->i_gid = inode->i_gid;
+        v2->i_mtime = inode->i_mtime.tv_sec;
+        v2->i_ctime = inode->i_ctime.tv_sec;
+        v2->i_atime = inode->i_atime.tv_sec;
+        v2->i_size = inode->i_size;
+        v2->i_nlinks = minix_inode->i_nlinks;
+        for(unsigned long i = 0;i < sbi->s_dzones;i++)
+            v2->i_zone[i] = minix_inode->i_zone[i];
+        v2->indir_zone = minix_inode->indir_zone;
+        v2->double_indir_zone = minix_inode->double_indir_zone;
+        v2->triple_indir_zone = minix_inode->triple_indir_zone;
+    } else {
+        mfs_err("only suport minix filesystem v1 | v2.\n");
+        return;
+    }
+    blk = minix_inode->i_rawdata - 
+        in * sbi->s_inosize;
+    sb_bwrite(sb,blk,I_OFFSET(sbi,bn));
+}
+
 
 static struct inode *minix_iget(struct super_block *sb,
         unsigned long ino){
@@ -105,7 +154,7 @@ static struct inode *minix_iget(struct super_block *sb,
             break;
     }
 
-    kfree(ib);
+    //kfree(ib);
     return inode;
 out_bad_inode:
     kfree(ib);

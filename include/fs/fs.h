@@ -79,7 +79,15 @@ static inline struct super_block *inode_sb(struct inode *inode) {
 
 int blk_rw(const object_t dev,const int cmd,
         void *buff,off_t offset,blkcnt_t count);
+static inline int blk_readpage(const object_t dev,void *buff,off_t offset) {
+    return blk_rw(dev,IF_READPAGE,buff,offset,1);
+}
+
+static inline int blk_writepage(const object_t dev,void *buff,off_t offset) {
+    return blk_rw(dev,IF_WRITEPAGE,buff,offset,1);
+}
 int sb_bread(struct super_block *sb,void *buff,off_t offset);
+int sb_bwrite(struct super_block *sb,void *buff,off_t offset);
 
 void generic_seek(object_t caller,int whence,off_t offset);
 void generic_mount(object_t caller,object_t mnt,umode_t mode);

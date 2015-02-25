@@ -37,6 +37,7 @@ struct minix_inode_info {
     unsigned long indir_zone;
     unsigned long double_indir_zone;
     unsigned long triple_indir_zone;
+    void          *i_rawdata;
 };
 
 struct minix_sb_info {
@@ -64,15 +65,15 @@ static inline struct inode *inode_iget(struct minix_inode_info *inode_info){
     return container_of(inode_info,struct inode,i_private);
 }
 
-int blk_rw(const object_t dev,const int cmd, void *buff,off_t offset,blkcnt_t count);
-int blk_read(struct inode *inode,unsigned long zone,void *buff);
-int blk_write(struct inode *inode,unsigned long zone,void *buff);
-
+int inode_bread(struct inode *inode,unsigned long zone,void *buff);
+int inode_bwrite(struct inode *inode,unsigned long zone,void *buff);
+unsigned long minix_new_block(struct inode *inode);
 struct inode *minix_find_inode(struct super_block *sb,unsigned long ino);
 struct super_block *minix_sget(object_t dev,int *error);
 struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error);
 void minix_free_inode(struct inode *inode);
 void minix_set_inode(struct inode *inode,object_t rdev);
+void minix_sync_inode(struct inode *inode);
 unsigned long minix_inode_by_name(struct inode *dir,String name,size_t nlen);
 object_t minix_path_walk(struct inode *dir,String name,umode_t mode);
 object_t normal_open(struct inode *inode,String name,umode_t mode);
