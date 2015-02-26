@@ -6,6 +6,7 @@
 #include <none/stat.h>
 #include <stddef.h>
 #include <x86/bitops.h>
+#include <stdbool.h>
 
 #ifdef FS_LOG
 #define fs_log(fmt,...) dbg("ROOTFS",fmt,##__VA_ARGS__)
@@ -65,20 +66,40 @@ static inline struct inode *inode_iget(struct minix_inode_info *inode_info){
     return container_of(inode_info,struct inode,i_private);
 }
 
+/* blk.c */
 int inode_bread(struct inode *inode,unsigned long zone,void *buff);
 int inode_bwrite(struct inode *inode,unsigned long zone,void *buff);
+
+/* bitmap.c */
 unsigned long minix_new_block(struct inode *inode);
+void minix_free_inode(struct inode *inode);
+
+/* inode.c */
+unsigned long bmap(struct inode *inode,unsigned long zone,bool create);
 struct inode *minix_find_inode(struct super_block *sb,unsigned long ino);
 struct super_block *minix_sget(object_t dev,int *error);
 struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error);
-void minix_free_inode(struct inode *inode);
 void minix_set_inode(struct inode *inode,object_t rdev);
 void minix_sync_inode(struct inode *inode);
-unsigned long minix_inode_by_name(struct inode *dir,String name,size_t nlen);
+
+/* dir.c */
+unsigned long minix_inode_by_name(struct inode *dir,
+        String name,size_t nlen);
+
+/* namei.c */
 object_t minix_path_walk(struct inode *dir,String name,umode_t mode);
 object_t normal_open(struct inode *inode,String name,umode_t mode);
 object_t mount_open(struct inode *inode,String name,umode_t mode);
+
+/* rw.c */
 void minix_read(object_t o,void *buffer,cnt_t count);
 void minix_write(object_t o,void *buffer,cnt_t count);
+
+#define DECAL_INODE(x) \
+    struct super_block *sb = inode_sb(x);\
+    struct minix_sb_info *unused(sbi) = sb_info(sb);\
+    struct minix_inode_info *unused(mi) = inode_info(x)
+
+#define CURRENT_TIME    ((struct timespace){time(NULL),0})
 
 #endif

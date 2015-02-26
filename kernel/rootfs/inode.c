@@ -1,8 +1,124 @@
 #include "minix_fs.h"
 #include <none/time.h>
+#include <none/util.h>
 
 #define inode_entry(i)  container_of(i,struct inode,i_list)
 #define I_OFFSET(sbi,n) (2 + sbi->s_imap_blocks + sbi->s_zmap_blocks + n)
+#define ZONE_PER_BLOCK(x) (sbi->s_version == MINIX_V1 ?\
+        (BLOCK_SIZE / sizeof(unsigned short)) :\
+        (BLOCK_SIZE / sizeof(unsigned long)))
+
+static inline unsigned long _get(struct minix_sb_info *sbi,
+        void *bb,int num) {
+    if(sbi->s_version == MINIX_V1)
+        return ((unsigned short *)bb)[num];
+    return ((unsigned long *)bb)[num];
+}
+
+static inline void _set(struct minix_sb_info *sbi,
+        void *bb,int num,unsigned long indir) {
+    if(sbi->s_version == MINIX_V1)
+        ((unsigned short *)bb)[num] = indir;
+    else if(sbi->s_version == MINIX_V2)
+        ((unsigned long *)bb)[num] = indir;
+}
+
+static unsigned long __indir_map(struct inode *inode,
+        unsigned long blk,int num,bool create) {
+    DECAL_INODE(inode);
+    void *bb;
+    unsigned long indir = 0;
+    bb = kalloc(BLOCK_SIZE);
+    if(!bb)
+        return 0;
+    if(sb_bread(sb,bb,blk))
+        goto out;
+
+    indir = _get(sbi,bb,num);
+    if(!indir && create) {
+        indir = minix_new_block(inode);
+        if(indir) {
+            _set(sbi,bb,num,indir);
+            sb_bwrite(sb,bb,blk);
+        }
+    }
+out:
+    kfree(bb);
+    return indir;
+}
+
+unsigned long bmap(struct inode *inode,unsigned long zone,bool create) {
+    DECAL_INODE(inode);
+    unsigned long zone_per_block = ZONE_PER_BLOCK(sbi);
+    unsigned long indir = 0;
+    if(zone > DIV_ROUND_UP(inode->i_size,BLOCK_SIZE))
+        return 0;
+    if(zone < sbi->s_dzones) {
+        if(create && !mi->i_zone[zone]) {
+            mi->i_zone[zone] = minix_new_block(inode);
+            if(mi->i_zone[zone]) {
+                inode->i_ctime.tv_sec = time(NULL);
+                minix_sync_inode(inode);
+            }
+        }
+        return mi->i_zone[zone];
+    }
+
+    zone -= sbi->s_dzones;
+    if(zone < zone_per_block) {
+        if(create && !mi->indir_zone) {
+            mi->indir_zone = minix_new_block(inode);
+            if(mi->indir_zone) {
+                inode->i_ctime.tv_sec = time(NULL);
+                minix_sync_inode(inode);
+            }
+        }
+        if(!mi->indir_zone)
+            return 0;
+        return __indir_map(inode,mi->indir_zone,zone,create);
+    }
+
+    zone -= zone_per_block;
+    if(zone < zone_per_block * zone_per_block) {
+        if(create && !mi->double_indir_zone) {
+            mi->double_indir_zone = minix_new_block(inode);
+            if(mi->double_indir_zone) {
+                inode->i_ctime.tv_sec = time(NULL);
+                minix_sync_inode(inode);
+            }
+        }
+        if(!mi->double_indir_zone)
+            return 0;
+        indir = __indir_map(inode,mi->double_indir_zone,
+                zone / zone_per_block,create);
+        if(!indir)
+            return 0;
+        return __indir_map(inode,indir,zone % zone_per_block,create);
+    }
+
+    zone -= zone_per_block * zone_per_block;
+    if(sbi->s_version == MINIX_V2 &&
+            zone < zone_per_block * zone_per_block * zone_per_block) {
+        if(create && mi->triple_indir_zone) {
+            mi->triple_indir_zone = minix_new_block(inode);
+            if(mi->triple_indir_zone) {
+                inode->i_ctime.tv_sec = time(NULL);
+                minix_sync_inode(inode);
+            }
+        }
+        if(!mi->triple_indir_zone)
+            return 0;
+        indir = __indir_map(inode,mi->triple_indir_zone,
+                zone / (zone_per_block * zone_per_block),create);
+        if(!indir)
+            return 0;
+        indir = __indir_map(inode,indir,zone / zone_per_block,create);
+        if(!indir)
+            return 0;
+        return __indir_map(inode,indir,zone % zone_per_block,create);
+    }
+    return 0;
+}
 
 static struct inode *minix_special_inode(struct super_block *sb,
         void *raw_inode,unsigned long ino) {
