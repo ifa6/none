@@ -3,7 +3,7 @@
 #include <none/scntl.h>
 
 static struct super_block *super;
-static struct inode *root;
+struct inode *root;
 
 object_t mount_open(struct inode *inode,String name,umode_t mode) {
     fs_log("mount open(%d).\n",inode->i_rdev);
@@ -54,7 +54,15 @@ object_t normal_open(struct inode *inode,String name,umode_t unused(mode)) {
 }
 
 static void rootfs_open(object_t caller,void *buffer,umode_t mode) {
-    ret(caller,minix_path_walk(root,buffer,mode));
+    int res;
+    struct inode *inode;
+    res = open_namei(buffer,O_WRONLY,mode,&inode);
+    if(res) {
+        fs_log("%d opoen_namei(%s,%d,%d,%p).\n",res,buffer,O_WRONLY,mode,&inode);
+        eret(caller,-1,res);
+    }
+    else
+        ret(caller,normal_open(inode,buffer,mode));
 }
 
 static void rootfs_init(void){

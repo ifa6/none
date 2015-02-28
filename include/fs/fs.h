@@ -4,6 +4,9 @@
 #include <none/time.h>
 #include <none/stat.h>
 #include <none/list.h>
+#include <none/fcntl.h>
+
+#define ACC_MODE(x) ("\004\002\006\006"[(x) & O_ACCMODE])
 
 struct inode {
     umode_t             i_mode;
@@ -12,7 +15,7 @@ struct inode {
     unsigned int        i_flags;
     unsigned long       i_ino;
     object_t            i_rdev;
-    loff_t              i_size;
+    size_t              i_size;
 
     struct super_block  *i_sb;
     struct list_head    i_list;

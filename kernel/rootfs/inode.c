@@ -163,6 +163,7 @@ static struct inode *minix_special_inode(struct super_block *sb,
         inode->i_atime.tv_sec = v2->i_atime;
         inode->i_mtime.tv_sec = v2->i_mtime;
         inode->i_ctime.tv_sec = v2->i_ctime;
+        minix_inode->i_nlinks = v2->i_nlinks;
         for(unsigned long i = 0;i < sbi->s_dzones;i++)
             minix_inode->i_zone[i] = v2->i_zone[i];
         minix_inode->indir_zone = v2->indir_zone;

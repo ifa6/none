@@ -61,7 +61,7 @@ static inline int _hex(int *str,unsigned long value){
     return i;
 }
 
-static inline char *_toNumber(char *str,unsigned long long value,_bool sign,
+static inline char *_toNumber(char *str,long long value,_bool sign,
         HexBase base,int size,int style,int mask){
     char signString = '+';
     const char *dig = _lowerDigits;
@@ -131,7 +131,7 @@ static char *_toString(char *t,char *f,int size,int style){
 extern int vsprintf(char *buf,const char *fmt,va_list args){
     int style = 0;
     int width = 0;
-    unsigned long num = 0;
+    long num = 0;
     _bool   sign = _true;
     HexBase base = DECIMAL;
     char *str,*s;
@@ -183,11 +183,11 @@ repeat:
             case _char:  mask = 0xff;
             case _short: mask &= 0xffff;
             case _int:   mask &= 0xffffffff;
-                num = va_arg(args,unsigned int);
+                num = va_arg(args,int);
                 str = _toNumber(str,num, sign,base,width,style,mask); 
                 break;
             case _long:   
-                num = va_arg(args,unsigned long long);
+                num = va_arg(args,long long);
                 str = _toNumber(str,num, sign,base,width,style,mask); 
                 break;
             case _string: 

@@ -41,6 +41,15 @@ void minix_free_block(struct inode *inode,unsigned long block) {
     sb_bwrite(sb,ib,ZMAP_OFFSET(sbi,zone));
 }
 
+static inline void clear_block(struct super_block *sb,unsigned long blk){
+    void *bb;
+    bb = kalloc(BLOCK_SIZE);
+    if(bb) {
+        memset(bb,0,BLOCK_SIZE);
+        sb_bwrite(sb,bb,blk);
+    }
+}
+
 unsigned long minix_new_block(struct inode *inode){
     struct super_block *sb = inode_sb(inode);
     struct minix_sb_info *sbi = sb_info(sb);
@@ -58,6 +67,7 @@ unsigned long minix_new_block(struct inode *inode){
             j += i * bits_per_zone + sbi->s_firstdatazone - 1;
             if(j < sbi->s_firstdatazone || j >= sbi->s_nzones)
                 break;
+            clear_block(sb,j);
             return j;
         }
         unlock();
@@ -104,6 +114,7 @@ void minix_free_inode(struct inode *inode) {
             mfs_err("bit %lu already cleared.\n",bit);
     unlock();
     sb_bwrite(sb,ib,IMAP_OFFSET(inr));
+    kfree(inode);
 }
 
 void minix_inode_init_owner(struct inode *inode,const struct inode *dir,

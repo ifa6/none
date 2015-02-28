@@ -20,6 +20,8 @@
         printk("%c",name[i]);\
         })
 
+struct inode *root;
+
 #define minix_set_bit(nr,addr) \
     __set_bit((nr),(unsigned long*)(addr))
 #define minix_test_bit(nr,addr) \
@@ -67,8 +69,8 @@ static inline struct inode *inode_iget(struct minix_inode_info *inode_info){
 }
 
 /* blk.c */
-int inode_bread(struct inode *inode,unsigned long zone,void *buff);
-int inode_bwrite(struct inode *inode,unsigned long zone,void *buff);
+int inode_bread (struct inode *inode,void *buff,unsigned long zone);
+int inode_bwrite(struct inode *inode,void *buff,unsigned long zone);
 
 /* bitmap.c */
 unsigned long minix_new_block(struct inode *inode);
@@ -87,9 +89,9 @@ unsigned long minix_inode_by_name(struct inode *dir,
         String name,size_t nlen);
 
 /* namei.c */
-object_t minix_path_walk(struct inode *dir,String name,umode_t mode);
 object_t normal_open(struct inode *inode,String name,umode_t mode);
 object_t mount_open(struct inode *inode,String name,umode_t mode);
+int      open_namei(String pathname,int flag,umode_t mode,struct inode **res_inode);
 
 /* rw.c */
 void minix_read(object_t o,void *buffer,cnt_t count);
@@ -99,6 +101,10 @@ void minix_write(object_t o,void *buffer,cnt_t count);
     struct super_block *sb = inode_sb(x);\
     struct minix_sb_info *unused(sbi) = sb_info(sb);\
     struct minix_inode_info *unused(mi) = inode_info(x)
+
+#define DECAL_SB(x) \
+    struct super_block *sb = inode_sb(x);\
+    struct minix_sb_info *unused(sbi) = sb_info(sb);
 
 #define CURRENT_TIME    ((struct timespace){time(NULL),0})
 
