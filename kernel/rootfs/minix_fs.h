@@ -92,6 +92,8 @@ unsigned long minix_inode_by_name(struct inode *dir,
 object_t normal_open(struct inode *inode,String name,umode_t mode);
 object_t mount_open(struct inode *inode,String name,umode_t mode);
 int      open_namei(String pathname,int flag,umode_t mode,struct inode **res_inode);
+int      minix_mkdir(String pathname,umode_t mode);
+int      minix_rmdir(String name);
 
 /* rw.c */
 void minix_read(object_t o,void *buffer,cnt_t count);

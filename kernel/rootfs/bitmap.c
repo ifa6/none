@@ -114,7 +114,6 @@ void minix_free_inode(struct inode *inode) {
             mfs_err("bit %lu already cleared.\n",bit);
     unlock();
     sb_bwrite(sb,ib,IMAP_OFFSET(inr));
-    kfree(inode);
 }
 
 void minix_inode_init_owner(struct inode *inode,const struct inode *dir,
@@ -133,12 +132,6 @@ struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error) {
     struct inode *inode;
     u8 *ib;
     unsigned long i,j, bits_per_zone = 8 * sb->s_blocksize;
-    inode = kalloc(sizeof(*inode) + sizeof(struct minix_inode_info));
-    memset(inode,0,sizeof(*inode) + sizeof(struct minix_inode_info));
-    if(!inode) {
-        *error = -ENOMEM;
-        return NULL;
-    }
     j = bits_per_zone;
     *error = -ENOSPC;
     lock();
@@ -150,22 +143,22 @@ struct inode *minix_new_inode(struct inode *dir,mode_t mode,int *error) {
     }
     if(!ib || j >= bits_per_zone) {
         unlock();
-        kfree(inode);
         return NULL;
     }
     if (minix_test_and_set_bit(j,ib)) {
         unlock();
         mfs_err("bit already set.\n");
-        kfree(inode);
         return NULL;
     }
     unlock();
     sb_bwrite(sb,ib,IMAP_OFFSET(i));
     j += i * bits_per_zone;
-    if(!j || j > sbi->s_ninodes) {
-        kfree(inode);
+    if(!j || j > sbi->s_ninodes)
         return NULL;
-    }
+
+    inode = minix_find_inode(sb,j);
+    if(!inode)
+        return NULL;
     minix_inode_init_owner(inode,dir,mode);
     inode->i_ino = j;
     inode->i_mtime.tv_sec = inode->i_atime.tv_sec 

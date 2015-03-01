@@ -6,6 +6,7 @@
 /* file interface */
 #define FIF_OPEN         IF_OPEN
 #define FIF_CLOSE        IF_CLOSE
+#define FIF_DELETE       IF_DELETE
 #define FIF_READ         IF_READ
 #define FIF_WRITE        IF_WRITE
 #define FIF_READPAGE     IF_READPAGE
@@ -15,6 +16,8 @@
 #define FIF_MOUNT        IF_MOUNT
 #define FIF_UMOUNT       IF_UMOUNT
 #define FIF_REMOUNT      IF_REMOUNT
+#define FIF_MKDIR        IF_USER1
+#define FIF_RMDIR        IF_USER2
 
 
 /* When introducing new O_* bits */

@@ -5,7 +5,6 @@
 #include "util.h"
 static object_t STDIN = 0,STDOUT = 1;
 FILE *stdin = &STDIN,*stdout = &STDOUT;
-int  errno;
 }
 
 

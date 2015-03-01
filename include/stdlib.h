@@ -22,5 +22,6 @@ extern off_t lseek(object_t ,off_t ,int);
 extern int   exec(const char *path,int argc,char **argv);
 extern int   execvp(const char *path,char **argv);
 extern _Noreturn void exit(int status);
-
+extern long strtol(const char *nptr, char **endptr, int base);
+extern int atoi(const char *str);
 #endif

@@ -20,22 +20,22 @@ static bool permission(struct inode *inode,umode_t mask) {
     struct minix_inode_info *mi = inode_info(inode);
     umode_t mode = inode->i_mode;
 
-    fs_log("permission inode->i_rdev(%d),mi->i_nlinks(%d).\n",
-            inode->i_rdev,mi->i_nlinks);
+ //   fs_log("permission inode->i_rdev(%d),mi->i_nlinks(%d).\n",
+  //          inode->i_rdev,mi->i_nlinks);
     if(inode->i_rdev && !mi->i_nlinks)
         return false;
 
     mode >>= 6;
-    fs_log("permission (mode & mask & 0007) => (%o %o %d).\n",
-            mode,mask,mode & mask & 0007);
+  //  fs_log("permission (mode & mask & 0007) => (%o %o %d).\n",
+   //         mode,mask,mode & mask & 0007);
     if((mode & mask & 0007) == mask)
         return true;
     return false;
 }
 
-static void *minix_find_entry(struct inode *dir,String name,int nlen,struct minix_dir_entry **res_dir) {
-    int i,entries;
+static void *minix_find_entry(struct inode *dir,String name,int nlen,struct minix_dir_entry **res_dir,unsigned long *res_zone) {
     void *bb;
+    int i,entries,res = 0;
     DECAL_SB(dir);
     struct minix_dir_entry *de;
     unsigned long dir_per_block  = sb->s_blocksize / sbi->s_dirsize;
@@ -47,15 +47,16 @@ static void *minix_find_entry(struct inode *dir,String name,int nlen,struct mini
         return NULL;
     entries = dir->i_size / sbi->s_dirsize;
 
-    *res_dir = NULL;
     /* check for '..',as we might have to do some 'magic' fot it */
     if(nlen == 2 && name[0] == '.' && name[1] == '.') {
         todo("unhandler '..'.\n");
         goto out_err;
     }
 
-    if(inode_bread(dir,bb,0))
+    res = inode_bread(dir,bb,0);
+    if(res)
         goto out_err;
+
     i = 0; de = bb;
     while(i < entries) {
         if((void*)de >= sb->s_blocksize + bb) {
@@ -74,8 +75,11 @@ static void *minix_find_entry(struct inode *dir,String name,int nlen,struct mini
 #endif
         if(namecompare(nlen,sbi->s_namelen,name,de->name)) {
             *res_dir = de;
+            if(res_zone)
+                *res_zone = i / dir_per_block;
             return bb;
         }
+
         de = minix_next_entry(de,sbi);
         i++;
     }
@@ -85,27 +89,32 @@ out_err:
     return NULL;
 }
 
-
-static void * minix_add_entry (struct inode *dir,String name,int nlen,struct minix_dir_entry **res_dir) {
+static int minix_add_entry (struct inode *dir,String name,int nlen,unsigned long ino) {
+    int res;
     void *bb;
-    DECAL_SB(dir);
-    unsigned long block,i;
+    DECAL_INODE(dir);
+    unsigned long block = mi->i_zone[0],i;
     struct minix_dir_entry *de;
     size_t dir_per_block = sb->s_blocksize / sbi->s_dirsize;
     bb = kalloc(sb->s_blocksize);
     if(!nlen)
-        return NULL;
+        return -EINVAL;
     if(!bb)
-        return NULL;
+        return -ENOMEM;
 
-    if(inode_bread(dir,bb,0))
-        goto out_err;
+    res = sb_bread(sb,bb,block);
+    if(res) {
+        kfree(bb);
+        return res;
+    }
     i = 0; de = bb;
     while(1){
         if((void*)de >= bb + sb->s_blocksize) {
             block = bmap(dir,i / dir_per_block,true);
-            if(block)
-                goto out_err;
+            if(!block) {
+                kfree(bb);
+                return -EINVAL;
+            }
             if(sb_bread(sb,bb,block)) {
                 i += dir_per_block;
                 continue;
@@ -113,46 +122,48 @@ static void * minix_add_entry (struct inode *dir,String name,int nlen,struct min
             de = bb;
         }
         if(i * sbi->s_dirsize >= dir->i_size) {
+            fs_log("(s_dirsize,dir->i_size) = >(%p,%d,%d).\n",dir,i * sbi->s_dirsize,dir->i_size);
             de->inode = 0;
             dir->i_size = (i + 1) *sbi->s_dirsize;
             dir->i_ctime.tv_sec = time(NULL);
             minix_sync_inode(dir);
         }
+        fs_log("add entry (%s,%d) => inode(%d,%s).\n",name,nlen,de->inode,de->name);
 
         if(!de->inode) {
-            dir->i_mtime.tv_sec = time(NULL);
+            de->inode = ino;
             memcpy(de->name,name,nlen);
+            memset(de->name + nlen,0,sbi->s_namelen - nlen);
+            dir->i_mtime.tv_sec = time(NULL);
             sb_bwrite(sb,bb,block);
-            *res_dir = de;
-            return bb;
+            fs_log("de %s %d dir(%d).\n",de->name,de->inode,dir->i_size);
+            kfree(bb);
+            return 0;
         }
         de = minix_next_entry(de,sbi);
         i++;
     }
-out_err:
-    kfree(bb);
-    return NULL;
 }
 
 static struct inode *minix_lookup(struct inode *dir, String name,size_t nlen) {
     void *bb;
     DECAL_SB(dir);
+    unsigned long ino;
     struct inode *inode = NULL;
     struct minix_dir_entry *de;
-    unsigned long ino;
 
     if(nlen > sbi->s_namelen)
         return NULL;
 
-    bb = minix_find_entry(dir,name,nlen,&de);
+    bb = minix_find_entry(dir,name,nlen,&de,NULL);
     if(!bb)
         return NULL;
     ino = de->inode;
     kfree(bb);
-    fs_log("inode(%s,%d).\n",name,ino);
-    if(ino)
+    fs_log("%p = minix_find_entry(%p,%s,%d,&de).\n",bb,dir,name,ino);
+    if(de->inode)
         inode = minix_find_inode(sb,ino);
-    fs_log("inode(%s,&%p,[%d],%d).\n",name,inode,ino,inode->i_size);
+    fs_log("%p = minix_find_inode(sb,%d).\n",inode,ino);
     return inode;
 }
 
@@ -184,7 +195,6 @@ static struct inode *minix_dir_namei(struct inode *base,String pathname,int *nle
     struct inode *dir;
 
     dir = minix_get_dir(base,pathname);
-    fs_log("(%p) minix_get_dir (%p,%s)\n",dir,base,pathname);
     if(!dir)
         return NULL;
     basename = pathname;
@@ -216,11 +226,9 @@ struct inode *minix_namei(struct inode *base,String pathname) {
 }
 
 int open_namei(String pathname,int flag,umode_t mode,struct inode **res_inode) {
-    void *bb;
     String basename;
     int nlen,error;
     struct inode *dir,*inode;
-    struct minix_dir_entry *de;
     if((flag & O_TRUNC) && !(flag & O_ACCMODE))
         flag |= O_WRONLY;
     mode &= 0777;
@@ -244,13 +252,11 @@ int open_namei(String pathname,int flag,umode_t mode,struct inode **res_inode) {
         inode = minix_new_inode(dir,mode,&error);
         if(!inode)
             return error;
-        bb = minix_add_entry(dir,basename,nlen,&de);
-        if(!bb) {
+        error = minix_add_entry(dir,basename,nlen,inode->i_ino);
+        if(error) {
             minix_free_inode(inode);
-            return -ENOSPC;
+            return -error;
         }
-        de->inode = inode->i_ino;
-        kfree(bb);
         *res_inode = inode;
         return 0;
     }
@@ -261,5 +267,192 @@ int open_namei(String pathname,int flag,umode_t mode,struct inode **res_inode) {
         return -EPERM;
     inode->i_atime.tv_sec = time(NULL);
     *res_inode = inode;
+    return 0;
+}
+
+int sys_mknod(String filename,int mode,object_t obj) {
+    void *bb;
+    int nlen,error;
+    String basename;
+    struct minix_dir_entry *de;
+    struct inode *dir,*inode;
+
+    dir = minix_dir_namei(root,filename,&nlen,&basename);
+    if(!dir)
+        return -ENOENT;
+    if(!nlen)
+        return -ENOENT;
+    if(!permission(dir,MAY_WRITE))
+        return -EPERM;
+    bb = minix_find_entry(dir,basename,nlen,&de,NULL);
+    if(bb) {
+        kfree(bb);
+        return -EEXIST;
+    }
+    inode = minix_new_inode(dir,mode,&error);
+    if(!inode)
+        return -ENOSPC;
+
+    if(S_ISBLK(mode) || S_ISCHR(mode))
+        inode->i_rdev = obj;
+
+    inode->i_mtime.tv_sec = inode->i_atime.tv_sec = time(NULL);
+    minix_sync_inode(inode);
+    error = minix_add_entry(dir,basename,nlen,inode->i_ino);
+    if(error) {
+        minix_free_inode(inode);
+        return error;
+    }
+    return 0;
+}
+
+int minix_mkdir(String pathname,umode_t mode) {
+    int nlen,error;
+    void *bb;
+    String basename;
+    struct inode *dir,*inode;
+    struct minix_dir_entry *de;
+    struct super_block *sb;
+    struct minix_sb_info *sbi;
+    struct minix_inode_info *mi;
+
+    dir = minix_dir_namei(root,pathname,&nlen,&basename);
+    if(!dir || !nlen)
+        return -ENOENT;
+    if(!permission(dir,MAY_WRITE))
+        return -EPERM;
+
+    bb =  minix_find_entry(dir,basename,nlen,&de,NULL);
+    if(bb) {
+        kfree(bb);
+        return -EEXIST;
+    }
+
+    inode = minix_new_inode(dir,mode,&error);
+    if(!inode)
+        return error;
+    sb = inode_sb(inode);
+    sbi = sb_info(sb);
+    mi = inode_info(inode);
+    inode->i_size = 2 * sbi->s_dirsize;
+    inode->i_mtime.tv_sec = inode->i_atime.tv_sec = time(NULL);
+    inode->i_mode = S_IFDIR | (mode & 0777);
+    mi->i_zone[0] = minix_new_block(inode);
+    if(!mi->i_zone[0]) {
+        minix_free_inode(inode);
+        return -ENOSPC;
+    }
+
+    bb = kalloc(sb->s_blocksize);
+    if(!bb) {
+        minix_free_inode(inode);
+        return -ENOMEM;
+    }
+    de = bb;
+    de->inode = inode->i_ino;
+    strcpy(de->name,".");
+    de = minix_next_entry(de,sbi);
+    de->inode = dir->i_ino;
+    strcpy(de->name,"..");
+    mi->i_nlinks = 2;
+    sb_bwrite(sb,bb,mi->i_zone[0]);
+    kfree(bb);
+    error = minix_add_entry(dir,basename,nlen,inode->i_ino);
+    if(error) {
+        minix_free_inode(inode);
+        return error;
+    }
+    minix_sync_inode(inode);
+    return 0;
+}
+
+static bool minix_emtry_dir(struct inode *inode) {
+    void *bb;
+    int len,nr,block;
+    DECAL_INODE(inode);
+    unsigned long dir_per_block = sb->s_blocksize / sbi->s_dirsize;
+    struct minix_dir_entry *de;
+    len = inode->i_size / sbi->s_dirsize;
+    bb = kalloc(sb->s_blocksize);
+    if(!bb)
+        return false;
+    if(len < 2 || !mi->i_zone[0] ||
+            (inode_bread(inode,bb,0))) {
+        mfs_err("warning - bad directory on dev %d.\n",inode->i_rdev);
+        return false;
+    }
+    de = bb;
+    if(de->inode != inode->i_ino || strcmp(de->name,"."))
+        return false;
+    de = minix_next_entry(de,sbi);
+    if(!de->inode || strcmp(de->name,".."))
+        return false;
+
+    nr = 2;
+    de = minix_next_entry(de,sbi);
+    while(nr < len) {
+        if(bb + sb->s_blocksize <= (void*)de) {
+            block = bmap(inode,nr / dir_per_block,false);
+            if(!block) {
+                nr += dir_per_block;
+                continue;
+            }
+            if(sb_bread(sb,bb,block)) {
+                kfree(bb);
+                return false;
+            }
+            de = bb;
+        }
+        if(de->inode) {
+            kfree(bb);
+            return false;
+        }
+        de = minix_next_entry(de,sbi);
+        nr++;
+    }
+    kfree(bb);
+    return true;
+}
+
+int minix_rmdir(String name) {
+    int nlen;
+    void *bb;
+    String basename;
+    unsigned long zone;
+    struct super_block *sb;
+    struct inode *inode,*dir;
+    struct minix_dir_entry *de;
+    struct minix_inode_info *mi;
+
+    dir = minix_dir_namei(root,name,&nlen,&basename);
+    if(!dir)
+        return -ENOENT;
+    if(!nlen)
+        return -ENOENT;
+    if(!permission(dir,MAY_WRITE))
+        return -EPERM;
+    sb = inode_sb(dir);
+    bb = minix_find_entry(dir,basename,nlen,&de,&zone);
+    if(!bb)
+        return -ENOENT;
+    inode = minix_find_inode(sb,de->inode);
+    mi = inode_info(inode);
+    if((dir->i_mode & S_ISVTX))
+        return -EPERM;
+    if(inode->i_rdev != dir->i_rdev)// || inode->i_count > 1)
+        return -EPERM;
+    if(inode == dir)
+        return -EPERM;
+    if(!S_ISDIR(inode->i_mode))
+        return -ENOTDIR;
+    if(!minix_emtry_dir(inode))
+        return -ENOTEMPTY;
+    if(mi->i_nlinks != 2)
+        mfs_err("emptry directory has nlinks != 2(%d).\n",mi->i_nlinks);
+    minix_free_inode(inode);
+    de->inode = 0;
+    dir->i_ctime.tv_sec = dir->i_mtime.tv_sec = time(NULL);
+    inode_bwrite(dir,bb,zone);
+    minix_sync_inode(dir);
     return 0;
 }

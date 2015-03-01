@@ -6,6 +6,7 @@ extern int cons_main();
 extern int clock_main();
 extern int ramdisk_main();
 extern int rootfs_main();
+extern int at_main();
 static int system_shell();
 
 struct {
@@ -14,7 +15,8 @@ struct {
 }tasks[] = {
     {.name = "Clock",         .entry = clock_main},
     {.name = "Conslo",        .entry = cons_main},
-    {.name = "Ram Disk",      .entry = ramdisk_main},
+   // {.name = "Ram Disk",      .entry = ramdisk_main},
+    {.name = "Ram Disk",      .entry = at_main},
     {.name = "rootfs",        .entry = rootfs_main},
     {.name = "Shell",         .entry = system_shell},
 };

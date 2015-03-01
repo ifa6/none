@@ -9,15 +9,23 @@ extern cnt_t ramdiskCount;
 static void ramdisk_readpage(object_t caller,void *ptr,cnt_t count,off_t offset){
     off_t off = offset * BLOCK_SIZE;
     cnt_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
-    memcpy(ptr,ramdisk + off,cnt);
-    ret(caller,OK);
+    if(off > ramdiskCount) {
+        ret(caller,-ENOSPC);
+    } else {
+        memcpy(ptr,ramdisk + off,cnt);
+        ret(caller,OK);
+    }
 }
 
 static void ramdisk_writepage(object_t caller,void *ptr,cnt_t count,off_t offset){
     off_t off = offset * BLOCK_SIZE;
     cnt_t cnt = min(count * BLOCK_SIZE,ramdiskCount - off);
-    memcpy(ramdisk + off,ptr,cnt);
-    ret(caller,OK);
+    if(off > ramdiskCount) {
+        ret(caller,-ENOSPC);
+    } else {
+        memcpy(ramdisk + off,ptr,cnt);
+        ret(caller,OK);
+    }
 }
 
 static void ramdisk_read(object_t caller,void *ptr,cnt_t count) {

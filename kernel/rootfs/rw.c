@@ -95,8 +95,8 @@ void minix_read(object_t o,void *buffer,cnt_t count){
     cnt_t nrbytes;
     struct file *file = self()->private_data;
     nrbytes = v2_read(file->inode,buffer,file->offset,count);
-    fs_log("read (%d,%d) bytes offset %d for %s.\n",
-            count,nrbytes,file->offset,self()->name);
+    //fs_log("read (%d,%d) bytes offset %d for %s.\n",
+     //       count,nrbytes,file->offset,self()->name);
     if(nrbytes > 0)
         file->offset += nrbytes;
     ret(o,nrbytes); 
