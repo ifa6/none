@@ -24,7 +24,7 @@ git clone https://github.com/TaiChiForLuoZhongYao/none.git
 
 <h3 id='run'>运行</h3>
 `c.img` `ramdisk.img`是已经编译好的的启动镜像(虚拟AT硬盘)和ramdisk镜像,直接可以在bochs下运行.安装好bochs后使用如下命令即可运行
-```bash -q
+```bash
 bochs
 ```
 
